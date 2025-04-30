@@ -1,0 +1,14 @@
+SQLAlchemy~=2.0.38
+python-dotenv~=1.0.1
+aiogram~=3.18.0
+openai~=1.65.4
+requests~=2.32.3
+yookassa~=3.5.0
+asyncpg
+redis~=5.2.1
+aioredis~=2.0.1
+aiohttp~=3.11.13
+matplotlib~=3.10.1
+pillow~=11.1.0
+APScheduler~=3.11.0
+pandas~=2.2.3
