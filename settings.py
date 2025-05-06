@@ -12,7 +12,8 @@ storage_bot = MemoryStorage()
 storage_admin_bot = MemoryStorage()
 
 
-load_dotenv(find_dotenv("../.env"))
+load_dotenv(find_dotenv())
+
 token_design_level = getenv("MAIN_BOT_TOKEN")
 token_admin_bot = getenv("ADMIN_BOT_TOKEN")
 business_connection_id = getenv("BUSINESS_CONNECTION_ID")

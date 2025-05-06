@@ -6,7 +6,7 @@ from aiogram.fsm.state import any_state
 from aiogram.types import InlineKeyboardButton, BufferedInputFile
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from bot import main_bot
+from bots import main_bot
 from data.keyboards import admin_keyboard, add_delete_admin, cancel_keyboard, choice_bot_stat, back_to_bots_keyboard, \
     db_tables_keyboard, type_users_mailing_keyboard, statistics_keyboard
 from db.repository import admin_repository, users_repository, ai_requests_repository, subscriptions_repository, \
