@@ -13,3 +13,4 @@ pillow~=11.1.0
 APScheduler~=3.11.0
 pandas~=2.2.3
 psycopg2-binary
+openpyxl
