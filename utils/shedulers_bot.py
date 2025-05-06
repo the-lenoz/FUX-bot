@@ -44,55 +44,6 @@ async def edit_activation_sub(main_bot: Bot):
                     reply_markup=buy_sub_keyboard.as_markup())
             except Exception as e:
                 print(f"\n\nВОЗНИКЛА ОШИБКА ОТПРАВКИ ПОЛЬЗОВАТЕЛЮ {sub.user_id}" + traceback.format_exc() + "\n\n")
-                continue
-
-
-async def send_week_rec(main_bot: Bot):
-    users = await users_repository.select_all_users()
-    now_date = datetime.datetime.now()
-    for user in users:
-        try:
-            print(user.user_id)
-            if (now_date - user.last_rec_week_date) > datetime.timedelta(days=7.0):
-                user_summaries = await summary_user_repository.get_summaries_by_user_id(user_id=user.user_id)
-                print(user_summaries)
-                if user_summaries is not None and len(user_summaries) > 0:
-                    user_last_summary = await summary_user_repository.get_summary_by_user_id_and_number_summary(user_id=user.user_id,
-                                                                                                                number_summary=len(user_summaries))
-                    user_problems = await mental_problems_repository.get_problems_by_summary_id(summary_id=user_last_summary.id)
-                    week_rec_promt = f'''Сгенерируй рекомендацию для пользователя на основе контекста данного чата с данным пользователем.
-                                       Также при генерации рекомендации сконцентрируйся на следующем словаре, где показывается,
-                                         какие проблемы есть, а каких нет у человека\nвот словарь:\n{user_problems}\n
-                                            \nВот список проблем, которые указаны в словаре\n
-                                            1. Самооценка
-                                            2. Эмоции
-                                            3. Отношения
-                                            4. Любовь 
-                                            5. Карьера
-                                            6. Финансы
-                                            7. Здоровье
-                                            8. Самореализация
-                                            9. Выгорание
-                                            10. Духовность")
-                                            Начни со слова "Рекомендация недели:". В твоем ответе 
-                                            должны быть только рекомендации и никакого второстепенного текста'''
-                    ai_rec = await GPT(thread_id=user.mental_ai_threat_id).send_message(user_id=user.user_id,
-                                                                               temperature=user.ai_temperature,
-                                                                               name=user.name,
-                                                                               gender=user.gender,
-                                                                               age=user.age,
-                                                                               text=week_rec_promt)
-                    await main_bot.send_message(text=ai_rec, chat_id=user.user_id)
-                    await users_repository.update_last_rec_week_date_by_user_id(user_id=user.user_id)
-                else:
-                    continue
-
-            else:
-                continue
-        except Exception as e:
-            print(f"\n\nВОЗНИКЛА ОШИБКА ОТПРАВКИ ПОЛЬЗОВАТЕЛЮ {user.user_id}\n\n" + traceback.format_exc() + "\n\n")
-            continue
-
 
 async def send_checkup(main_bot: Bot):
     checkups = await checkup_repository.select_all_active_checkups()

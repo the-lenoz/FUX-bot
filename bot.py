@@ -24,7 +24,7 @@ from handlers.user_handler import user_router
 
 from settings import storage_bot, token_design_level, redis_host
 from utils.activity_middleware import UserActivityMiddleware
-from utils.shedulers_bot import edit_activation_sub, send_week_rec, send_checkup, notification_reminder, \
+from utils.shedulers_bot import edit_activation_sub, send_checkup, notification_reminder, \
     update_power_mode_days, month_checkups
 
 from utils.user_activity_redis import UserActivityRedis
@@ -49,7 +49,6 @@ async def main():
                        paginator_router, standard_router)
     scheduler = AsyncIOScheduler(timezone="Europe/Moscow")
     scheduler.add_job(func=edit_activation_sub, args=[main_bot], trigger="interval", minutes=60, max_instances=20, misfire_grace_time=120)
-    scheduler.add_job(func=send_week_rec, args=[main_bot], trigger="interval", minutes=60, max_instances=20, misfire_grace_time=120)
     scheduler.add_job(func=update_power_mode_days, args=[main_bot], trigger="interval", minutes=30, max_instances=20,
                       misfire_grace_time=120)
     scheduler.add_job(func=send_checkup, args=[main_bot], trigger="interval", minutes=1, max_instances=20,
