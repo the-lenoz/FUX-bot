@@ -68,8 +68,10 @@ async def main():
         replace_existing=True,
     )
     scheduler.start()
-    await main_bot_dispatcher.start_polling(main_bot, admin_bot, polling_timeout=3)
+    main_bot_task = asyncio.create_task(main_bot_dispatcher.start_polling(main_bot, polling_timeout=3))
+    admin_bot_task = asyncio.create_task(admin_bot_dispatcher.start_polling(admin_bot, polling_timeout=3))
 
+    await asyncio.gather(main_bot_task, admin_bot_task)
 
 
 if __name__ == "__main__":
