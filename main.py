@@ -10,6 +10,7 @@ from aiogram.enums import ParseMode
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
+from bots import admin_bot, main_bot
 from db.engine import DatabaseEngine
 from handlers.admin_bot_handlers import admin_router
 from handlers.checkup_handler import checkup_router
@@ -31,8 +32,7 @@ from utils.shedulers_bot import edit_activation_sub, send_checkup, notification_
 from utils.user_activity_redis import UserActivityRedis
 from utils.user_middleware import EventLoggerMiddleware
 
-main_bot = Bot(token=token_design_level, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-admin_bot = Bot(token=token_admin_bot, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+
 
 async def main():
     # redis = await aioredis.from_url(f"redis://{redis_host}", encoding="utf-8", decode_responses=True)
