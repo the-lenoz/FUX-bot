@@ -5,6 +5,7 @@ from os import getenv
 
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.types import FSInputFile
 from dotenv import load_dotenv, find_dotenv
 
 storage_bot = MemoryStorage()
@@ -243,31 +244,31 @@ mental_problems_function = {
     }
 }
 
-mental_helper_photo = "AgACAgIAAxkBAAIVLGf4PQZAaioiIcQJ-RVAIcbSb8gvAALH-TEbvALBS35A4o562evlAQADAgADeQADNgQ"
+mental_helper_photo = FSInputFile("assets/mental_helper_photo.jpg")
 
-exercises_photo = "AgACAgIAAxkBAAIVMmf4PT32Mt65cQpfqQmvd59G1FMuAALI-TEbvALBS1idbaVxrVwnAQADAgADeQADNgQ"
+exercises_photo = FSInputFile("assets/exercises_photo.jpg")
 
-checkups_graphic_photo = "AgACAgIAAxkBAAIVNGf4PW7m1Bn_TZCDMaI8OEYAASt_1AACyfkxG7wCwUtB83au90374gEAAwIAA3kAAzYE"
+checkups_graphic_photo = FSInputFile("assets/checkups_graphic_photo.jpg")
 
-checkups_types_photo = "AgACAgIAAxkBAAIVNmf4PdRlSFhWzoU3tEfQzY1MHnSVAALK-TEbvALBS229tRkfCiwtAQADAgADeQADNgQ"
+checkups_types_photo = FSInputFile("assets/checkups_types_photo.jpg")
 
-temperature_ai_photo = "AgACAgIAAxkBAAIVOGf4PgenKjMydR8FzECg1VkSJbOHAALL-TEbvALBSzuJZUsQVzucAQADAgADeQADNgQ"
+temperature_ai_photo = FSInputFile("assets/temperature_ai_photo.jpg")
 
-universal_ai_photo = "AgACAgIAAxkBAAIVOmf4PlYCpejQ1wAB-pY4R7N0ls3gbAACzPkxG7wCwUuApyqgQK8ljQEAAwIAA3kAAzYE"
+universal_ai_photo = FSInputFile("assets/universal_ai_photo.jpg")
 
-payment_photo = "AgACAgIAAxkBAAIVQGf4Prm4v66nJCvQ7AJ7TVYPmvZQAALO-TEbvALBS2yQ8L-raBlPAQADAgADeQADNgQ"
+payment_photo = FSInputFile("assets/payment_photo.jpg")
 
-menu_photo = "AgACAgIAAxkBAAIVPGf4PouaoenmxBho_TkYYJBX-GWvAALN-TEbvALBSxgRvdgL8ya3AQADAgADeQADNgQ"
+menu_photo = FSInputFile("assets/menu_photo.jpg")
 
-system_setting_photo = "AgACAgIAAxkBAAIVQmf4PuJtMiYyWiOVQ-NogrNpnLIFAALP-TEbvALBS2dQC3-UarUiAQADAgADeQADNgQ"
+system_setting_photo = FSInputFile("assets/system_setting_photo.jpg")
 
-sub_description_photo = "AgACAgIAAxkBAAIT3Wf3AAGV2PfKyIjbAa62HbEXGMjqzAACrfMxG-e7uUuH4hxlRxr2ZQEAAwIAA3kAAzYE"
+sub_description_photo = FSInputFile("assets/sub_description_photo.jpg")
 
-you_fooher_photo = "AgACAgIAAxkBAAIT4Gf3AUKY86PHRJAh9oN5ozOf2cGEAAKu8zEb57u5S0V5ESoJHFbnAQADAgADeQADNgQ"
+you_fooher_photo = FSInputFile("assets/you_fooher_photo.jpg")
 
-sub_description_photo2 = "AgACAgIAAxkBAAIT42f3Aa-MWumK9XTGMn6llxiX56-aAAKv8zEb57u5Sw4LlVPxZp_KAQADAgADeQADNgQ"
+sub_description_photo2 = FSInputFile("assets/sub_description_photo2.jpg")
 
-how_are_you_photo = "AgACAgIAAxkBAAIVzGf44X3GtTQ1cBi14pMguh3ftiqQAALL7zEbvALJS02iZKnOMdsJAQADAgADeQADNgQ"
+how_are_you_photo = FSInputFile("assets/how_are_you_photo.jpg")
 
 photos_pages = {
     1: mental_helper_photo,
