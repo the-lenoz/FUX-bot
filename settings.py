@@ -110,8 +110,8 @@ def is_valid_time(time_str: str) -> bool:
         return False
 
 
-checkup_emotions_photo = "AgACAgIAAxkBAAIDcWfloXCMz5MeVZh2JtOI8QGIrvUxAALm9jEb4OUwSzbwWz6yi_zvAQADAgADeQADNgQ"
-checkup_productivity_photo = "AgACAgIAAxkBAAIDcmfloXlwnsex1ChuwyYTeIft4ipSAALn9jEb4OUwS8V9ktImoGm9AQADAgADeQADNgQ"
+checkup_emotions_photo = FSInputFile("assets/checkup_emotions_photo.jpg")
+checkup_productivity_photo = FSInputFile("assets/checkup_productivity_photo.jpg")
 
 emoji_dict = {
     1: "😖",  # самый недовольный
