@@ -27,7 +27,7 @@ from handlers.user_handler import user_router
 from settings import storage_bot, token_design_level, redis_host, token_admin_bot, storage_admin_bot
 from utils.activity_middleware import UserActivityMiddleware
 from utils.shedulers_bot import edit_activation_sub, send_checkup, notification_reminder, \
-    update_power_mode_days, month_checkups
+    update_power_mode_days, month_checkups, send_weekly_checkups_report
 
 from utils.user_activity_redis import UserActivityRedis
 from utils.user_middleware import EventLoggerMiddleware
@@ -67,6 +67,14 @@ async def main():
         id="monthly_checkups_report",
         replace_existing=True,
     )
+    scheduler.add_job(
+        send_weekly_checkups_report,
+        trigger=CronTrigger(day_of_week=6, hour=23, minute=55),
+        args=[main_bot],
+        id="send_weekly_checkups_report",
+        replace_existing=True
+    )
+
     scheduler.start()
     main_bot_task = asyncio.create_task(main_bot_dispatcher.start_polling(main_bot, polling_timeout=3))
     admin_bot_task = asyncio.create_task(admin_bot_dispatcher.start_polling(admin_bot, polling_timeout=3))

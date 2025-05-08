@@ -87,6 +87,16 @@ class CheckupRepository:
                 query = await session.execute(sql)
                 return query.scalars().all()
 
+    async def get_ended_checkups_per_week_by_user_id(self, user_id: int) -> Sequence[Checkups]:
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                now_date = datetime.datetime.now()
+                sql = select(Checkups).where(and_(Checkups.user_id == user_id, Checkups.end_checkup == True,
+                                                  now_date - Checkups.creation_date <= datetime.timedelta(weeks=1)))
+                query = await session.execute(sql)
+                return query.scalars().all()
+
     async def get_active_checkup_by_user_id_type_checkup(self, user_id: int, type_checkup) -> Checkups:
         async with self.session_maker() as session:
             session: AsyncSession

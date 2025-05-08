@@ -16,6 +16,8 @@ class DaysCheckups(BaseModel, CleanModel):
     day = Column(BigInteger, nullable=False)
     send_checkup = Column(Boolean, nullable=False, default=False)
     date_end_day = Column(DateTime, nullable=True, unique=False)
+    user_id = Column(BigInteger, nullable=False)
+    checkup_type = Column(String, nullable=False)
 
     @property
     def stats(self) -> str:

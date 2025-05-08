@@ -81,20 +81,6 @@ async def enter_emoji_user(call: CallbackQuery, state: FSMContext):
     await days_checkups_repository.update_data_by_day_checkup_id(day_checkup_id=day_checkup_id,
                                                                  points=emoji)
     await call.message.answer("Спасибо за ответ!")
-    if day_checkup.day >= 7:
-        checkup_days = await days_checkups_repository.get_days_checkups_by_checkup_id(checkup_id=checkup_id)
-        # graphic = generate_emotion_chart(emotion_data=[day.points for day in checkup_days], dates=[day.date_end_day for day in checkup_days])
-        graphic = generate_emotion_chart(emotion_data=[checkup_day.points for checkup_day in checkup_days],
-                                         dates=[checkup_day.date_end_day.strftime("%d-%m") for checkup_day in checkup_days],
-                                         checkup_type=type_checkup)
-        graphic_bytes = graphic.getvalue()
-        # Отправка голосового сообщения
-        await call.message.answer_photo(
-            photo=BufferedInputFile(file=graphic_bytes, filename="graphic.png"),
-            caption="Итоговый результат пройденного тобой трекинга",
-            reply_markup=menu_keyboard.as_markup()
-        )
-        await checkup_repository.update_ending_by_checkup_id(checkup_id=checkup_id)
     if update_power_mode:
         await call.message.answer(f"{user.power_mode_days + 1} орех подряд!🌰 Продолжай с трекингом в том же духе")
     await call.message.delete()
@@ -169,9 +155,10 @@ async def update_tine_checkup(message: Message, state: FSMContext):
                                              time_checkup=time_obj)
         user_checkup = await checkup_repository.get_active_checkup_by_user_id_type_checkup(user_id=user_id,
                                                                                             type_checkup=type_checkup)
-        await days_checkups_repository. add_day_checkup(checkup_id=user_checkup.id,
+        await days_checkups_repository.add_day_checkup(checkup_id=user_checkup.id,
                                                        day=1,
-                                                       points=0)
+                                                       points=0,
+                                                       user_id=user_id)
         await message.answer('🐿️Отлично, теперь в это время тебе будет приходить ежедневный трекинг.\n\n'
                              'Если ты захочешь пройти трекинг в другое время,'
                              ' то ты всегда сможешь изменить его в настройках⚙️',

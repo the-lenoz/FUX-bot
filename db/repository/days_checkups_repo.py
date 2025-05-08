@@ -14,13 +14,16 @@ class DaysCheckupRepository:
         self.session_maker = DatabaseEngine().create_session()
 
     async def add_day_checkup(self,
-                          checkup_id: int,
-                          day: int,
-                          points: int) -> bool:
+                            checkup_id: int,
+                            day: int,
+                            points: int,
+                            user_id: int,
+                            checkup_type: str) -> bool:
+
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = DaysCheckups(checkup_id=checkup_id, day=day, points=points)
+                sql = DaysCheckups(checkup_id=checkup_id, day=day, points=points, user_id=user_id, checkup_type=checkup_type)
                 try:
                     session.add(sql)
                 except Exception:
@@ -40,6 +43,14 @@ class DaysCheckupRepository:
             session: AsyncSession
             async with session.begin():
                 sql = select(DaysCheckups).where(or_(DaysCheckups.checkup_id == checkup_id))
+                query = await session.execute(sql)
+                return query.scalars().all()
+
+    async def get_days_checkups_by_user_id(self, user_id: int) -> Sequence[DaysCheckups]:
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = select(DaysCheckups).where(or_(DaysCheckups.user_id == user_id))
                 query = await session.execute(sql)
                 return query.scalars().all()
 
