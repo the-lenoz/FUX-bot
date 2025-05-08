@@ -135,6 +135,7 @@ async def send_weekly_checkups_report(main_bot: Bot):
                 checkup_days = await days_checkups_repository.get_days_checkups_by_user_id(user_id=user.user_id)
                 checkups_report = []
                 now = datetime.datetime.now().date()
+                send = False
                 for weekday in range(now.weekday(), -1, -1):
                     day = now - datetime.timedelta(days=weekday)
                     day_checkup_data = 0
@@ -142,16 +143,18 @@ async def send_weekly_checkups_report(main_bot: Bot):
                         if checkup_day.date_end_day and checkup_day.date_end_day == day \
                                 and checkup_day.checkup_type == checkup_type:
                             day_checkup_data = checkup_day.points
+                            send = True
                     checkups_report.append(day_checkup_data)
 
-                graphic = generate_emotion_chart(emotion_data=checkups_report,
-                                                 dates=["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"],
-                                                 checkup_type=checkup_type)
-                await main_bot.send_photo(
-                    photo=BufferedInputFile(file=graphic.getvalue(), filename="graphic.png"),
-                    chat_id=user.user_id,
-                    caption=f"📙Результаты твоего недельного трекинга!"
-                )
+                if send:
+                    graphic = generate_emotion_chart(emotion_data=checkups_report,
+                                                     dates=["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"],
+                                                     checkup_type=checkup_type)
+                    await main_bot.send_photo(
+                        photo=BufferedInputFile(file=graphic.getvalue(), filename="graphic.png"),
+                        chat_id=user.user_id,
+                        caption=f"📙Результаты твоего недельного трекинга!"
+                    )
             except Exception:
                 continue
 
