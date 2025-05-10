@@ -14,3 +14,7 @@ APScheduler~=3.11.0
 pandas~=2.2.3
 psycopg2-binary
 openpyxl
+pilmoji~=2.0.4
+emoji==1.7
+numpy~=2.2.5
+httpx~=0.28.1

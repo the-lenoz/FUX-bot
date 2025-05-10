@@ -77,7 +77,6 @@ async def enter_user_email(message: types.Message, state: FSMContext, bot: Bot):
     if await is_valid_email(email=message.text):
         await state.clear()
         await message.answer("Отлично, мы сохранили твой email для следующих покупок")
-        await asyncio.sleep(1)
         await users_repository.update_email_by_user_id(user_id=message.from_user.id, email=message.text)
         await message.answer_photo(photo=sub_description_photo, reply_markup=generate_sub_keyboard(mode_type=mode_type,
                                                                        mode_id=mode_id).as_markup())

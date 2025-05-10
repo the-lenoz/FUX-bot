@@ -6,7 +6,7 @@ from aiogram.fsm.state import any_state
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from data.keyboards import menu_keyboard, information_buro_keyboard
+
 from settings import mechanic_dict, photos_pages
 from utils.paginator import MechanicsPaginator
 

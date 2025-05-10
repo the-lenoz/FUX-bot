@@ -58,7 +58,8 @@ async def send_checkup(main_bot: Bot):
                     await days_checkups_repository.add_day_checkup(checkup_id=checkup.id,
                                                                    day=len(days_checkup) + 1,
                                                                    points=0,
-                                                                   user_id=checkup.user_id)
+                                                                   user_id=checkup.user_id,
+                                                                   checkup_type=checkup.type_checkup)
                     checkup_day = await days_checkups_repository.get_active_day_checkup_by_checkup_id(checkup_id=checkup.id)
                 checkup_id, day_checkup_id, type_checkup = checkup.id, checkup_day.id, checkup.type_checkup
                 message_photo = checkup_emotions_photo

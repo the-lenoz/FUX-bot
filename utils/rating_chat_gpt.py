@@ -1,4 +1,5 @@
 import io
+import os
 import traceback
 from os import getenv
 
@@ -7,11 +8,15 @@ from dotenv import find_dotenv, load_dotenv
 from openai import OpenAI
 
 from db.repository import users_repository
+import httpx
+
 
 load_dotenv(find_dotenv("../.env"))
 api_key = getenv("GPT_TOKEN")
 mental_assistant_id = getenv("MENTAL_ASSISTANT_ID")
 standard_assistant_id = getenv("STANDARD_ASSISTANT_ID")
+proxy_url = os.environ.get("OPENAI_PROXY_URL")
+
 
 class GPT:
     def __init__(self, assistant_id: str | None = mental_assistant_id, thread_id: str | None = None):
@@ -21,7 +26,8 @@ class GPT:
         else:
             self.assistant_id = mental_assistant_id
             self.assistant_type = "mental"
-        self.client = OpenAI(api_key=api_key)
+        self.client = OpenAI(api_key=api_key) if proxy_url is None or proxy_url == "" \
+            else OpenAI(http_client=httpx.Client(proxy=proxy_url), api_key=api_key)
         self.assistant = self.client.beta.assistants.retrieve(assistant_id=self.assistant_id)
         self.thread_id = thread_id
 
@@ -45,7 +51,7 @@ class GPT:
         # try:
         have_info = False
         about_user: str = ""
-        if name is not None or name == "NoName":
+        if name is not None and name != "NoName":
             about_user += f"\nИмя: {name}\n"
             have_info = True
         if gender is not None:
@@ -62,7 +68,7 @@ class GPT:
             have_info = True
         if have_info:
             about_user = ("Отвечай с учетом следующей информации о пользователе(используй разные конструкции обращения"
-                          " к пользорвателю, например,  иногда по имени, иногда просто по местоимению) Если ты видишь,"
+                          " к пользователю, например,  иногда по имени, иногда просто по местоимению) Если ты видишь,"
                           " что в предыдущем сообщении ты обращался по имени, то сейчас по имени не обращайся, а также"
                           " не надо каждый раз приветствовать\n\n") + about_user
         if text is None:
@@ -141,7 +147,7 @@ class GPT:
                 messages = self.client.beta.threads.messages.list(
                     thread_id=thread.id
                 )
-                message_text = messages.data[0].content[0].text.value.replace("**", "").replace('"', "'").replace("#", "")
+                message_text = messages.data[0].content[0].text.value
                 if with_audio_transcription:
                     audio_data = await self.generate_audio_by_text(text=message_text)
                     return message_text, audio_data

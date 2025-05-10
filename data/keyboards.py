@@ -1,7 +1,9 @@
+from datetime import timedelta
+
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from db.repository import checkup_repository, days_checkups_repository
+from db.repository import checkup_repository, days_checkups_repository, subscriptions_repository
 from settings import emoji_dict, speed_dict, table_names
 
 admin_kb = [
@@ -104,20 +106,21 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
             break
     if finish_checkup_day is False:
         keyboard.row(InlineKeyboardButton(text="Пройти трекинг", callback_data="go_checkup"))
-    keyboard.row(InlineKeyboardButton(text="⭐Режимы общения", callback_data="mental_helper"))
+    # keyboard.row(InlineKeyboardButton(text="⭐Режимы общения", callback_data="mental_helper"))
     keyboard.row(InlineKeyboardButton(text="📝Упражнения", callback_data="exercises_by_problem"))
     keyboard.add(InlineKeyboardButton(text="🗓️Трекинг состояния", callback_data="checkups"))
     keyboard.row(InlineKeyboardButton(text="📜Механика сервиса", callback_data="all_mechanics"))
     keyboard.add(InlineKeyboardButton(text="⚙️Настройки", callback_data="system_settings"))
     keyboard.row(InlineKeyboardButton(text="🎁 Реферальная система", callback_data="referral_system"))
+    user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
+    if user_sub is None:
+        sub_button_text = "Купить подписку😎️"
+    else:
+        end_date = user_sub.creation_date + timedelta(days=user_sub.time_limit_subscription)
+        sub_button_text = (f"Моя подписка (до"
+                f" {end_date.strftime('%d.%m.%y, %H:%M')} +GMT3)")
+    keyboard.row(InlineKeyboardButton(text=sub_button_text, callback_data="sub_management"))
     return keyboard
-
-information_buro_keyboard = InlineKeyboardBuilder()
-information_buro_keyboard.row(InlineKeyboardButton(text="Режимы общения", callback_data="get_mechanic|mental_helper"))
-information_buro_keyboard.row(InlineKeyboardButton(text="Упражнения", callback_data="get_mechanic|exercises_by_problem"))
-information_buro_keyboard.row(InlineKeyboardButton(text="Трекинг состояния", callback_data="get_mechanic|checkups"))
-information_buro_keyboard.row(InlineKeyboardButton(text="Пригласить друзей", callback_data="get_mechanic|referral_system"))
-information_buro_keyboard.row(menu_button)
 
 
 fast_help_keyboard = InlineKeyboardBuilder()

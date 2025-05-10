@@ -49,7 +49,7 @@ async def standard_message_photo_handler(message: Message, bot: Bot):
     if user is not None and user.full_registration:
         user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
         if user_sub is None:
-            await message.answer("Чтобы общаться со стандартным GPT у тебя должна быть подписка",
+            await message.answer("Чтобы отправлять картинки тебе нужна подписка!",
                                  reply_markup=buy_sub_keyboard.as_markup())
             return
         await bot.send_chat_action(chat_id=message.chat.id, action="typing")
@@ -82,7 +82,7 @@ async def standard_message_voice_handler(message: Message, bot: Bot):
     if user is not None and user.full_registration:
         user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
         if user_sub is None:
-            await message.answer("Чтобы общаться со стандартным GPT у тебя должна быть подписка",
+            await message.answer("Чтобы отправлять голосовые тебе нужна подписка!",
                                  reply_markup=buy_sub_keyboard.as_markup())
             return
         await bot.send_chat_action(chat_id=message.chat.id, action="typing")
@@ -112,7 +112,7 @@ async def standard_message_document_handler(message: Message, bot: Bot):
     if user is not None and user.full_registration:
         user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
         if user_sub is None:
-            await message.answer("Чтобы общаться со стандартным GPT у тебя должна быть подписка",
+            await message.answer("Чтобы отправлять документы тебе нужна подписка!",
                                  reply_markup=buy_sub_keyboard.as_markup())
             return
         await bot.send_chat_action(chat_id=message.chat.id, action="typing")

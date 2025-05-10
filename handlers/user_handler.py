@@ -23,13 +23,14 @@ user_router = Router()
 async def start_menu(call: CallbackQuery, state: FSMContext):
     await state.clear()
     user_id = call.from_user.id
-    user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
+    '''user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
     if user_sub is None:
         text = "На данный момент у тебя базовый режим 🐿️"
     else:
         end_date = user_sub.creation_date + timedelta(days=user_sub.time_limit_subscription)
         text = (f"🐿️Твоя подписка активна до"
-                f" {end_date.strftime('%d.%m.%y, %H:%M')} +GMT3")
+                f" {end_date.strftime('%d.%m.%y, %H:%M')} +GMT3")'''
+    text = "🐿️Для общения - просто пиши, ничего выбирать не надо"
     keyboard = await main_keyboard(user_id=user_id)
     await call.message.answer_photo(photo=menu_photo,
                                     caption=text,
@@ -70,13 +71,7 @@ async def send_user_message(message: Message, state: FSMContext, bot: Bot):
             await message.answer("Какой возрастной диапазон тебе ближе?(Чтобы я мог лучше адаптироваться под твои запросы🧡)",
                                  reply_markup=age_keyboard.as_markup())
     else:
-        user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
-        if user_sub is None:
-            text = "На данный момент у тебя базовый режим 🐿️"
-        else:
-            end_date = user_sub.creation_date + timedelta(days=user_sub.time_limit_subscription)
-            text = (f"🐿️Твоя подписка активна до"
-                    f" {end_date.strftime('%d.%m.%y, %H:%M')} +GMT3")
+        text = "🐿️Для общения - просто пиши, ничего выбирать не надо"
         keyboard = await main_keyboard(user_id=user_id)
         await message.answer_photo(caption=text,
                                    photo=menu_photo,

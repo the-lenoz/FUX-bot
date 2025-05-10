@@ -21,6 +21,7 @@ from handlers.paginator_handlers import paginator_router
 from handlers.payment_handler import payment_router
 from handlers.referral_handler import referral_router
 from handlers.standard_handler import standard_router
+from handlers.sub_management_handler import sub_management_router
 from handlers.system_settings_handler import system_settings_router
 from handlers.user_handler import user_router
 
@@ -46,7 +47,7 @@ async def main():
     main_bot_dispatcher.update.middleware(EventLoggerMiddleware())
     main_bot_dispatcher.include_routers(user_router, referral_router, mental_router,
                        payment_router, checkup_router,information_router, system_settings_router, exercises_router,
-                       paginator_router, standard_router)
+                       paginator_router, standard_router, sub_management_router)
 
     print(await admin_bot.get_me())
     await admin_bot.delete_webhook(drop_pending_updates=True)
