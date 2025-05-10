@@ -24,6 +24,7 @@ class SubscriptionsRepository:
                                      active=active)
                 try:
                     session.add(user)
+                    await session.commit()
                 except Exception:
                     return False
                 return True

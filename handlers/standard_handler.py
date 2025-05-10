@@ -3,13 +3,14 @@ import html
 import io
 
 from aiogram import Router, F, Bot
-from aiogram.types import Message
+from aiogram.types import Message, Poll
 
 from data.keyboards import buy_sub_keyboard
 # from data.keyboards import choice_keyboard
 # from data.messages import start_message, wait_manager, update_language
 from db.repository import users_repository, ai_requests_repository, subscriptions_repository
 from utils.rating_chat_gpt import GPT
+from utils.shedulers_bot import send_weekly_checkups_report
 
 standard_router = Router()
 
@@ -107,6 +108,7 @@ async def standard_message_voice_handler(message: Message, bot: Bot):
 
 @standard_router.message(F.document)
 async def standard_message_document_handler(message: Message, bot: Bot):
+    await send_weekly_checkups_report(bot)
     user_id = message.from_user.id
     user = await users_repository.get_user_by_user_id(user_id=user_id)
     if user is not None and user.full_registration:
@@ -140,4 +142,3 @@ async def standard_message_document_handler(message: Message, bot: Bot):
                                                      has_files=True,
                                                      file_id=message.document.file_id)
         # await bot.delete_message(message_id=delete_message.message_id, chat_id=user_id)
-

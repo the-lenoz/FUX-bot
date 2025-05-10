@@ -24,6 +24,7 @@ class CheckupRepository:
                 sql = Checkups(user_id=user_id, number_checkup=number_checkup, type_checkup=type_checkup, time_checkup=time_checkup)
                 try:
                     session.add(sql)
+                    await session.commit()
                 except Exception:
                     return False
                 return True
@@ -150,3 +151,4 @@ class CheckupRepository:
                 await session.execute(
                     delete(Checkups).where(Checkups.id == checkup_id)
                 )
+                await session.commit()

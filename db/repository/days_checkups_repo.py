@@ -26,6 +26,7 @@ class DaysCheckupRepository:
                 sql = DaysCheckups(checkup_id=checkup_id, day=day, points=points, user_id=user_id, checkup_type=checkup_type)
                 try:
                     session.add(sql)
+                    await session.commit()
                 except Exception:
                     return False
                 return True
@@ -50,7 +51,7 @@ class DaysCheckupRepository:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = select(DaysCheckups).where(or_(DaysCheckups.user_id == user_id))
+                sql = select(DaysCheckups).where(DaysCheckups.user_id == user_id)
                 query = await session.execute(sql)
                 return query.scalars().all()
 
