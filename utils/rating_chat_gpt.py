@@ -11,7 +11,7 @@ from db.repository import users_repository
 import httpx
 
 
-load_dotenv(find_dotenv("../.env"))
+load_dotenv(find_dotenv())
 api_key = getenv("GPT_TOKEN")
 mental_assistant_id = getenv("MENTAL_ASSISTANT_ID")
 standard_assistant_id = getenv("STANDARD_ASSISTANT_ID")
