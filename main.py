@@ -1,12 +1,6 @@
 import asyncio
-import datetime
-import traceback
-import types
 
-import aioredis
-from aiogram import Dispatcher, Bot
-from aiogram.client.default import DefaultBotProperties
-from aiogram.enums import ParseMode
+from aiogram import Dispatcher
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
@@ -24,15 +18,10 @@ from handlers.standard_handler import standard_router
 from handlers.sub_management_handler import sub_management_router
 from handlers.system_settings_handler import system_settings_router
 from handlers.user_handler import user_router
-
-from settings import storage_bot, token_design_level, redis_host, token_admin_bot, storage_admin_bot
-from utils.activity_middleware import UserActivityMiddleware
+from settings import storage_bot, storage_admin_bot
 from utils.shedulers_bot import edit_activation_sub, send_checkup, notification_reminder, \
     update_power_mode_days, month_checkups, send_weekly_checkups_report
-
-from utils.user_activity_redis import UserActivityRedis
 from utils.user_middleware import EventLoggerMiddleware
-
 
 
 async def main():
