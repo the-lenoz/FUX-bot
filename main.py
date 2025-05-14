@@ -1,4 +1,6 @@
 import asyncio
+import signal
+import sys
 
 from aiogram import Dispatcher
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -69,7 +71,14 @@ async def main():
     main_bot_task = asyncio.create_task(main_bot_dispatcher.start_polling(main_bot, polling_timeout=3))
     admin_bot_task = asyncio.create_task(admin_bot_dispatcher.start_polling(admin_bot, polling_timeout=3))
 
+    loop = asyncio.get_event_loop()
+    loop.add_signal_handler(signal.SIGTERM, stop, None)
     await asyncio.gather(main_bot_task, admin_bot_task)
+
+
+def stop():
+    sys.exit(0)
+
 
 
 if __name__ == "__main__":

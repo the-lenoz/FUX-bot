@@ -172,7 +172,7 @@ async def answer_fast_help_question (message: Message, state: FSMContext, bot: B
 
 @mental_router.callback_query(F.data.startswith("get_recommendation"), any_state)
 async def get_rec_after_sub(call: CallbackQuery, state: FSMContext, bot: Bot):
-    await bot.send_chat_action(chat_id=message.chat.id, action="typing")
+    await bot.send_chat_action(chat_id=call.message.chat.id, action="typing")
     user_id = call.from_user.id
     call_data = call.data.split("|")
     mode_id = int(call_data[2])

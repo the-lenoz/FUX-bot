@@ -13,6 +13,7 @@ from data.keyboards import next_politic_keyboard, have_promo_keyboard, cancel_ke
 # from data.messages import start_message, wait_manager, update_language
 from db.repository import users_repository, referral_system_repository, \
     promo_activations_repository, subscriptions_repository
+from handlers.standard_handler import user_request_handler
 from settings import InputMessage, photos_pages, menu_photo
 from utils.paginator import MechanicsPaginator
 
@@ -23,19 +24,14 @@ user_router = Router()
 async def start_menu(call: CallbackQuery, state: FSMContext):
     await state.clear()
     user_id = call.from_user.id
-    '''user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
-    if user_sub is None:
-        text = "На данный момент у тебя базовый режим 🐿️"
-    else:
-        end_date = user_sub.creation_date + timedelta(days=user_sub.time_limit_subscription)
-        text = (f"🐿️Твоя подписка активна до"
-                f" {end_date.strftime('%d.%m.%y, %H:%M')} +GMT3")'''
     text = "🐿️Для общения - просто пиши, ничего выбирать не надо"
     keyboard = await main_keyboard(user_id=user_id)
     await call.message.answer_photo(photo=menu_photo,
                                     caption=text,
                                     reply_markup=keyboard.as_markup())
     await call.message.delete()
+    await user_request_handler.psy_handler.exit(user_id)
+    await user_request_handler.general_handler.exit(user_id)
 
 
 
@@ -76,6 +72,8 @@ async def send_user_message(message: Message, state: FSMContext, bot: Bot):
         await message.answer_photo(caption=text,
                                    photo=menu_photo,
                                     reply_markup=keyboard.as_markup())
+    await user_request_handler.psy_handler.exit(user_id)
+    await user_request_handler.general_handler.exit(user_id)
 
 
 @user_router.callback_query(F.data == "confirm_politic")

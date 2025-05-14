@@ -20,6 +20,7 @@ class UserRepository:
                 user = Users(user_id=user_id, username=username, gender=gender, age=age, name=name)
                 try:
                     session.add(user)
+                    await session.commit()
                 except Exception:
                     return False
                 return True
@@ -169,6 +170,26 @@ class UserRepository:
             async with session.begin():
                 sql = update(Users).values({
                     Users.power_mode_days: new_days
+                }).where(or_(Users.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
+    async def update_mental_data_by_user_id(self, user_id: int, new_mental_data: str):
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(Users).values({
+                    Users.mental_data: new_mental_data
+                }).where(or_(Users.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
+    async def used_free_recommendation(self, user_id: int):
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(Users).values({
+                    Users.used_free_recommendation: True
                 }).where(or_(Users.user_id == user_id))
                 await session.execute(sql)
                 await session.commit()
