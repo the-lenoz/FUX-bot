@@ -327,7 +327,7 @@ class PsyHandler(AIHandler):
 
                 else:
                     photo_recommendation = generate_blurred_image_with_text(text=recommendation, enable_blur=True)
-                    await main_bot.send_message(
+                    await main_bot.send_photo(
                         user_id,
                         photo=BufferedInputFile(file=photo_recommendation, filename=f"recommendation.png"),
                         caption="🌰<i>Рекомендация</i> готова, но чтобы получить её, нужна <b>подписка</b>",
