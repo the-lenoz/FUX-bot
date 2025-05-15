@@ -1,7 +1,7 @@
 from db.repository import users_repository
 
 
-async def get_user_description(user_id: int) -> str:
+async def get_user_description(user_id: int, is_psy: bool = False) -> str:
     user = await users_repository.get_user_by_user_id(user_id)
 
     description = []
@@ -18,7 +18,7 @@ async def get_user_description(user_id: int) -> str:
     elif user.ai_temperature == 1.3:
         description.append("\nUser is sensitive.\n")
 
-    if user.mental_data:
+    if user.mental_data and is_psy:
         description.append(user.mental_data)
 
     return "".join(description)

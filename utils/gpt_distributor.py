@@ -177,7 +177,7 @@ class AIHandler:
             await openAI_client.beta.threads.messages.create(
                 thread_id=thread.id,
                 role="user",
-                content=f"Description of the client:\n{await get_user_description(request.user_id)}",
+                content=f"Description of the client:\n{await get_user_description(request.user_id, isinstance(self, PsyHandler))}",
             )
 
 
