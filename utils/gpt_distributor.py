@@ -382,7 +382,8 @@ class PsyHandler(AIHandler):
                     user_id,
                     new_mental_data
                 )
-            await openAI_client.beta.threads.messages.delete(message.id)
+            await openAI_client.beta.threads.messages.delete(message.id,
+                                                             thread.id)
 
     async def exit(self, user_id: int):
         await self.update_user_mental_data(user_id)
