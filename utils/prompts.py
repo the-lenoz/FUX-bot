@@ -26,4 +26,12 @@ Respond with only "false" if the document should be sent to a regular chatbot.""
 
 
 RECOMMENDATION_PROMPT = """Основываясь на всех проблемах пользователя, дай строго один самый важный совет, который поможет ему решить проблему.
-Действуй как психолог. Опиши всё подробно."""
+Действуй как психолог. Опиши всё подробно. Не задавай вопросов, пользователь не сможет ответить. Рекомендация должна быть готовой, как домашнее задание."""
+
+
+MENTAL_DATA_PROVIDER_PROMPT = """Analyze all information about user. Based on it, act as the psychotherapist and write a complete, full user description.
+
+This description should be useful for the psychologist to know all the information and help the user.
+
+It should contain data about all user's mental problems, his therapy and previous consultations."""
+

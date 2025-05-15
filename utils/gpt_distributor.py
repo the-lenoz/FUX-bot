@@ -1,6 +1,5 @@
 import base64
 import tempfile
-from io import BytesIO
 
 import openai
 from aiogram.types import BufferedInputFile, FSInputFile
@@ -12,8 +11,10 @@ from db.repository import users_repository
 from utils.gpt_client import openAI_client, BASIC_MODEL, TRANSCRIPT_MODEL, mental_assistant_id, standard_assistant_id, \
     wait_for_run_completion, TTS_MODEL
 from utils.photo_recommendation import generate_blurred_image_with_text
-from utils.prompts import TEXT_CHECK_PROMPT, IMAGE_CHECK_PROMPT, DOCUMENT_CHECK_PROMPT, RECOMMENDATION_PROMPT
+from utils.prompts import TEXT_CHECK_PROMPT, IMAGE_CHECK_PROMPT, DOCUMENT_CHECK_PROMPT, RECOMMENDATION_PROMPT, \
+    MENTAL_DATA_PROVIDER_PROMPT
 from utils.subscription import check_is_subscribed
+from utils.user_properties import get_user_description
 
 
 class UserFile(BaseModel):
@@ -173,6 +174,11 @@ class AIHandler:
         else:
             thread = await openAI_client.beta.threads.create()
             self.active_threads[request.user_id] = thread.id
+            await openAI_client.beta.threads.messages.create(
+                thread_id=thread.id,
+                role="user",
+                content=f"Description of the client:\n{await get_user_description(request.user_id)}",
+            )
 
 
         await wait_for_run_completion(thread.id)
@@ -201,6 +207,7 @@ class AIHandler:
                 )
             elif request.file.file_type == "voice":
                 text = await UserRequestHandler.get_transcription(request.file)
+                await main_bot.send_chat_action(chat_id=request.user_id, action="typing")
                 if content:
                     content[0]["text"] += text
                 elif text:
@@ -222,7 +229,9 @@ class AIHandler:
                     "tools": [{"type": "file_search"}]
                 }]
 
-        if not content:
+        if content:
+            pass
+        else:
             content = "Расскажи о себе"
 
         await openAI_client.beta.threads.messages.create(
@@ -236,6 +245,8 @@ class AIHandler:
             thread_id=thread.id,
             assistant_id=self.assistant_id
         )
+
+        await main_bot.send_chat_action(chat_id=request.user_id, action="typing")
 
         if run.status == 'completed':
             messages = await openAI_client.beta.threads.messages.list(
@@ -271,18 +282,22 @@ class PsyHandler(AIHandler):
         self.messages_count[request.user_id] += 1
 
         if self.messages_count[request.user_id] <= self.MESSAGES_LIMIT or await check_is_subscribed(request.user_id):
+            await main_bot.send_chat_action(chat_id=request.user_id, action="typing")
             await super().handle(request)
+            await self.update_user_mental_data(request.user_id)
         else:
             await self.provide_recommendations(request.user_id)
 
 
 
     async def provide_recommendations(self, user_id: int):
+        await main_bot.send_chat_action(chat_id=user_id, action="typing")
         user = await users_repository.get_user_by_user_id(user_id)
         is_subscribed = await check_is_subscribed(user_id)
 
         if self.active_threads.get(user_id):
             thread = await openAI_client.beta.threads.retrieve(self.active_threads[user_id])
+            await wait_for_run_completion(thread.id)
 
             await openAI_client.beta.threads.messages.create(
                 thread_id=thread.id,
@@ -294,6 +309,8 @@ class PsyHandler(AIHandler):
                 thread_id=thread.id,
                 assistant_id=self.assistant_id
             )
+
+            await main_bot.send_chat_action(chat_id=user_id, action="typing")
 
             if run.status == 'completed':
                 messages = await openAI_client.beta.threads.messages.list(
@@ -334,6 +351,39 @@ class PsyHandler(AIHandler):
                         reply_markup=get_rec_keyboard(mode_id=0, mode_type="fast_help").as_markup())
 
         await self.exit(user_id)
+
+    async def update_user_mental_data(self, user_id: int):
+        user = await users_repository.get_user_by_user_id(user_id)
+
+        request_text = MENTAL_DATA_PROVIDER_PROMPT + "\n\nCurrent information about user:\n" + user.mental_data
+
+        if self.active_threads.get(user_id):
+            thread = await openAI_client.beta.threads.retrieve(self.active_threads[user_id])
+            await wait_for_run_completion(thread.id)
+
+            message = await openAI_client.beta.threads.messages.create(
+                thread_id=thread.id,
+                role="user",
+                content=request_text,
+            )
+
+            run = await openAI_client.beta.threads.runs.create_and_poll(
+                thread_id=thread.id,
+                assistant_id=self.assistant_id
+            )
+
+            if run.status == 'completed':
+                messages = await openAI_client.beta.threads.messages.list(
+                    thread_id=thread.id,
+                    run_id=run.id  # Получить сообщения только из этого Run
+                )
+
+                new_mental_data = messages.data[0].content[0].text.value
+                await users_repository.update_mental_data_by_user_id(
+                    user_id,
+                    new_mental_data
+                )
+            await openAI_client.beta.threads.messages.delete(message.id)
 
     async def exit(self, user_id: int):
         await super().exit(user_id)
