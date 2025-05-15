@@ -2,6 +2,7 @@ import base64
 import tempfile
 
 import openai
+from aiogram.enums import ParseMode
 from aiogram.types import BufferedInputFile, FSInputFile
 from pydantic import BaseModel
 
@@ -255,7 +256,8 @@ class AIHandler:
             )
             await main_bot.send_message(
                 request.user_id,
-                messages.data[0].content[0].text.value
+                messages.data[0].content[0].text.value,
+                parse_mode=ParseMode.MARKDOWN_V2
             )
 
 
@@ -323,7 +325,8 @@ class PsyHandler(AIHandler):
                 if not user.used_free_recommendation or is_subscribed:
                     await main_bot.send_message(
                         user_id,
-                        recommendation
+                        recommendation,
+                        parse_mode=ParseMode.MARKDOWN_V2
                     ) # Дать рекомендации
                     response = await openAI_client.audio.speech.create(
                         model=TTS_MODEL,

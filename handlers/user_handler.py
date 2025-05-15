@@ -40,6 +40,8 @@ async def start_menu(call: CallbackQuery, state: FSMContext):
 async def send_user_message(message: Message, state: FSMContext, bot: Bot):
     user = await users_repository.get_user_by_user_id(message.from_user.id)
     user_id = message.from_user.id
+    await user_request_handler.psy_handler.exit(user_id)
+    await user_request_handler.general_handler.exit(user_id)
     # quote = "> Это цитата, выделенная с помощью MarkdownV2"
     # explanation = "Это обучающий текст, который объясняет смысл приведённой цитаты\."
     #
@@ -72,8 +74,7 @@ async def send_user_message(message: Message, state: FSMContext, bot: Bot):
         await message.answer_photo(caption=text,
                                    photo=menu_photo,
                                     reply_markup=keyboard.as_markup())
-    await user_request_handler.psy_handler.exit(user_id)
-    await user_request_handler.general_handler.exit(user_id)
+
 
 
 @user_router.callback_query(F.data == "confirm_politic")
