@@ -8,6 +8,7 @@ from data.keyboards import  menu_keyboard, menu_button, ai_temperature_keyboard
 from db.repository import users_repository, checkup_repository, subscriptions_repository
 from settings import InputMessage, mechanic_text, mechanic_checkup, is_valid_email, fast_help_promt, go_deeper_promt, \
     ai_temperature_text, is_valid_time, temperature_ai_photo
+from utils.gpt_distributor import user_request_handler
 
 system_settings_router = Router()
 
@@ -29,6 +30,8 @@ async def system_settings_callback(call: CallbackQuery, state: FSMContext):
                               "🌰доступно только в платной версии.",
                               reply_markup=keyboard.as_markup())
     await call.message.delete()
+    await user_request_handler.psy_handler.exit(user_id)
+    await user_request_handler.general_handler.exit(user_id)
 
 
 @system_settings_router.callback_query(F.data.startswith("settings"), any_state)
@@ -56,6 +59,8 @@ async def set_system_settings(call: CallbackQuery, state: FSMContext):
                                   "режим общения, так как у тебя нет подписки 🌰",
                                   reply_markup=menu_keyboard.as_markup())
         await call.message.delete()
+    await user_request_handler.psy_handler.exit(user_id)
+    await user_request_handler.general_handler.exit(user_id)
 
 
 @system_settings_router.callback_query(F.data.startswith("ai_temperature"), any_state)
@@ -66,6 +71,8 @@ async def ai_temperature_callback(call: CallbackQuery, state: FSMContext):
     await call.message.answer("Отлично, настройки твоего ассистента изменены!",
                               reply_markup=menu_keyboard.as_markup())
     await call.message.delete()
+    await user_request_handler.psy_handler.exit(user_id)
+    await user_request_handler.general_handler.exit(user_id)
 
 
 @system_settings_router.callback_query(F.data.startswith("edit_checkup"), any_state)
@@ -79,6 +86,8 @@ async def edit_checkup_time_call(call: CallbackQuery, state: FSMContext):
                               f"\n\nСейчас данный чекап отправляется в {checkup.time_checkup.strftime('%H:%M')}",
                               reply_markup=menu_keyboard.as_markup())
     await call.message.delete()
+    await user_request_handler.psy_handler.exit(user_id)
+    await user_request_handler.general_handler.exit(user_id)
 
 
 @system_settings_router.message(F.text, InputMessage.edit_time_checkup)
@@ -98,3 +107,5 @@ async def enter_new_checkup_time(message: Message, state: FSMContext):
     await state.update_data(checkup_id=checkup_id)
     await message.answer("Введенное тобой время имеет неправильный формат. Пример - 13:45. Попробуй еще раз",
                          reply_markup=menu_keyboard.as_markup())
+    await user_request_handler.psy_handler.exit(user_id)
+    await user_request_handler.general_handler.exit(user_id)
