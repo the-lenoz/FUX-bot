@@ -33,5 +33,11 @@ MENTAL_DATA_PROVIDER_PROMPT = """Analyze all information about user. Based on it
 
 This description should be useful for the psychologist to know all the information and help the user.
 
-It should contain data about all user's mental problems, his therapy and previous consultations."""
+It should contain data about all user's mental problems, his therapy and previous consultations.
+
+Provide structured output - each paragraph has to contain problem title and its description. 
+
+Never drop any data - your output has to contain all current information plus new from dialog context.
+
+Don't ask anything. I can't answer you. Just write all as possible."""
 
