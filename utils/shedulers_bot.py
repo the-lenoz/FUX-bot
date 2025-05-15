@@ -2,25 +2,18 @@ import asyncio
 import datetime
 import traceback
 
-
-from aiogram import Dispatcher, Bot
+from aiogram import Bot
 from aiogram.types import BufferedInputFile
 
 from data.keyboards import buy_sub_keyboard, emotions_keyboard, productivity_keyboard
-from db.engine import DatabaseEngine
-from db.repository import subscriptions_repository, users_repository, fast_help_repository, go_deeper_repository, \
-    fast_help_dialogs_repository, fast_help_dialog_repository, mental_problems_repository, summary_user_repository, \
-    checkup_repository, days_checkups_repository, events_repository
+from db.repository import subscriptions_repository, users_repository, checkup_repository, days_checkups_repository, \
+    events_repository
 from settings import payment_photo, checkup_emotions_photo, checkup_productivity_photo, how_are_you_photo, emoji_dict, \
     speed_dict
-
-from utils.rating_chat_gpt import GPT
-from utils.timeranges import is_date_in_this_week
 from utils.сheckup_stat import generate_emotion_chart
 
 
 async def edit_activation_sub(main_bot: Bot):
-    # print("хуила")
     subs = await subscriptions_repository.select_all_active_subscriptions()
     now_date = datetime.datetime.now()
     for sub in subs:
@@ -206,13 +199,17 @@ async def update_power_mode_days(main_bot: Bot):
             if user_active_checkups is not None and len(user_active_checkups) > 0:
                 max_date = None
                 for checkup in user_active_checkups:
-                    last_ended_day = await days_checkups_repository.get_latest_ended_day_checkup_by_checkup_id(checkup_id=checkup.id)
-                    if last_ended_day is not None and (max_date is None or last_ended_day.date_end_day > max_date):
-                        max_date = last_ended_day.date_end_day
-                if max_date is not None and ((now_date - max_date) > datetime.timedelta(hours=24)) and user.power_mode_days != 0:
-                    await users_repository.update_power_mode_days_by_user_id(user_id=user.user_id, new_days=0)
-                    await main_bot.send_message(chat_id=user.user_id, text="Ох… твои орехи раскололись🌰, но за счёт"
-                                                                           " ежедневного трекинга можно начать снова")
+                    if max_date is not None and ((now_date - checkup.last_date_send) > datetime.timedelta(hours=24)) \
+                            and user.power_mode_days != 0:
+                        await users_repository.update_power_mode_days_by_user_id(user_id=user.user_id, new_days=0)
+                        await main_bot.send_message(chat_id=user.user_id,
+                                                    text="Ох… твои орехи раскололись🌰, но "
+                                                         "можно начать трекинг "
+                                                        + (
+                                                        "эмоций"
+                                                        if checkup.type_checkup == "emotions" else "продуктивности") +
+                                                         " снова"
+                                                    )
         except Exception as e:
             print(f"\n\nВОЗНИКЛА ОШИБКА ОТПРАВКИ ПОЛЬЗОВАТЕЛЮ {user.user_id}\n\n" + traceback.format_exc() + "\n\n")
             continue

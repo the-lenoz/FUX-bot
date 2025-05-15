@@ -93,3 +93,14 @@ class DaysCheckupRepository:
                 )
                 result = await session.execute(sql)
                 return result.scalars().first()
+
+    async def get_latest_send_day_checkup_by_checkup_id(self, checkup_id: int) -> DaysCheckups | None:
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = (
+                    select(DaysCheckups).where(and_(DaysCheckups.checkup_id == checkup_id,
+                                                    DaysCheckups.creation_date.isnot(None))).order_by(DaysCheckups.creation_date.desc())
+                )
+                result = await session.execute(sql)
+                return result.scalars().first()
