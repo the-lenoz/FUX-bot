@@ -284,7 +284,6 @@ class PsyHandler(AIHandler):
         if self.messages_count[request.user_id] <= self.MESSAGES_LIMIT or await check_is_subscribed(request.user_id):
             await main_bot.send_chat_action(chat_id=request.user_id, action="typing")
             await super().handle(request)
-            await self.update_user_mental_data(request.user_id)
         else:
             await self.provide_recommendations(request.user_id)
 
@@ -386,6 +385,7 @@ class PsyHandler(AIHandler):
             await openAI_client.beta.threads.messages.delete(message.id)
 
     async def exit(self, user_id: int):
+        await self.update_user_mental_data(user_id)
         await super().exit(user_id)
         self.messages_count[user_id] = 0
 
