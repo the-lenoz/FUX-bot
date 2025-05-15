@@ -1,12 +1,14 @@
 import asyncio
+import logging
 import signal
 import sys
+from logging import Logger
 
 from aiogram import Dispatcher
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-from bots import admin_bot, main_bot
+from bots import admin_bot, main_bot, main_bot_dispatcher, admin_bot_dispatcher
 from db.engine import DatabaseEngine
 from handlers.admin_bot_handlers import admin_router
 from handlers.checkup_handler import checkup_router
@@ -26,15 +28,16 @@ from utils.shedulers_bot import edit_activation_sub, send_checkup, notification_
 from utils.user_middleware import EventLoggerMiddleware
 
 
+logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+logger = logging.getLogger(__name__)
+
 async def main():
-    # redis = await aioredis.from_url(f"redis://{redis_host}", encoding="utf-8", decode_responses=True)
-    # activity_tracker = UserActivityRedis(redis=redis)
     db_engine = DatabaseEngine()
     # try:
     await db_engine.proceed_schemas()
     print(await main_bot.get_me())
     await main_bot.delete_webhook(drop_pending_updates=True)
-    main_bot_dispatcher = Dispatcher(storage=storage_bot)
+
     main_bot_dispatcher.update.middleware(EventLoggerMiddleware())
     main_bot_dispatcher.include_routers(user_router, referral_router, mental_router,
                        payment_router, checkup_router,information_router, system_settings_router, exercises_router,
@@ -42,7 +45,7 @@ async def main():
 
     print(await admin_bot.get_me())
     await admin_bot.delete_webhook(drop_pending_updates=True)
-    admin_bot_dispatcher = Dispatcher(storage=storage_admin_bot)
+
     admin_bot_dispatcher.include_routers(admin_router)
 
     scheduler = AsyncIOScheduler(timezone="Europe/Moscow")
@@ -72,13 +75,25 @@ async def main():
     admin_bot_task = asyncio.create_task(admin_bot_dispatcher.start_polling(admin_bot, polling_timeout=3))
 
     loop = asyncio.get_event_loop()
-    loop.add_signal_handler(signal.SIGTERM, stop, None)
+    loop.add_signal_handler(signal.SIGTERM, lambda: asyncio.create_task(stop(loop, signal.SIGTERM)))
+    loop.add_signal_handler(signal.SIGINT, lambda: asyncio.create_task(stop(loop, signal.SIGINT)))
     await asyncio.gather(main_bot_task, admin_bot_task)
 
 
-def stop():
-    sys.exit(0)
+async def stop(loop, sig):
+    logger.info(f"Received signal {sig.name if sig else 'None'}, shutting down gracefully...")
 
+    # Остановить поллинг диспетчера
+    await main_bot_dispatcher.stop_polling()
+    await admin_bot_dispatcher.stop_polling()
+
+    # Выполнить очистку ресурсов, если необходимо
+    await main_bot.close()
+    await admin_bot.close()
+
+    # Остановить цикл событий asyncio
+    loop.stop()
+    logger.info("Event loop stopped.")
 
 
 if __name__ == "__main__":
