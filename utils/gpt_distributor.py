@@ -374,36 +374,37 @@ class PsyHandler(AIHandler):
 
     async def update_user_mental_data(self, user_id: int):
         user = await users_repository.get_user_by_user_id(user_id)
+        if user:
 
-        request_text = MENTAL_DATA_PROVIDER_PROMPT + "\n\nCurrent information about user:\n" + str(user.mental_data)
+            request_text = MENTAL_DATA_PROVIDER_PROMPT + "\n\nCurrent information about user:\n" + str(user.mental_data)
 
-        if self.active_threads.get(user_id):
-            thread = await openAI_client.beta.threads.retrieve(self.active_threads[user_id])
-            await wait_for_run_completion(thread.id)
+            if self.active_threads.get(user_id):
+                thread = await openAI_client.beta.threads.retrieve(self.active_threads[user_id])
+                await wait_for_run_completion(thread.id)
 
-            message = await openAI_client.beta.threads.messages.create(
-                thread_id=thread.id,
-                role="user",
-                content=request_text,
-            )
-
-            run = await openAI_client.beta.threads.runs.create_and_poll(
-                thread_id=thread.id,
-                assistant_id=self.assistant_id
-            )
-
-            if run.status == 'completed':
-                messages = await openAI_client.beta.threads.messages.list(
+                message = await openAI_client.beta.threads.messages.create(
                     thread_id=thread.id,
-                    run_id=run.id  # Получить сообщения только из этого Run
+                    role="user",
+                    content=request_text,
                 )
 
-                new_mental_data = messages.data[0].content[0].text.value
-                await users_repository.update_mental_data_by_user_id(
-                    user_id,
-                    new_mental_data
+                run = await openAI_client.beta.threads.runs.create_and_poll(
+                    thread_id=thread.id,
+                    assistant_id=self.assistant_id
                 )
-            await openAI_client.beta.threads.messages.delete(message_id=message.id, thread_id=thread.id)
+
+                if run.status == 'completed':
+                    messages = await openAI_client.beta.threads.messages.list(
+                        thread_id=thread.id,
+                        run_id=run.id  # Получить сообщения только из этого Run
+                    )
+
+                    new_mental_data = messages.data[0].content[0].text.value
+                    await users_repository.update_mental_data_by_user_id(
+                        user_id,
+                        new_mental_data
+                    )
+                await openAI_client.beta.threads.messages.delete(message_id=message.id, thread_id=thread.id)
 
     async def exit(self, user_id: int):
         await self.update_user_mental_data(user_id)
