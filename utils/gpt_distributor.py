@@ -9,10 +9,10 @@ from bots import main_bot
 from data.keyboards import get_rec_keyboard
 from db.repository import users_repository
 from utils.gpt_client import openAI_client, BASIC_MODEL, TRANSCRIPT_MODEL, mental_assistant_id, standard_assistant_id, \
-    wait_for_run_completion, TTS_MODEL
+    wait_for_run_completion, TTS_MODEL, ADVANCED_MODEL
 from utils.photo_recommendation import generate_blurred_image_with_text
-from utils.prompts import TEXT_CHECK_PROMPT, IMAGE_CHECK_PROMPT, DOCUMENT_CHECK_PROMPT, RECOMMENDATION_PROMPT, \
-    MENTAL_DATA_PROVIDER_PROMPT
+from utils.prompts import TEXT_CHECK_PROMPT_FORMAT, IMAGE_CHECK_PROMPT, DOCUMENT_CHECK_PROMPT, RECOMMENDATION_PROMPT, \
+    MENTAL_DATA_PROVIDER_PROMPT, EXERCISE_PROMPT_FORMAT
 from utils.subscription import check_is_subscribed
 from utils.user_properties import get_user_description
 
@@ -95,7 +95,7 @@ class UserRequestHandler:
         try:
             response = await openAI_client.responses.create(
                 model=BASIC_MODEL,
-                input=TEXT_CHECK_PROMPT.format(text=text),
+                input=TEXT_CHECK_PROMPT_FORMAT.format(text=text),
                 max_output_tokens=32
             )
             return response.output_text == 'true'
@@ -287,8 +287,6 @@ class PsyHandler(AIHandler):
         else:
             await self.provide_recommendations(request.user_id)
 
-
-
     async def provide_recommendations(self, user_id: int):
         await main_bot.send_chat_action(chat_id=user_id, action="typing")
         user = await users_repository.get_user_by_user_id(user_id)
@@ -350,6 +348,31 @@ class PsyHandler(AIHandler):
                         reply_markup=get_rec_keyboard(mode_id=0, mode_type="fast_help").as_markup())
 
         await self.exit(user_id)
+
+    async def generate_exercise(self, user_id: int):
+        await self.exit(user_id)
+
+        user_description = await get_user_description(user_id, True)
+
+        response = await openAI_client.responses.create(
+            input=EXERCISE_PROMPT_FORMAT.format(user_description=user_description),
+            model=ADVANCED_MODEL if await check_is_subscribed(user_id) else BASIC_MODEL,
+        )
+
+        exercise = response.output_text
+
+        response = await openAI_client.responses.create(
+            input=MENTAL_DATA_PROVIDER_PROMPT + "\n\nПользователю было дано задание КПТ:\n" + exercise,
+            model=ADVANCED_MODEL if await check_is_subscribed(user_id) else BASIC_MODEL,
+        )
+
+        await users_repository.update_mental_data_by_user_id(
+            user_id,
+            response.output_text
+        )
+
+        return exercise
+
 
     async def update_user_mental_data(self, user_id: int):
         user = await users_repository.get_user_by_user_id(user_id)
