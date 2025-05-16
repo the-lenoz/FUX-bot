@@ -217,7 +217,7 @@ class AIHandler:
                     })
             elif request.file.file_type == "document":
                 document_file = await openAI_client.files.create(
-                    file=("document.pdf", request.file.file_bytes),
+                    file=(request.file.filename, request.file.file_bytes),
                     purpose="assistants"
                 )
 
