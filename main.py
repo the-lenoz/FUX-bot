@@ -39,9 +39,9 @@ async def main():
     await main_bot.delete_webhook(drop_pending_updates=True)
 
     main_bot_dispatcher.update.middleware(EventLoggerMiddleware())
-    main_bot_dispatcher.include_routers(user_router, referral_router, mental_router,
+    main_bot_dispatcher.include_routers(sub_management_router, user_router, referral_router, mental_router,
                        payment_router, checkup_router,information_router, system_settings_router, exercises_router,
-                       paginator_router, standard_router, sub_management_router)
+                       paginator_router, standard_router)
 
     print(await admin_bot.get_me())
     await admin_bot.delete_webhook(drop_pending_updates=True)
