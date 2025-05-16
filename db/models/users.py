@@ -26,7 +26,7 @@ class Users(BaseModel, CleanModel):
     email = Column(String, nullable=True, unique=False)
     last_rec_week_date = Column(DateTime, nullable=False, default=func.now())
     power_mode_days = Column(BigInteger, nullable=True, unique=False, default=0)
-    mental_data = Column(String, nullable=True, default="")
+    mental_data = Column(String, nullable=False, default="")
     used_free_recommendation = Column(Boolean, nullable=False, default=False)
 
     @property

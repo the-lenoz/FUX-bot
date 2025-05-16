@@ -375,7 +375,7 @@ class PsyHandler(AIHandler):
     async def update_user_mental_data(self, user_id: int):
         user = await users_repository.get_user_by_user_id(user_id)
 
-        request_text = MENTAL_DATA_PROVIDER_PROMPT + "\n\nCurrent information about user:\n" + user.mental_data
+        request_text = MENTAL_DATA_PROVIDER_PROMPT + "\n\nCurrent information about user:\n" + str(user.mental_data)
 
         if self.active_threads.get(user_id):
             thread = await openAI_client.beta.threads.retrieve(self.active_threads[user_id])
