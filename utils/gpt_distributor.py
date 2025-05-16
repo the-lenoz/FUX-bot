@@ -273,10 +273,7 @@ class PsyHandler(AIHandler):
 
     async def handle(self, request: UserRequest):
         if not self.messages_count.get(request.user_id):
-            await main_bot.send_message(
-                request.user_id,
-                "Теперь я говорю как психолог. Чтобы выйти, нажмите /menu"
-            )
+
             await user_request_handler.general_handler.exit(request.user_id)
             self.messages_count[request.user_id] = 0
         self.messages_count[request.user_id] += 1
