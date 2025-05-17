@@ -49,6 +49,7 @@ EXERCISE_PROMPT_FORMAT = """Отвечай как профессиональны
 Ты практикуешь КПТ (когнитивно-поведенческую терапию).
 Тебе даётся информация о пользователе и его проблемах. С самим пользователем пообщаться ты не сможешь. Задать вопросы тоже.
 Основываясь на всех проблемах пользователя, составь для него упражнение, которое он сможет выполнить самостоятельно.
+Сконцентрируйся на актуальных проблемах пользователя, если тебе они известны.
 Опиши всё подробно. Упражнение должно соответствовать методикам КПТ и иметь научно доказанную эффективность.
 В ответе должно быть только упражнение.
 СТРОГО! Текст упражнения должен быть коротким - до 800 знаков!
@@ -74,7 +75,7 @@ Include section with actual therapy:
 What exercises does user right now. 
 What are his most actual problems. 
 
-Never drop any data - your output has to contain all current information plus new from dialog context.
+Never drop any data - your output has to contain all current information and a new from dialog context.
 
 Don't ask anything. I can't answer you. Just write all as possible."""
 
