@@ -1,7 +1,9 @@
 
 TEXT_CHECK_PROMPT_FORMAT = """Analyze the following text: "{text}"
 
-Based on the content and sentiment of the text, determine if it should be directed to a psychologist bot for sensitive, emotional, or mental health-related topics, or to a regular chatbot for general inquiries, factual questions, or casual conversation.
+Based on the content and sentiment of the text, determine if it should be directed to a psychologist bot for sensitive, emotional, mental health-related,
+or any psychology-related topics,  
+or to a regular chatbot for general inquiries, factual questions, or casual conversation.
 
 Respond with only "true" if the text should be sent to a psychologist bot.
 Respond with only "false" if the text should be sent to a regular chatbot."""

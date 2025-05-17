@@ -73,7 +73,7 @@ async def enter_emoji_user(call: CallbackQuery, state: FSMContext):
                 max_date = last_ended_day.date_end_day.date()
         if max_date is None or (now_date.date() != max_date):
             await users_repository.update_power_mode_days_by_user_id(user_id=user_id, new_days=user.power_mode_days + 1)
-            update_power_mode = True
+            update_power_mode = True  # TODO
     call_data = call.data.split("|")[1:]
     emoji, checkup_id, day_checkup_id, type_checkup = (int(call_data[0]), int(call_data[1]),
                                                        int(call_data[2]), call_data[3])

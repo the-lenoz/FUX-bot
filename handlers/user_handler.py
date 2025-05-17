@@ -24,14 +24,14 @@ user_router = Router()
 async def start_menu(call: CallbackQuery, state: FSMContext):
     await state.clear()
     user_id = call.from_user.id
+    await user_request_handler.psy_handler.exit(user_id)
+    await user_request_handler.general_handler.exit(user_id)
     text = "✍️Для общения - просто пиши, ничего выбирать не надо"
     keyboard = await main_keyboard(user_id=user_id)
     await call.message.answer_photo(photo=menu_photo,
                                     caption=text,
                                     reply_markup=keyboard.as_markup())
     await call.message.delete()
-    await user_request_handler.psy_handler.exit(user_id)
-    await user_request_handler.general_handler.exit(user_id)
 
 
 
