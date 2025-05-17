@@ -49,6 +49,11 @@ class UserRequestHandler:
                 elif request.file.file_type == 'voice':
                     text += '\n'
                     text += await UserRequestHandler.get_transcription(request.file)
+                    request = UserRequest(
+                        text=text,
+                        user_id=request.user_id,
+                        file=None
+                    )
                 elif request.file.file_type == 'document':
                     document_file = await openAI_client.files.create(
                         file=(request.file.filename, request.file.file_bytes),
@@ -390,6 +395,7 @@ class PsyHandler(AIHandler):
 
                 run = await openAI_client.beta.threads.runs.create_and_poll(
                     thread_id=thread.id,
+                    model=BASIC_MODEL,
                     assistant_id=self.assistant_id
                 )
 
