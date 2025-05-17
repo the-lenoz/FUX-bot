@@ -266,9 +266,10 @@ class AIHandler:
 
 
     async def exit(self, user_id: int):
-        if self.active_threads.get(user_id):
-            await openAI_client.beta.threads.delete(self.active_threads[user_id])
-            self.active_threads[user_id] = None
+        if self.active_threads.get(user_id) and self.thread_locks.get(user_id):
+            async with self.thread_locks[user_id]:
+                await openAI_client.beta.threads.delete(self.active_threads[user_id])
+                self.active_threads[user_id] = None
 
 
 
@@ -379,7 +380,6 @@ class PsyHandler(AIHandler):
     async def update_user_mental_data(self, user_id: int):
         user = await users_repository.get_user_by_user_id(user_id)
         if user:
-
             request_text = MENTAL_DATA_PROVIDER_PROMPT + "\n\nCurrent information about user:\n" + str(user.mental_data)
 
             if self.active_threads.get(user_id) and self.thread_locks.get(user_id):
