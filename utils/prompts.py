@@ -70,6 +70,10 @@ Provide structured output - each paragraph has to contain problem title and its 
 
 Also provide information of user's therapy and exercises.
 
+Include section with actual therapy:
+What exercises does user right now. 
+What are his most actual problems. 
+
 Never drop any data - your output has to contain all current information plus new from dialog context.
 
 Don't ask anything. I can't answer you. Just write all as possible."""

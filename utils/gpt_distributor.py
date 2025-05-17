@@ -42,7 +42,7 @@ class UserRequestHandler:
             if self.psy_handler.active_threads.get(request.user_id):
                 to_psy = True
 
-            if request.file is not None:
+            if request.file is not None and not to_psy:
                 if request.file.file_type == 'image':
                     if await UserRequestHandler.is_image_mental(request.file):
                         to_psy = True
