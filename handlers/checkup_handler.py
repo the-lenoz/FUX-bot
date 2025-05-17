@@ -60,26 +60,21 @@ async def get_checkup_question(call: CallbackQuery, state: FSMContext):
 @checkup_router.callback_query(F.data.startswith("enter_emoji|"), any_state)
 async def enter_emoji_user(call: CallbackQuery, state: FSMContext):
     user_id = call.from_user.id
-    user_active_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id=user_id)
-    now_date = datetime.now()
-    update_power_mode = False
+    update_power_mode = True
     user = await users_repository.get_user_by_user_id(user_id=user_id)
-    if user_active_checkups is not None and len(user_active_checkups) > 0:
-        max_date = None
-        for checkup in user_active_checkups:
-            last_ended_day = await days_checkups_repository.get_latest_ended_day_checkup_by_checkup_id(
-                checkup_id=checkup.id)
-            if last_ended_day is not None and (max_date is None or last_ended_day.date_end_day.date() > max_date):
-                max_date = last_ended_day.date_end_day.date()
-        if max_date is None or (now_date.date() != max_date):
-            await users_repository.update_power_mode_days_by_user_id(user_id=user_id, new_days=user.power_mode_days + 1)
-            update_power_mode = True  # TODO
     call_data = call.data.split("|")[1:]
     emoji, checkup_id, day_checkup_id, type_checkup = (int(call_data[0]), int(call_data[1]),
                                                        int(call_data[2]), call_data[3])
     day_checkup = await days_checkups_repository.get_day_checkup_by_day_checkup_id(day_checkup_id=day_checkup_id)
     await days_checkups_repository.update_data_by_day_checkup_id(day_checkup_id=day_checkup_id,
                                                                  points=emoji)
+    user_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id)
+    for checkup in user_checkups:
+        days_checkups = await days_checkups_repository.get_active_day_checkup_by_checkup_id(checkup.id)
+
+        if days_checkups:
+            update_power_mode = False
+
     await call.message.answer("Спасибо за ответ!")
     if update_power_mode:
         await call.message.answer(f"{user.power_mode_days + 1} орех подряд!🌰 Продолжай с трекингом в том же духе")
