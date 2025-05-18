@@ -12,7 +12,7 @@ from db.repository import users_repository, subscriptions_repository, checkup_re
 from settings import mechanic_checkup, InputMessage, is_valid_time, checkup_emotions_photo, checkup_productivity_photo, \
     checkups_types_photo
 import utils.checkups
-from utils.checkups import is_ended_today
+from utils.checkups_ended import is_ended_today
 
 checkup_router = Router()
 

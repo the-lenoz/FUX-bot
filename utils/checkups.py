@@ -2,7 +2,6 @@ from datetime import datetime
 
 from bots import main_bot
 from data.keyboards import emotions_keyboard, productivity_keyboard
-from db.models import Checkups
 from db.repository import days_checkups_repository, checkup_repository
 from settings import checkup_emotions_photo, checkup_productivity_photo
 
@@ -32,8 +31,3 @@ async def send_checkup(checkup_id: int):
     await checkup_repository.update_last_date_send_checkup_by_checkup_id(checkup_id=checkup.id,
                                                                          last_date_send=now_date)
 
-async def is_ended_today(checkup_id: int) -> bool:
-    day_checkup = await days_checkups_repository.get_latest_ended_day_checkup_by_checkup_id(checkup_id)
-    if day_checkup and day_checkup.date_end_day and day_checkup.date_end_day.date() == datetime.now().date():
-        return True
-    return False
