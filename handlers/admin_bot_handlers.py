@@ -238,7 +238,7 @@ async def add_mew_admin(message: types.Message, state: FSMContext, bot: Bot):
 
 @admin_router.message(F.text=="Сгенерировать промокод")
 @is_main_admin
-async def get_statistics(message: types.Message, state: FSMContext, bot: Bot):
+async def gen_promo(message: types.Message, state: FSMContext, bot: Bot):
     await state.clear()
     await state.set_state(InputMessage.enter_promo_days)
     await message.answer("Пожалуйста, введи количество дней, которое будет давать активация данного промокода",
@@ -247,7 +247,7 @@ async def get_statistics(message: types.Message, state: FSMContext, bot: Bot):
 
 @admin_router.message(F.text, InputMessage.enter_promo_days)
 @is_main_admin
-async def get_statistics(message: types.Message, state: FSMContext, bot: Bot):
+async def enter_promo_days(message: types.Message, state: FSMContext, bot: Bot):
     max_days = message.text
     if max_days.isdigit():
         await state.clear()
@@ -263,7 +263,7 @@ async def get_statistics(message: types.Message, state: FSMContext, bot: Bot):
 
 @admin_router.message(F.text, InputMessage.enter_max_activations_promo)
 @is_main_admin
-async def get_statistics(message: types.Message, state: FSMContext, bot: Bot):
+async def enter_max_activations(message: types.Message, state: FSMContext, bot: Bot):
     max_activations = message.text
     state_data = await state.get_data()
     max_days = int(state_data.get("max_days"))

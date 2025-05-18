@@ -132,7 +132,7 @@ async def send_weekly_checkups_report(main_bot: Bot):
                 send = False
                 for weekday in range(7):
                     day = now - datetime.timedelta(days=now.weekday() - weekday)
-                    day_checkup_data = 10000
+                    day_checkup_data = None
                     for checkup_day in checkup_days:
                         if checkup_day.date_end_day and checkup_day.date_end_day.date() == day \
                                 and checkup_day.checkup_type == checkup_type:
