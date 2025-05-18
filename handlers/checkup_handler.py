@@ -11,7 +11,7 @@ from data.keyboards import checkup_type_keyboard, buy_sub_keyboard, menu_keyboar
 from db.repository import users_repository, subscriptions_repository, checkup_repository, days_checkups_repository
 from settings import mechanic_checkup, InputMessage, is_valid_time, checkup_emotions_photo, checkup_productivity_photo, \
     checkups_types_photo
-from utils.сheckup_stat import generate_emotion_chart
+import utils.checkups
 
 checkup_router = Router()
 
@@ -24,13 +24,11 @@ async def go_checkup(call: CallbackQuery):
     have_checkups = False
     for checkup in user_checkups:
         active_day = await days_checkups_repository.get_active_day_checkup_by_checkup_id(checkup_id=checkup.id)
-        if active_day:
+        if active_day or datetime.now().time() < checkup.time_checkup:
+            await utils.checkups.send_checkup(checkup.id)
             have_checkups = True
             button_text = "🤩Трекинг эмоций" if checkup.type_checkup == "emotions" else "🚀Трекинг продуктивности"
-            keyboard.row(InlineKeyboardButton(text=button_text, callback_data=f"start_checkup|"
-                                                                              f"{checkup.id}|"
-                                                                              f"{active_day.id}"
-                                                                              f"|{checkup.type_checkup}|"))
+            keyboard.row(InlineKeyboardButton(text=button_text, callback_data=f"start_checkup|{checkup.id}"))
     keyboard.row(menu_button)
     message_text = "Выбери трекинг, который хочешь пройти"
     if not have_checkups:
@@ -41,19 +39,9 @@ async def go_checkup(call: CallbackQuery):
 
 @checkup_router.callback_query(F.data.startswith("start_checkup|"), any_state)
 async def get_checkup_question(call: CallbackQuery, state: FSMContext):
-    user_id = call.from_user.id
     call_data = call.data.split("|")
-    checkup_id, day_checkup_id, type_checkup = call_data[1], call_data[2], call_data[3]
-    message_photo = checkup_emotions_photo
-    check_data = "|".join(call_data[1:])
-    keyboard = emotions_keyboard(check_data)
-    if type_checkup == "productivity":
-        message_photo = checkup_productivity_photo
-        keyboard = productivity_keyboard(check_data)
-    await call.message.answer_photo(photo=message_photo,
-                                    reply_markup=keyboard.as_markup())
-    await checkup_repository.update_last_date_send_checkup_by_checkup_id(checkup_id=int(checkup_id),
-                                                                         last_date_send=datetime.now())
+    checkup_id = int(call_data[1])
+    await utils.checkups.send_checkup(checkup_id)
     await call.message.delete()
 
 

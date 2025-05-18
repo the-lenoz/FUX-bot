@@ -5,6 +5,7 @@ import traceback
 from aiogram import Bot
 from aiogram.types import BufferedInputFile
 
+import utils.checkups
 from data.keyboards import buy_sub_keyboard, emotions_keyboard, productivity_keyboard
 from db.repository import subscriptions_repository, users_repository, checkup_repository, days_checkups_repository, \
     events_repository
@@ -45,27 +46,7 @@ async def send_checkup(main_bot: Bot):
     for checkup in checkups:
         try:
             if (now_date.time() >= checkup.time_checkup) and ((now_date.date() - checkup.last_date_send.date()) >= datetime.timedelta(days=1)):
-                checkup_day = await days_checkups_repository.get_active_day_checkup_by_checkup_id(checkup_id=checkup.id)
-                if checkup_day is None:
-                    days_checkup = await days_checkups_repository.get_days_checkups_by_checkup_id(checkup_id=checkup.id)
-                    await days_checkups_repository.add_day_checkup(checkup_id=checkup.id,
-                                                                   day=len(days_checkup) + 1,
-                                                                   points=0,
-                                                                   user_id=checkup.user_id,
-                                                                   checkup_type=checkup.type_checkup)
-                    checkup_day = await days_checkups_repository.get_active_day_checkup_by_checkup_id(checkup_id=checkup.id)
-                checkup_id, day_checkup_id, type_checkup = checkup.id, checkup_day.id, checkup.type_checkup
-                message_photo = checkup_emotions_photo
-                check_data = "|".join([str(checkup_id), str(day_checkup_id), type_checkup])
-                keyboard = emotions_keyboard(check_data)
-                if type_checkup == "productivity":
-                    message_photo = checkup_productivity_photo
-                    keyboard = productivity_keyboard(check_data)
-                await main_bot.send_photo(photo=message_photo,
-                                          chat_id=checkup.user_id,
-                                          reply_markup=keyboard.as_markup())
-                await checkup_repository.update_last_date_send_checkup_by_checkup_id(checkup_id=checkup.id,
-                                                                                     last_date_send=now_date)
+                await utils.checkups.send_checkup(checkup.id)
         except Exception as e:
             print(f"\n\nВОЗНИКЛА ОШИБКА ОТПРАВКИ ПОЛЬЗОВАТЕЛЮ {checkup.user_id}\n\n" + traceback.format_exc() + "\n\n")
             continue
