@@ -1,5 +1,5 @@
 
-TEXT_CHECK_PROMPT_FORMAT = """Analyze the following text: "{text}"
+PSY_TEXT_CHECK_PROMPT_FORMAT = """Analyze the following text: "{text}"
 
 Based on the content and sentiment of the text, determine if it should be directed to a psychologist bot for sensitive, emotional, mental health-related,
 or any psychology-related topics,  
@@ -9,6 +9,16 @@ If the text is related to psychology or psychologists, answer true.
 Respond with only "true" if the text should be sent to a psychologist bot.
 Respond with only "false" if the text should be sent to a regular chatbot."""
 
+
+SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT = """
+Тебе будет предоставлен текст. Определи его осмысленность по следующим правилам:
+- Если текст является простым приветствием (например, "привет", "здравствуйте", "добрый день"), вопросом о твоей личности ("кто ты?", "что ты?"), или другим крайне простым, поверхностным высказыванием, не требующим глубокого анализа или выполнения действия, верни `true`.
+- Во всех остальных случаях, включая вопросы, требующие ответа, запросы на выполнение действий, предоставление информации, рассуждения и т.п., верни `false`.
+
+Твоим ответом должно быть только одно слово: `true` или `false`. Не добавляй никаких других символов или пояснений.
+
+Текст для анализа:
+{text}"""
 
 
 IMAGE_CHECK_PROMPT = """Analyze the image.

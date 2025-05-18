@@ -11,8 +11,9 @@ from data.keyboards import get_rec_keyboard
 from db.repository import users_repository
 from utils.gpt_client import openAI_client, BASIC_MODEL, TRANSCRIPT_MODEL, mental_assistant_id, standard_assistant_id, TTS_MODEL, ADVANCED_MODEL
 from utils.photo_recommendation import generate_blurred_image_with_text
-from utils.prompts import TEXT_CHECK_PROMPT_FORMAT, IMAGE_CHECK_PROMPT, DOCUMENT_CHECK_PROMPT, RECOMMENDATION_PROMPT, \
-    MENTAL_DATA_PROVIDER_PROMPT, EXERCISE_PROMPT_FORMAT
+from utils.prompts import PSY_TEXT_CHECK_PROMPT_FORMAT, IMAGE_CHECK_PROMPT, DOCUMENT_CHECK_PROMPT, \
+    RECOMMENDATION_PROMPT, \
+    MENTAL_DATA_PROVIDER_PROMPT, EXERCISE_PROMPT_FORMAT, SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT
 from utils.subscription import check_is_subscribed
 from utils.user_properties import get_user_description
 
@@ -74,10 +75,13 @@ class UserRequestHandler:
                         or self.psy_handler.active_threads.get(request.user_id):
                     await self.psy_handler.handle(request) # РАБОТАЕМ - к психологу
                 else:
-                    await main_bot.send_message(
-                        request.user_id,
-                        "Чтобы общаться с 🤖 <i>универсальным ассистентом</i> — оформи <b>подписку</b>"
-                    )
+                    if await UserRequestHandler.is_text_smalltalk(request.text):
+                        await self.general_handler.handle(request)  # Разрешаем приветствия и смол-ток
+                    else:
+                        await main_bot.send_message(
+                            request.user_id,
+                            "Чтобы общаться с 🤖 <i>универсальным ассистентом</i> — оформи <b>подписку</b>"
+                        )
             else:
                 if request.file.file_type == 'image':
                     await main_bot.send_message(
@@ -96,11 +100,23 @@ class UserRequestHandler:
                     )
 
     @staticmethod
+    async def is_text_smalltalk(text: str):
+        try:
+            response = await openAI_client.responses.create(
+                model=BASIC_MODEL,
+                input=SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT.format(text=text),
+                max_output_tokens=32
+            )
+            return response.output_text == 'true'
+        except openai.BadRequestError:
+            return False
+
+    @staticmethod
     async def is_text_mental(text: str):
         try:
             response = await openAI_client.responses.create(
                 model=BASIC_MODEL,
-                input=TEXT_CHECK_PROMPT_FORMAT.format(text=text),
+                input=PSY_TEXT_CHECK_PROMPT_FORMAT.format(text=text),
                 max_output_tokens=32
             )
             return response.output_text == 'true'
