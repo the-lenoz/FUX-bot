@@ -128,7 +128,7 @@ async def send_weekly_checkups_report(main_bot: Bot):
                     await main_bot.send_photo(
                         photo=BufferedInputFile(file=graphic.getvalue(), filename="graphic.png"),
                         chat_id=user.user_id,
-                        caption=f"📙Результаты твоего недельного трекинга!"
+                        caption=f"✅ Трекинг <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за неделю готов!"
                     )
             except Exception:
                 continue
