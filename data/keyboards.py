@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -101,7 +101,7 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
     finish_checkup_day = True
     for checkup in user_checkups:
         active_day = await days_checkups_repository.get_active_day_checkup_by_checkup_id(checkup_id=checkup.id)
-        if active_day is not None:
+        if datetime.now().time() < checkup.time_checkup or active_day is not None:
             finish_checkup_day = False
             break
     if finish_checkup_day is False:
