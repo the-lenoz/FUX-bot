@@ -55,13 +55,23 @@ async def get_choice_of_sub(call: types.CallbackQuery, state: FSMContext, bot: B
     call_data = call.data.split("|")
     days, amount, mode_type, mode_id = call_data[1], call_data[2], call_data[3], call_data[4]
     user = await users_repository.get_user_by_user_id(call.from_user.id)
+    if user.email is None:
+        await state.set_state(InputMessage.enter_email)
+        await state.update_data(mode_id=mode_id, mode_type=mode_type)
+        await call.message.answer("Для проведения оплаты нам понадобиться адрес электронной почты,"
+                                  " чтобы направить чек о покупке 🧾\n\nПожалуйста, введи свой email 🍏",
+                                  reply_markup=menu_keyboard.as_markup())
+        try:
+            await call.message.delete()
+        finally:
+            return
     payment = await create_payment(user.email, amount=amount)
     await operation_repository.add_operation(operation_id=payment[0], user_id=call.from_user.id, is_paid=False,
                                              url=payment[1])
     operation = await operation_repository.get_operation_by_operation_id(payment[0])
     keyboard = await keyboard_for_pay(operation_id=operation.id, url=payment[1], time_limit=int(days), mode_type=mode_type,
                                       mode_id=mode_id)
-    await call.message.answer(text=f'Для дальнейше работы ассистента нужно приобрести подписку'
+    await call.message.answer(text=f'Для дальнейшей работы ассистента нужно приобрести подписку'
                                    f' за {amount[:-3]} рублей.\n\nПосле проведения платежа нажми на кнопку "Оплата произведена",'
                                    ' чтобы подтвердить платеж', reply_markup=keyboard.as_markup())
     try:
