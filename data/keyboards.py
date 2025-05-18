@@ -5,6 +5,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from db.repository import checkup_repository, days_checkups_repository, subscriptions_repository
 from settings import emoji_dict, speed_dict, table_names
+from utils.checkups import is_ended_today
 
 admin_kb = [
         [KeyboardButton(text='Статистика')],
@@ -101,7 +102,8 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
     finish_checkup_day = True
     for checkup in user_checkups:
         active_day = await days_checkups_repository.get_active_day_checkup_by_checkup_id(checkup_id=checkup.id)
-        if datetime.now().time() < checkup.time_checkup or active_day is not None:
+        if active_day is not None or (datetime.now().time() < checkup.time_checkup
+                                      and not await is_ended_today(checkup.id)):
             finish_checkup_day = False
             break
     if finish_checkup_day is False:
