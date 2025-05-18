@@ -81,26 +81,26 @@ class UserRequestHandler:
                         await main_bot.send_message(
                             request.user_id,
                             "Чтобы общаться с 🤖 <i>универсальным ассистентом</i> — оформи <b>подписку</b>",
-                            reply_markup=buy_sub_keyboard
+                            reply_markup=buy_sub_keyboard.as_markup()
                         )
             else:
                 if request.file.file_type == 'image':
                     await main_bot.send_message(
                         request.user_id,
                         "Чтобы я смог считывать твои 🌇 <i>фотографии</i> — оформи <b>подписку</b>",
-                        reply_markup=buy_sub_keyboard
+                        reply_markup=buy_sub_keyboard.as_markup()
                     )
                 elif request.file.file_type == 'voice':
                     await main_bot.send_message(
                         request.user_id,
                         "Чтобы я смог считывать твои 🎙️ <i>голосовые сообщения</i> — оформи <b>подписку</b>",
-                        reply_markup=buy_sub_keyboard
+                        reply_markup=buy_sub_keyboard.as_markup()
                     )
                 elif request.file.file_type == 'document':
                     await main_bot.send_message(
                         request.user_id,
                         "Чтобы я смог считывать твои 📁 <i>файлы</i> — оформи <b>подписку</b>",
-                        reply_markup=buy_sub_keyboard
+                        reply_markup=buy_sub_keyboard.as_markup()
                     )
 
     @staticmethod
