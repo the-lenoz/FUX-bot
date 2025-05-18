@@ -21,7 +21,7 @@ async def edit_activation_sub(main_bot: Bot):
             try:
                 await subscriptions_repository.deactivate_subscription(sub.id)
                 await main_bot.send_photo(
-                    caption="К сожалению, твоя подписка закончена. Необходимо оплатить подписку",
+                    caption="К сожалению, твоя подписка закончена. Необходимо продлить подписку:",
                     photo=payment_photo,
                     chat_id=sub.user_id,
                     reply_markup=buy_sub_keyboard.as_markup())
@@ -32,7 +32,7 @@ async def edit_activation_sub(main_bot: Bot):
             try:
                 await subscriptions_repository.update_send_notification_subscription(subscription_id=sub.id)
                 await main_bot.send_photo(
-                    caption="Твоя подписка закончится через 3 дня",
+                    caption="Твоя подписка закончится через 3 дня. Ты можешь продлить её:",
                     photo=payment_photo,
                     chat_id=sub.user_id,
                     reply_markup=buy_sub_keyboard.as_markup())

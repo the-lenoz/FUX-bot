@@ -18,7 +18,7 @@ payment_router = Router()
 
 
 @payment_router.callback_query(F.data.startswith("subscribe"), any_state)
-async def get_day_statistic(call: types.CallbackQuery, state: FSMContext, bot: Bot):
+async def subscribe(call: types.CallbackQuery, state: FSMContext, bot: Bot):
     user = await users_repository.get_user_by_user_id(call.from_user.id)
     call_data = call.data.split("|")
     if len(call_data) > 1:

@@ -7,7 +7,7 @@ from aiogram.types import BufferedInputFile, FSInputFile
 from pydantic import BaseModel
 
 from bots import main_bot
-from data.keyboards import get_rec_keyboard
+from data.keyboards import get_rec_keyboard, buy_sub_keyboard
 from db.repository import users_repository
 from utils.gpt_client import openAI_client, BASIC_MODEL, TRANSCRIPT_MODEL, mental_assistant_id, standard_assistant_id, TTS_MODEL, ADVANCED_MODEL
 from utils.photo_recommendation import generate_blurred_image_with_text
@@ -80,23 +80,27 @@ class UserRequestHandler:
                     else:
                         await main_bot.send_message(
                             request.user_id,
-                            "Чтобы общаться с 🤖 <i>универсальным ассистентом</i> — оформи <b>подписку</b>"
+                            "Чтобы общаться с 🤖 <i>универсальным ассистентом</i> — оформи <b>подписку</b>",
+                            reply_markup=buy_sub_keyboard
                         )
             else:
                 if request.file.file_type == 'image':
                     await main_bot.send_message(
                         request.user_id,
-                        "Чтобы я смог считывать твои 🌇 <i>фотографии</i> — оформи <b>подписку</b>"
+                        "Чтобы я смог считывать твои 🌇 <i>фотографии</i> — оформи <b>подписку</b>",
+                        reply_markup=buy_sub_keyboard
                     )
                 elif request.file.file_type == 'voice':
                     await main_bot.send_message(
                         request.user_id,
-                        "Чтобы я смог считывать твои 🎙️ <i>голосовые сообщения</i> — оформи <b>подписку</b>"
+                        "Чтобы я смог считывать твои 🎙️ <i>голосовые сообщения</i> — оформи <b>подписку</b>",
+                        reply_markup=buy_sub_keyboard
                     )
                 elif request.file.file_type == 'document':
                     await main_bot.send_message(
                         request.user_id,
-                        "Чтобы я смог считывать твои 📁 <i>файлы</i> — оформи <b>подписку</b>"
+                        "Чтобы я смог считывать твои 📁 <i>файлы</i> — оформи <b>подписку</b>",
+                        reply_markup=buy_sub_keyboard
                     )
 
     @staticmethod
