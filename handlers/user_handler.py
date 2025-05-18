@@ -48,8 +48,8 @@ async def send_user_message(message: Message, state: FSMContext, bot: Bot):
             finally:
                 await message.answer('🐿️📙Для начала работы необходимо согласиться с политикой и правилами'
                                      ' нашего сервиса. Наш сервис полностью защищён и работает в соответствии с 152-ФЗ.\n\n'
-                                     '<b>Пользовательское соглашение:</b> https://disk.yandex.ru/i/3xWhbQXOrWdAig\n\n<b>Соглашение'
-                                     ' об обработке персональных данных:</b> https://disk.yandex.ru/i/pJmigSHkLXekLQ',
+                                     '<b>Пользовательское соглашение</b> — https://fuhmental.ru/user'
+                                     '<b>Соглашение об обработке персональных данных</b> — https://fuhmental.ru/agreement',
                                      disable_web_page_preview=True,
                                      reply_markup=next_politic_keyboard.as_markup())
     elif not user.full_registration:
