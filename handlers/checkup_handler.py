@@ -25,7 +25,6 @@ async def go_checkup(call: CallbackQuery):
     for checkup in user_checkups:
         active_day = await days_checkups_repository.get_active_day_checkup_by_checkup_id(checkup_id=checkup.id)
         if active_day or datetime.now().time() < checkup.time_checkup:
-            await utils.checkups.send_checkup(checkup.id)
             have_checkups = True
             button_text = "🤩Трекинг эмоций" if checkup.type_checkup == "emotions" else "🚀Трекинг продуктивности"
             keyboard.row(InlineKeyboardButton(text=button_text, callback_data=f"start_checkup|{checkup.id}"))
