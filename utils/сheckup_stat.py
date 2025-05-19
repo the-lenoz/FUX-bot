@@ -86,7 +86,7 @@ def generate_emotion_chart(emotion_data=None, dates=None, checkup_type: str | No
             label.set_color('white')
 
 
-    ax.set_xlim(-0.5, len(dates) - 0.5)
+    ax.set_xlim(-0.7, len(dates) - 0.5)
     ax.set_ylim(0.5, 5.5)
     name = 'ТРЕКИНГ ЭМОЦИЙ' if checkup_type == "emotions" else "ТРЕКИНГ ПРОДУКТИВНОСТИ"
 
