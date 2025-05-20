@@ -208,6 +208,11 @@ class AIHandler:
                     role="user",
                     content=f"Description of the client:\n{await get_user_description(request.user_id, isinstance(self, PsyHandler))}",
                 )
+            await main_bot.send_chat_action(chat_id=request.user_id, action="typing")
+            typing_message = await main_bot.send_message(
+                request.user_id,
+                "💬Печатаю…"
+            )
 
             content = [
                     {
@@ -233,11 +238,6 @@ class AIHandler:
                     )
                 elif request.file.file_type == "voice":
                     text = await UserRequestHandler.get_transcription(request.file)
-                    await main_bot.send_chat_action(chat_id=request.user_id, action="typing")
-                    typing_message = await main_bot.send_message(
-                        request.user_id,
-                        "💬Печатаю…"
-                    )
                     if content:
                         content[0]["text"] += text
                     elif text:
