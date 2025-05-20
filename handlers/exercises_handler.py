@@ -1,5 +1,3 @@
-import logging
-
 from aiogram import Router, F, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
@@ -10,14 +8,11 @@ from settings import mechanic_dict, exercises_photo
 from utils.gpt_distributor import user_request_handler
 
 exercises_router = Router()
-logger = logging.getLogger(__name__)
 
 @exercises_router.callback_query(F.data == "exercises_by_problem")
 async def exercises_by_problem_call(call: CallbackQuery, state: FSMContext, bot: Bot):
     user_id = call.from_user.id
     user = await users_repository.get_user_by_user_id(user_id)
-    logger.info(f"User {user_id} used exercises value: {user.used_exercises},"
-                f" casted to bool: {False if not user.used_exercises else True}")
     if not user.used_exercises:
         await call.message.answer_photo(caption=mechanic_dict.get("exercises_by_problem"),
                                         photo=exercises_photo)
