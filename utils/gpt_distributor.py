@@ -285,7 +285,8 @@ class AIHandler:
                 await typing_message.delete()
                 await main_bot.send_message(
                     request.user_id,
-                    messages.data[0].content[0].text.value
+                    messages.data[0].content[0].text.value,
+                    parse_mode=""
                 )
 
 
