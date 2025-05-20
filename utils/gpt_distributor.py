@@ -208,11 +208,12 @@ class AIHandler:
                     role="user",
                     content=f"Description of the client:\n{await get_user_description(request.user_id, isinstance(self, PsyHandler))}",
                 )
-            await main_bot.send_chat_action(chat_id=request.user_id, action="typing")
+
             typing_message = await main_bot.send_message(
                 request.user_id,
                 "💬Печатаю…"
             )
+            await main_bot.send_chat_action(chat_id=request.user_id, action="typing")
 
             content = [
                     {
@@ -312,11 +313,11 @@ class PsyHandler(AIHandler):
             await self.provide_recommendations(request.user_id)
 
     async def provide_recommendations(self, user_id: int):
-        await main_bot.send_chat_action(chat_id=user_id, action="typing")
         typing_message = await main_bot.send_message(
             user_id,
             "💬Печатаю…"
         )
+        await main_bot.send_chat_action(chat_id=user_id, action="typing")
         user = await users_repository.get_user_by_user_id(user_id)
         is_subscribed = await check_is_subscribed(user_id)
 
