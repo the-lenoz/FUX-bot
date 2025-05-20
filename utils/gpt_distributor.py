@@ -234,6 +234,10 @@ class AIHandler:
                 elif request.file.file_type == "voice":
                     text = await UserRequestHandler.get_transcription(request.file)
                     await main_bot.send_chat_action(chat_id=request.user_id, action="typing")
+                    typing_message = await main_bot.send_message(
+                        request.user_id,
+                        "💬Печатаю…"
+                    )
                     if content:
                         content[0]["text"] += text
                     elif text:
@@ -272,13 +276,12 @@ class AIHandler:
                 assistant_id=self.assistant_id
             )
 
-            await main_bot.send_chat_action(chat_id=request.user_id, action="typing")
-
             if run.status == 'completed':
                 messages = await openAI_client.beta.threads.messages.list(
                     thread_id=thread.id,
                     run_id=run.id  # Получить сообщения только из этого Run
                 )
+                await typing_message.delete()
                 await main_bot.send_message(
                     request.user_id,
                     messages.data[0].content[0].text.value
@@ -304,13 +307,16 @@ class PsyHandler(AIHandler):
         self.messages_count[request.user_id] += 1
 
         if self.messages_count[request.user_id] <= self.MESSAGES_LIMIT or await check_is_subscribed(request.user_id):
-            await main_bot.send_chat_action(chat_id=request.user_id, action="typing")
             await super().handle(request)
         else:
             await self.provide_recommendations(request.user_id)
 
     async def provide_recommendations(self, user_id: int):
         await main_bot.send_chat_action(chat_id=user_id, action="typing")
+        typing_message = await main_bot.send_message(
+            user_id,
+            "💬Печатаю…"
+        )
         user = await users_repository.get_user_by_user_id(user_id)
         is_subscribed = await check_is_subscribed(user_id)
 
@@ -329,8 +335,6 @@ class PsyHandler(AIHandler):
                     assistant_id=self.assistant_id
                 )
 
-                await main_bot.send_chat_action(chat_id=user_id, action="typing")
-
                 if run.status == 'completed':
                     messages = await openAI_client.beta.threads.messages.list(
                         thread_id=thread.id,
@@ -341,10 +345,15 @@ class PsyHandler(AIHandler):
 
 
                     if not user.used_free_recommendation or is_subscribed:
+                        await typing_message.delete()
                         await main_bot.send_message(
                             user_id,
                             recommendation
                         ) # Дать рекомендации
+                        await main_bot.send_chat_action(
+                            user_id,
+                            action="record_voice"
+                        )
                         response = await openAI_client.audio.speech.create(
                             model=TTS_MODEL,
                             voice="alloy",  # Выберите один из голосов: alloy, echo, fable, onyx, nova, shimmer
@@ -353,6 +362,10 @@ class PsyHandler(AIHandler):
                         )
                         with tempfile.NamedTemporaryFile(mode="w+", suffix=".ogg") as voice_file:
                             response.stream_to_file(voice_file.name)
+                            await main_bot.send_chat_action(
+                                user_id,
+                                action="upload_voice"
+                            )
                             await main_bot.send_voice(
                                 user_id,
                                 FSInputFile(voice_file.name)
@@ -362,6 +375,7 @@ class PsyHandler(AIHandler):
                             await users_repository.used_free_recommendation(user_id)
 
                     else:
+                        await typing_message.delete()
                         photo_recommendation = generate_blurred_image_with_text(text=recommendation, enable_blur=True)
                         await main_bot.send_photo(
                             user_id,
