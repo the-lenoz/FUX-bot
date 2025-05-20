@@ -34,7 +34,7 @@ async def exercises_by_problem_call(call: CallbackQuery, state: FSMContext, bot:
 async def generate_feedback_for_user(call: CallbackQuery, state: FSMContext, bot: Bot):
     user_id = call.from_user.id
     delete_message = await call.message.answer(
-        "Генерирую индивидуальное задание для тебя, это займет не более 5 секунд")
+        "📙Генерирую <b>индивидуальное</b> задание для тебя!")
 
     exercise = await user_request_handler.psy_handler.generate_exercise(user_id)
     await call.message.answer(exercise + "\n\n" + "Ответ на упражнение пиши в любое время",
