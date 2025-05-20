@@ -194,6 +194,16 @@ class UserRepository:
                 await session.execute(sql)
                 await session.commit()
 
+    async def used_exercises(self, user_id: int):
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(Users).values({
+                    Users.used_exercises: True
+                }).where(or_(Users.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
     async def get_user_creation_statistics(self) -> dict[str, int]:
         async with self.session_maker() as session:
             session: AsyncSession

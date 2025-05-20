@@ -28,6 +28,7 @@ class Users(BaseModel, CleanModel):
     power_mode_days = Column(BigInteger, nullable=True, unique=False, default=0)
     mental_data = Column(String, nullable=False, default="")
     used_free_recommendation = Column(Boolean, nullable=False, default=False)
+    used_exercises = Column(Boolean, nullable=False, default=False)
 
     @property
     def stats(self) -> str:

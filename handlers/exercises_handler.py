@@ -11,7 +11,7 @@ from data.keyboards import menu_keyboard, fast_help_keyboard, mental_helper_keyb
 from db.models import ExercisesUser
 from db.repository import fast_help_repository, fast_help_dialog_repository, \
     go_deeper_repository, go_deeper_dialogs_repository, operation_repository, summary_user_repository, \
-    mental_problems_repository, exercises_user_repository
+    mental_problems_repository, exercises_user_repository, users_repository
 from settings import InputMessage, mechanic_text, mechanic_checkup, is_valid_email, fast_help_promt, go_deeper_promt, \
     mechanic_dict, exercises_photo
 from utils.gpt_distributor import user_request_handler
@@ -24,8 +24,11 @@ exercises_router = Router()
 @exercises_router.callback_query(F.data == "exercises_by_problem")
 async def exercises_by_problem_call(call: CallbackQuery, state: FSMContext, bot: Bot):
     user_id = call.from_user.id
-    await call.message.answer_photo(caption=mechanic_dict.get("exercises_by_problem"),
-                                    photo=exercises_photo)
+    user = await users_repository.get_user_by_user_id(user_id)
+    if not user.used_exercises:
+        await call.message.answer_photo(caption=mechanic_dict.get("exercises_by_problem"),
+                                        photo=exercises_photo)
+        await users_repository.used_exercises(user_id)
 
     await call.message.delete()
     await generate_feedback_for_user(call, state, bot)
