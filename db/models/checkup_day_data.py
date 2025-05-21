@@ -10,7 +10,7 @@ class CheckupDayData(BaseModel, CleanModel):
     __tablename__ = 'days_checkups'
 
     checkup_id = Column(BigInteger, ForeignKey('checkups.id'), nullable=False)
-    checkup: Mapped[Checkup] = relationship("Checkups", backref=__tablename__, cascade='all', lazy='subquery')
+    checkup: Mapped[Checkup] = relationship("Checkup", backref=__tablename__, cascade='all', lazy='subquery')
     points = Column(BigInteger, nullable=False, default=0)
     day = Column(BigInteger, nullable=False)
     send_checkup = Column(Boolean, nullable=False, default=False)
