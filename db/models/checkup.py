@@ -12,7 +12,7 @@ class Checkup(BaseModel, CleanModel):
     __tablename__ = 'checkups'
 
     user_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=False, unique=False)
-    user: Mapped[User] = relationship("Users", backref=__tablename__, cascade='all', lazy='subquery')
+    user: Mapped[User] = relationship("User", backref=__tablename__, cascade='all', lazy='subquery')
     end_checkup = Column(Boolean, nullable=False, default=False)
     number_checkup = Column(BigInteger, nullable=False)
     type_checkup = Column(String, nullable=False)

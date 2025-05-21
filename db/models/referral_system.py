@@ -10,7 +10,7 @@ class ReferralSystem(BaseModel, CleanModel):
     __tablename__ = 'referral_system'
 
     bring_user_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=True, unique=False)
-    user: Mapped[User] = relationship("Users", backref=__tablename__, cascade='all', lazy='subquery')
+    user: Mapped[User] = relationship("User", backref=__tablename__, cascade='all', lazy='subquery')
     # activate_user_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=True, default=None, unique=True)
     promo_code = Column(String, nullable=False, primary_key=True, unique=True)
     # activated = Column(Boolean, nullable=False, default=False)
