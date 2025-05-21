@@ -14,7 +14,7 @@ class Operations(BaseModel, CleanModel):
     url = Column(String, nullable=False)
 
     user_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=False)
-    user: Mapped[User] = relationship("users", backref=__tablename__, cascade='all', lazy='subquery')
+    user: Mapped[User] = relationship("Users", backref=__tablename__, cascade='all', lazy='subquery')
 
     @property
     def stats(self) -> str:

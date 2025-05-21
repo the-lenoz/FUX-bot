@@ -13,7 +13,7 @@ class SubscriptionsRepository:
 
     async def add_subscription(self, user_id: int, time_limit_subscription: int, active: bool = True):
         """    user_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=False)
-                user: Mapped[Users] = relationship("users", backref=__tablename__, cascade='all', lazy='subquery')
+                user: Mapped[Users] = relationship("Users", backref=__tablename__, cascade='all', lazy='subquery')
                 start_subscription_date = Column(DateTime, nullable=False)
                 time_limit_subscription = Column(Integer, nullable=False)
                 active = Column(Boolean, nullable=False, default=True)"""

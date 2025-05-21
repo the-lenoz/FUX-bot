@@ -10,7 +10,7 @@ class AiRequests(BaseModel, CleanModel):
     __tablename__ = 'ai_requests'
 
     user_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=False)
-    user: Mapped[User] = relationship("users", backref=__tablename__, cascade='all', lazy='subquery')
+    user: Mapped[User] = relationship("Users", backref=__tablename__, cascade='all', lazy='subquery')
     user_question = Column(String, nullable=True, unique=False)
     answer_ai = Column(String, nullable=True, default="default_answer")
     has_photo = Column(Boolean, nullable=False, default=False)
