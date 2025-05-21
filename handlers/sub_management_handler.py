@@ -5,8 +5,8 @@ from aiogram.fsm.state import any_state
 from aiogram.types import Message
 
 from bots import main_bot
-from data.keyboards import buy_sub_keyboard, generate_sub_keyboard
-from settings import payment_photo, sub_description_photo
+from data.keyboards import generate_sub_keyboard
+from settings import sub_description_photo
 from utils.subscription import check_is_subscribed
 
 sub_management_router = Router()

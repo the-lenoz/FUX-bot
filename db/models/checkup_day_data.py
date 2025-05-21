@@ -1,17 +1,16 @@
-from sqlalchemy import Column, BigInteger, ForeignKey, String, Boolean, Date, DateTime, func
+from sqlalchemy import Column, BigInteger, ForeignKey, String, Boolean, DateTime
 from sqlalchemy.orm import relationship, Mapped
 
 from db.base import BaseModel, CleanModel
-from .checkups import Checkups
-from .users import Users
+from .checkup import Checkup
 
 
-class DaysCheckups(BaseModel, CleanModel):
+class CheckupDayData(BaseModel, CleanModel):
     """Таблица запросов к gpt"""
     __tablename__ = 'days_checkups'
 
     checkup_id = Column(BigInteger, ForeignKey('checkups.id'), nullable=False)
-    checkup: Mapped[Checkups] = relationship("Checkups", backref=__tablename__, cascade='all', lazy='subquery')
+    checkup: Mapped[Checkup] = relationship("Checkups", backref=__tablename__, cascade='all', lazy='subquery')
     points = Column(BigInteger, nullable=False, default=0)
     day = Column(BigInteger, nullable=False)
     send_checkup = Column(Boolean, nullable=False, default=False)

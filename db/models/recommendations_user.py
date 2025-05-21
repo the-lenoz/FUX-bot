@@ -2,7 +2,7 @@ from sqlalchemy import Column, BigInteger, ForeignKey, String, Boolean
 from sqlalchemy.orm import relationship, Mapped
 
 from db.base import BaseModel, CleanModel
-from .users import Users
+from .user import User
 
 
 class RecommendationsUser(BaseModel, CleanModel):
@@ -10,7 +10,7 @@ class RecommendationsUser(BaseModel, CleanModel):
     __tablename__ = 'recommendations_user'
 
     user_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=False)
-    user: Mapped[Users] = relationship("Users", backref=__tablename__, cascade='all', lazy='subquery')
+    user: Mapped[User] = relationship("Users", backref=__tablename__, cascade='all', lazy='subquery')
     recommendation = Column(String, nullable=False)
     shipped = Column(Boolean, nullable=False, default=False)
 

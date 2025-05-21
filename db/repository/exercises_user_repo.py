@@ -1,7 +1,6 @@
-from datetime import datetime, time
 from typing import Sequence
 
-from sqlalchemy import select, or_, update, delete
+from sqlalchemy import select, or_, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.engine import DatabaseEngine

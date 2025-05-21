@@ -1,15 +1,12 @@
-import random
-import secrets
-
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-from datetime import datetime, timedelta, date
 import io
 import os
-import numpy as np
-from PIL import Image, ImageDraw, ImageFont
-
+import random
+import secrets
 import warnings
+from datetime import timedelta, date
+
+import matplotlib.pyplot as plt
+from PIL import Image, ImageFont
 
 warnings.filterwarnings("ignore", category=UserWarning)
 

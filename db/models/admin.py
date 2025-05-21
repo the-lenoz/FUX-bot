@@ -3,7 +3,7 @@ from sqlalchemy import Column, BigInteger, String
 from db.base import BaseModel, CleanModel
 
 
-class Admins(BaseModel, CleanModel):
+class Admin(BaseModel, CleanModel):
     """
     Таблица юзеров
     """

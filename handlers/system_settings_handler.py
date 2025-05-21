@@ -4,10 +4,9 @@ from aiogram.fsm.state import any_state
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from data.keyboards import  menu_keyboard, menu_button, ai_temperature_keyboard
+from data.keyboards import menu_keyboard, menu_button, ai_temperature_keyboard
 from db.repository import users_repository, checkup_repository, subscriptions_repository
-from settings import InputMessage, mechanic_text, mechanic_checkup, is_valid_email, fast_help_promt, go_deeper_promt, \
-    ai_temperature_text, is_valid_time, temperature_ai_photo
+from settings import InputMessage, ai_temperature_text, is_valid_time, temperature_ai_photo
 from utils.gpt_distributor import user_request_handler
 
 system_settings_router = Router()

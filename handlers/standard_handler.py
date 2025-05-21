@@ -6,7 +6,7 @@ from aiogram.types import Message
 
 # from data.keyboards import choice_keyboard
 # from data.messages import start_message, wait_manager, update_language
-from utils.gpt_distributor import UserRequest, UserFile, UserRequestHandler, user_request_handler
+from utils.gpt_distributor import UserRequest, UserFile, user_request_handler
 
 standard_router = Router()
 

@@ -1,18 +1,14 @@
-import asyncio
 import datetime
 
 from aiogram import Router, F, types, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import any_state
-from aiogram.types import BufferedInputFile
 
 from data.keyboards import cancel_keyboard, menu_keyboard, keyboard_for_pay, generate_sub_keyboard
-from db.repository import users_repository, subscriptions_repository, operation_repository, go_deeper_repository, \
-    fast_help_repository
+from db.repository import users_repository, subscriptions_repository, operation_repository
 from settings import InputMessage, is_valid_email, sub_description_photo, you_fooher_photo, \
     sub_description_photo2
 from utils.payment_for_services import create_payment, check_payment
-from utils.rating_chat_gpt import GPT
 
 payment_router = Router()
 
@@ -138,19 +134,7 @@ async def check_payment_callback(message: types.CallbackQuery, state: FSMContext
             reply_markup=menu_keyboard.as_markup()
         )
         if update:
-            if mode_type == "go_deeper":
-                dialog = await go_deeper_repository.get_go_deeper_by_go_deeper_id(go_deeper_id=mode_id)
-            else:
-                dialog = await fast_help_repository.get_fast_help_by_fast_help_id(fast_help_id=mode_id)
-            recommendation = dialog.recommendation
-            await message.message.answer(text=recommendation)
-            audio_file = await GPT(thread_id=user.mental_ai_threat_id).generate_audio_by_text(text=recommendation)
-            audio_file.seek(0)  # сброс указателя в начало файла
-            audio_bytes = audio_file.read()
-            # Отправка голосового сообщения
-            await message.message.answer_voice(
-                voice=BufferedInputFile(file=audio_bytes, filename="voice.mp3")
-            )
+            pass #TODO - recommendation send
     else:
         try:
             payment = await operation_repository.get_operation_by_operation_id(payment_id)

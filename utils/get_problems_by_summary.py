@@ -1,4 +1,3 @@
-import asyncio
 import json
 import traceback
 from os import getenv
@@ -7,7 +6,6 @@ from dotenv import find_dotenv, load_dotenv
 from openai import OpenAI
 
 from settings import mental_problems_function
-
 
 load_dotenv(find_dotenv("../.env"))
 api_key = getenv("GPT_TOKEN")

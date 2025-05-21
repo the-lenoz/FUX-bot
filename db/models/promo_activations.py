@@ -1,8 +1,6 @@
-from sqlalchemy import Column, BigInteger, ForeignKey, String, Boolean
-from sqlalchemy.orm import relationship, Mapped
+from sqlalchemy import Column, BigInteger, ForeignKey
 
 from db.base import BaseModel, CleanModel
-from .users import Users
 
 
 class PromoActivations(BaseModel, CleanModel):

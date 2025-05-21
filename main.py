@@ -2,9 +2,7 @@ import asyncio
 import logging
 import signal
 import sys
-from logging import Logger
 
-from aiogram import Dispatcher
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
@@ -14,7 +12,6 @@ from handlers.admin_bot_handlers import admin_router
 from handlers.checkup_handler import checkup_router
 from handlers.exercises_handler import exercises_router
 from handlers.information_handler import information_router
-from handlers.mental_helper_handler import mental_router
 from handlers.paginator_handlers import paginator_router
 from handlers.payment_handler import payment_router
 from handlers.referral_handler import referral_router
@@ -22,11 +19,9 @@ from handlers.standard_handler import standard_router
 from handlers.sub_management_handler import sub_management_router
 from handlers.system_settings_handler import system_settings_router
 from handlers.user_handler import user_router
-from settings import storage_bot, storage_admin_bot
 from utils.shedulers_bot import edit_activation_sub, send_checkup, notification_reminder, \
     update_power_mode_days, month_checkups, send_weekly_checkups_report
 from utils.user_middleware import EventLoggerMiddleware
-
 
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 logger = logging.getLogger(__name__)
@@ -39,7 +34,7 @@ async def main():
     await main_bot.delete_webhook(drop_pending_updates=True)
 
     main_bot_dispatcher.update.middleware(EventLoggerMiddleware())
-    main_bot_dispatcher.include_routers(sub_management_router, user_router, referral_router, mental_router,
+    main_bot_dispatcher.include_routers(sub_management_router, user_router, referral_router,
                        payment_router, checkup_router,information_router, system_settings_router, exercises_router,
                        paginator_router, standard_router)
 

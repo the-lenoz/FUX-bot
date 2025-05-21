@@ -1,10 +1,10 @@
 from typing import Sequence
 
-from sqlalchemy import select, or_, update, delete
+from sqlalchemy import select, or_, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.engine import DatabaseEngine
-from db.models import Admins
+from db.models import Admin
 
 
 class AdminRepository:
@@ -15,26 +15,26 @@ class AdminRepository:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                user = Admins(admin_id=admin_id, username=username)
+                user = Admin(admin_id=admin_id, username=username)
                 try:
                     session.add(user)
                 except Exception:
                     return False
                 return True
 
-    async def get_admin_by_user_id(self, user_id: int) -> Admins:
+    async def get_admin_by_user_id(self, user_id: int) -> Admin:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = select(Admins).where(or_(Admins.admin_id == user_id))
+                sql = select(Admin).where(or_(Admin.admin_id == user_id))
                 query = await session.execute(sql)
                 return query.scalars().one_or_none()
 
-    async def select_all_admins(self) -> Sequence[Admins]:
+    async def select_all_admins(self) -> Sequence[Admin]:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = select(Admins)
+                sql = select(Admin)
                 query = await session.execute(sql)
                 return query.scalars().all()
 
@@ -42,7 +42,7 @@ class AdminRepository:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = delete(Admins).where(or_(Admins.admin_id == admin_id))
+                sql = delete(Admin).where(or_(Admin.admin_id == admin_id))
                 await session.execute(sql)
                 await session.commit()
 

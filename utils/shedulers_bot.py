@@ -6,10 +6,10 @@ from aiogram import Bot
 from aiogram.types import BufferedInputFile
 
 import utils.checkups
-from data.keyboards import buy_sub_keyboard, emotions_keyboard, productivity_keyboard
+from data.keyboards import buy_sub_keyboard
 from db.repository import subscriptions_repository, users_repository, checkup_repository, days_checkups_repository, \
     events_repository
-from settings import payment_photo, checkup_emotions_photo, checkup_productivity_photo, how_are_you_photo, emoji_dict, \
+from settings import payment_photo, how_are_you_photo, emoji_dict, \
     speed_dict
 from utils.сheckup_stat import generate_emotion_chart
 
@@ -54,7 +54,7 @@ async def send_checkup(main_bot: Bot):
 
 async def notification_reminder(main_bot: Bot):
     users = await users_repository.select_all_users()
-    now = datetime.datetime.utcnow()  # Можно использовать локальное время, если требуется
+    now = datetime.datetime.now()  # Можно использовать локальное время, если требуется
 
     for user in users:
         last_event = await events_repository.get_last_event_by_user_id(user_id=user.user_id)

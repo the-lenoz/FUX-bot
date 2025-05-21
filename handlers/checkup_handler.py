@@ -3,15 +3,14 @@ from datetime import datetime
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import any_state
-from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, BufferedInputFile
+from aiogram.types import Message, CallbackQuery, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from data.keyboards import checkup_type_keyboard, buy_sub_keyboard, menu_keyboard, menu_button, \
-    emotions_keyboard, productivity_keyboard, delete_checkups_keyboard
-from db.repository import users_repository, subscriptions_repository, checkup_repository, days_checkups_repository
-from settings import mechanic_checkup, InputMessage, is_valid_time, checkup_emotions_photo, checkup_productivity_photo, \
-    checkups_types_photo
 import utils.checkups
+from data.keyboards import checkup_type_keyboard, buy_sub_keyboard, menu_keyboard, menu_button, \
+    delete_checkups_keyboard
+from db.repository import users_repository, subscriptions_repository, checkup_repository, days_checkups_repository
+from settings import mechanic_checkup, InputMessage, is_valid_time, checkups_types_photo
 from utils.checkups_ended import is_ended_today
 
 checkup_router = Router()
