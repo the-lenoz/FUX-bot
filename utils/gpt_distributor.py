@@ -211,7 +211,7 @@ class AIHandler:
 
             typing_message = await main_bot.send_message(
                 request.user_id,
-                "💬Печатаю…"
+                "💬<i>Печатаю…</i>"
             )
             await main_bot.send_chat_action(chat_id=request.user_id, action="typing")
 
@@ -316,7 +316,7 @@ class PsyHandler(AIHandler):
     async def provide_recommendations(self, user_id: int):
         typing_message = await main_bot.send_message(
             user_id,
-            "💬Печатаю…"
+            "💬<i>Печатаю…</i>"
         )
         await main_bot.send_chat_action(chat_id=user_id, action="typing")
         user = await users_repository.get_user_by_user_id(user_id)
