@@ -5,7 +5,7 @@ from utils.prompts import SENSITIVE_PROMPT, STRAIGHTFORWARD_PROMPT
 async def get_user_description(user_id: int, is_psy: bool = False) -> str:
     user = await users_repository.get_user_by_user_id(user_id)
 
-    description = []
+    description = ['СТРОГО! Общайся с пользователем на "ты" или по имени. Никогда не на "Вы".\n\n']
 
     if user.name and user.name != "NoName":
         description.append(f"\nName: {user.name}\n")
