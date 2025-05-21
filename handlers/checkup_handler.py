@@ -11,7 +11,7 @@ from data.keyboards import checkup_type_keyboard, buy_sub_keyboard, menu_keyboar
     delete_checkups_keyboard
 from db.repository import users_repository, subscriptions_repository, checkup_repository, days_checkups_repository
 from settings import mechanic_checkup, InputMessage, is_valid_time, checkups_types_photo
-from utils.checkups_ended import is_ended_today
+from utils.checkups_ended import sent_today
 
 checkup_router = Router()
 
@@ -24,7 +24,7 @@ async def go_checkup(call: CallbackQuery):
     have_checkups = False
     for checkup in user_checkups:
         active_day = await days_checkups_repository.get_active_day_checkup_by_checkup_id(checkup_id=checkup.id)
-        if active_day or (datetime.now().time() < checkup.time_checkup and not await is_ended_today(checkup.id)):
+        if active_day or (datetime.now().time() < checkup.time_checkup and not await sent_today(checkup.id)):
             have_checkups = True
             button_text = "🤩Трекинг эмоций" if checkup.type_checkup == "emotions" else "🚀Трекинг продуктивности"
             keyboard.row(InlineKeyboardButton(text=button_text, callback_data=f"start_checkup|{checkup.id}"))
