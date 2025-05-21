@@ -1,6 +1,7 @@
 import base64
 import tempfile
 from asyncio import Lock
+import re
 
 import openai
 from aiogram.types import BufferedInputFile, FSInputFile
@@ -285,7 +286,7 @@ class AIHandler:
                 await typing_message.delete()
                 await main_bot.send_message(
                     request.user_id,
-                    messages.data[0].content[0].text.value,
+                    re.sub(r'【.*】.', '', messages.data[0].content[0].text.value),
                     parse_mode=""
                 )
 
