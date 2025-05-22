@@ -230,7 +230,9 @@ statistics_keyboard.row(InlineKeyboardButton(text="Количество запр
 
 notification_keyboard = InlineKeyboardBuilder()
 notification_keyboard.row(
-    InlineKeyboardButton(text="Обсудить проблему", callback_data="start_problem_conversation"),
+    InlineKeyboardButton(text="Обсудить проблему", callback_data="start_problem_conversation")
+)
+notification_keyboard.row(
     InlineKeyboardButton(text="Упражнение", callback_data="exercises_by_problem"),
     InlineKeyboardButton(text="Трекинг", callback_data="settings|checkups")
 )
