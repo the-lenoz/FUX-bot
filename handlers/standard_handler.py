@@ -2,13 +2,23 @@ import io
 
 from aiogram import Router, F, Bot
 from aiogram.filters import Command
-from aiogram.types import Message
+from aiogram.fsm.context import FSMContext
+from aiogram.types import Message, CallbackQuery
 
 # from data.keyboards import choice_keyboard
 # from data.messages import start_message, wait_manager, update_language
 from utils.gpt_distributor import UserRequest, UserFile, user_request_handler
 
 standard_router = Router()
+
+
+@standard_router.callback_query(F.data == "start_problem_conversation")
+async def start_problem_conversation(call: CallbackQuery, state: FSMContext, bot: Bot):
+    request = UserRequest(
+        user_id=call.from_user.id,
+        text="Привет, я хочу разобрать проблему."
+    )
+    await user_request_handler.handle(request)
 
 
 @standard_router.message(Command("recommendation"))

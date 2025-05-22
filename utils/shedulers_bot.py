@@ -6,7 +6,7 @@ from aiogram import Bot
 from aiogram.types import BufferedInputFile
 
 import utils.checkups
-from data.keyboards import buy_sub_keyboard
+from data.keyboards import buy_sub_keyboard, notification_keyboard
 from db.repository import subscriptions_repository, users_repository, checkup_repository, days_checkups_repository, \
     events_repository
 from settings import payment_photo, how_are_you_photo, emoji_dict, \
@@ -72,6 +72,7 @@ async def notification_reminder(main_bot: Bot):
                     chat_id=user.user_id,
                     caption="> Добрый день, коллеги\.\.\.\n\n\nВы подготовили отчёт\?📙",
                     parse_mode="MarkdownV2",
+                    reply_markup=notification_keyboard
                 )
                 last_event.day_notif_sent = True
                 await events_repository.update_event(last_event)
@@ -83,7 +84,8 @@ async def notification_reminder(main_bot: Bot):
             try:
                 await main_bot.send_message(
                     user.user_id,
-                    "Уведомление: с момента последнего вашего действия прошла неделя. Рекомендуем вернуться к работе."
+                    "Ты не взаимодействовал со мной уже неделю! Жду тебя снова",
+                    reply_markup=notification_keyboard
                 )
                 last_event.week_notif_sent = True
                 await events_repository.update_event(last_event)
@@ -94,7 +96,8 @@ async def notification_reminder(main_bot: Bot):
             try:
                 await main_bot.send_message(
                     user.user_id,
-                    "Уведомление: с момента вашего последнего действия прошел месяц. Мы скучаем и ждем вас снова!"
+                    "Ты не взаимодействовал со мной уже месяц! Скучаю и жду тебя снова",
+                    reply_markup=notification_keyboard
                 )
                 last_event.month_notif_sent = True
                 await events_repository.update_event(last_event)

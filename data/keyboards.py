@@ -228,6 +228,14 @@ statistics_keyboard.row(InlineKeyboardButton(text="Количество поль
 statistics_keyboard.row(InlineKeyboardButton(text="Количество запросов в GPT", callback_data="statistics|gpt"))
 
 
+notification_keyboard = InlineKeyboardBuilder()
+notification_keyboard.row(
+    InlineKeyboardButton(text="Обсудить проблему", callback_data="start_problem_conversation"),
+    InlineKeyboardButton(text="Упражнение", callback_data="exercises_by_problem"),
+    InlineKeyboardButton(text="Трекинг", callback_data="settings|checkups")
+)
+
+
 def delete_checkups_keyboard(type_checkup: str, checkup_id: int):
     keyboard = InlineKeyboardBuilder()
     if type_checkup == "emotions":
