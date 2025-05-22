@@ -72,7 +72,7 @@ async def notification_reminder(main_bot: Bot):
                     chat_id=user.user_id,
                     caption="> Добрый день, коллеги\.\.\.\n\n\nВы подготовили отчёт\?📙",
                     parse_mode="MarkdownV2",
-                    reply_markup=notification_keyboard
+                    reply_markup=notification_keyboard.as_markup()
                 )
                 last_event.day_notif_sent = True
                 await events_repository.update_event(last_event)
@@ -85,7 +85,7 @@ async def notification_reminder(main_bot: Bot):
                 await main_bot.send_message(
                     user.user_id,
                     "Ты не взаимодействовал со мной уже неделю! Жду тебя снова",
-                    reply_markup=notification_keyboard
+                    reply_markup=notification_keyboard.as_markup()
                 )
                 last_event.week_notif_sent = True
                 await events_repository.update_event(last_event)
@@ -97,7 +97,7 @@ async def notification_reminder(main_bot: Bot):
                 await main_bot.send_message(
                     user.user_id,
                     "Ты не взаимодействовал со мной уже месяц! Скучаю и жду тебя снова",
-                    reply_markup=notification_keyboard
+                    reply_markup=notification_keyboard.as_markup()
                 )
                 last_event.month_notif_sent = True
                 await events_repository.update_event(last_event)
