@@ -14,7 +14,7 @@ async def get_user_description(user_id: int, is_psy: bool = False) -> str:
     if user.age:
         description.append(f"\nAge: {user.age}\n")
 
-    if user.ai_temperature == 0.7:
+    if user.ai_temperature == 0.6:
         description.append(STRAIGHTFORWARD_PROMPT)
     elif user.ai_temperature == 1.3:
         description.append(SENSITIVE_PROMPT)

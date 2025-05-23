@@ -200,6 +200,7 @@ def productivity_keyboard(check_data: str):
 ai_temperature_keyboard = InlineKeyboardBuilder()
 ai_temperature_keyboard.row(InlineKeyboardButton(text="Мягкая версия", callback_data="ai_temperature|1.3"))
 ai_temperature_keyboard.row(InlineKeyboardButton(text="Прямолинейная версия", callback_data="ai_temperature|0.6"))
+ai_temperature_keyboard.row(InlineKeyboardButton(text="Нейтральная версия (по умолчанию)", callback_data="ai_temperature|1"))
 ai_temperature_keyboard.row(menu_button)
 
 
