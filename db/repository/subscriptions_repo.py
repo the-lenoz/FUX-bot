@@ -72,12 +72,12 @@ class SubscriptionsRepository:
                 await session.execute(sql)
                 await session.commit()
 
-    async def update_time_limit_subscription(self, subscription_id: int, new_time_limit):
+    async def increase_subscription_time_limit(self, subscription_id: int, time_to_add):
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
                 sql = update(Subscriptions).values({
-                    Subscriptions.time_limit_subscription: Subscriptions.time_limit_subscription + new_time_limit
+                    Subscriptions.time_limit_subscription: Subscriptions.time_limit_subscription + time_to_add
                 }).where(or_(Subscriptions.id == subscription_id))
                 await session.execute(sql)
                 await session.commit()

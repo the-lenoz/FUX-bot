@@ -3,6 +3,7 @@ import traceback
 from datetime import timedelta, datetime
 
 from aiogram import Router, F, Bot
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import any_state
 from aiogram.types import Message, CallbackQuery
@@ -16,6 +17,7 @@ from db.repository import users_repository, referral_system_repository, \
 from handlers.standard_handler import user_request_handler
 from settings import InputMessage, photos_pages, menu_photo
 from utils.paginator import MechanicsPaginator
+from utils.promocode import user_entered_promo_code
 
 user_router = Router()
 
@@ -37,7 +39,7 @@ async def start_menu(call: CallbackQuery, state: FSMContext):
 
 @user_router.message(F.text == "/menu", any_state)
 @user_router.message(F.text == "/start", any_state)
-async def send_user_message(message: Message, state: FSMContext, bot: Bot):
+async def send_user_message(message: Message, state: FSMContext, bot: Bot, command: Command):
     user = await users_repository.get_user_by_user_id(message.from_user.id)
     user_id = message.from_user.id
 
@@ -147,173 +149,11 @@ async def user_enter_promo_code(message: Message, state: FSMContext, bot: Bot):
     from_referral = state_data.get("from_referral")
     if delete_message_id is not None:
         await bot.delete_message(chat_id=user_id, message_id=delete_message_id)
-    promo = await referral_system_repository.get_promo_by_promo_code(promo_code=promo_code)
-    if promo is None:
-        await message.answer("Такого промокода не существует",
-                             reply_markup=cancel_keyboard.as_markup())
-        return
-    elif promo.bring_user_id == message.from_user.id and promo.type_promo == "standard":
-        await message.answer("Ты не можешь активировать промокод, который ты сам же выпустил)",
-                             reply_markup=menu_keyboard.as_markup())
-        return
-    await state.clear()
-    # delete_message = await message.answer("Секундочку, загружаем информацию о промокоде)")
-    if promo.type_promo == "standard":
-        user = await users_repository.get_user_by_user_id(user_id=user_id)
-        if user.activate_promo:
-            if not from_referral:
-                await message.answer("К сожалению, мы вынуждены отказать. Ты уже активировал бонусы ранее")
-                await go_to_enter_initials(message, state, bot)
-            else:
-                await message.answer("К сожалению, мы вынуждены отказать. Ты уже активировал бонусы ранее",
-                                     reply_markup=menu_keyboard.as_markup())
-            return
-        await referral_system_repository.update_activations_by_promo_id(promo_id=promo.id)
-        await promo_activations_repository.add_activation(promo_id=promo.id, activate_user_id=user_id)
-        await users_repository.update_activate_promo_by_user_id(user_id=user_id)
-        activate_user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
-        if activate_user_sub is None:
-            await subscriptions_repository.add_subscription(user_id=user_id,
-                                                            time_limit_subscription=7)
-            end_date = datetime.now() + timedelta(days=7)
-            text = f"✅ Теперь у тебя есть <b>недельная подписка</b>! Подписка действует до {end_date.strftime('%d.%m.%y, %H:%M')} (GMT+3)"
-        else:
-            await subscriptions_repository.update_time_limit_subscription(subscription_id=activate_user_sub.id,
-                                                                          new_time_limit=7)
-            end_date = activate_user_sub.creation_date + timedelta(days=activate_user_sub.time_limit_subscription + 7)
-            text = f"✅ К текущему плану тебе добавили <b>одну неделю</b>! Подписка действует до {end_date.strftime('%d.%m.%y, %H:%M')} (GMT+3)"
-        await message.answer(text=text)
 
-        if from_referral is None and not from_referral:
-            await go_to_enter_initials(message, state, bot)
-        await asyncio.sleep(2)
-        promo = await referral_system_repository.get_promo_by_bring_user_id(bring_user_id=promo.bring_user_id)
-        activations = promo.activations
-        bring_user_subscription = await subscriptions_repository.get_active_subscription_by_user_id(
-            user_id=promo.bring_user_id)
-        if activations > 10:
-            try:
-                await bot.send_message(chat_id=promo.bring_user_id,
-                                       text="Поздравляем, выпущенный тобой промокод только что бы активирован,"
-                                            " но, к сожалению, больше бонусов мы не можем тебе дать,"
-                                            " так как этот промокод был активирован более 10 раз",
-                                       reply_markup=menu_keyboard.as_markup())
-            except:
-                print(traceback.format_exc())
-        elif activations == 5:
-            if bring_user_subscription is None:
-                end_date = datetime.now() + timedelta(days=30)
-                await subscriptions_repository.add_subscription(user_id=promo.bring_user_id,
-                                                                time_limit_subscription=30)
-                text = (f"<b>Пять друзей</b> активировали твой промокод. ✅"
-                        f" Теперь у тебя есть подписка на один месяц! Подписка действует"
-                        f" до {end_date.strftime('%d.%m.%y, %H:%M')} (GMT+3)")
-            else:
-                end_date = bring_user_subscription.creation_date + timedelta(
-                    days=bring_user_subscription.time_limit_subscription + 30)
-                await subscriptions_repository.update_time_limit_subscription(
-                    subscription_id=bring_user_subscription.id,
-                    new_time_limit=30)
-                text = (f"Пять друзей активировали твой промокод. ✅"
-                        f" К текущему плану тебе добавили <b>один месяц</b>!"
-                        f" Теперь твоя подписка действует до {end_date.strftime('%d.%m.%y, %H:%M')} (GMT+3)")
-            try:
-                await bot.send_message(chat_id=promo.bring_user_id, text=text,
-                                       reply_markup=menu_keyboard.as_markup())
-            except:
-                print(traceback.format_exc())
-        elif activations == 10:
-            if bring_user_subscription is None:
-                end_date = datetime.now() + timedelta(days=30)
-                await subscriptions_repository.add_subscription(user_id=promo.bring_user_id,
-                                                                time_limit_subscription=90)
-                text = (f"<b>Десять друзей</b> активировали твой промокод. ✅"
-                        f" Теперь у тебя есть подписка на три месяца!"
-                        f" Подписка действует до {end_date.strftime('%d.%m.%y, %H:%M')} (GMT+3")
-            else:
-                end_date = bring_user_subscription.creation_date + timedelta(
-                    days=bring_user_subscription.time_limit_subscription + 90)
-                await subscriptions_repository.update_time_limit_subscription(
-                    subscription_id=bring_user_subscription.id,
-                    new_time_limit=90)
-                text = (f"Десять друзей активировали твой промокод. ✅"
-                        f" К текущему плану тебе добавили <b>три месяца</b>!"
-                        f" Теперь твоя подписка действует до {end_date.strftime('%d.%m.%y, %H:%M')} (GMT+3)")
-            try:
-                await bot.send_message(chat_id=promo.bring_user_id, text=text,
-                                       reply_markup=menu_keyboard.as_markup())
-            except:
-                print(traceback.format_exc())
-        elif activations == 1:
-            if bring_user_subscription is None:
-                end_date = datetime.now() + timedelta(days=7)
-                await subscriptions_repository.add_subscription(user_id=promo.bring_user_id,
-                                                                time_limit_subscription=7)
-                text = (f"Твой друг активировал промокод. ✅ "
-                        f"Теперь у тебя есть <b>недельная подписка</b>! Подписка действует до {end_date.strftime('%d.%m.%y, %H:%M')} (GMT+3)")
-            else:
-                end_date = bring_user_subscription.creation_date + timedelta(
-                    days=bring_user_subscription.time_limit_subscription + 7)
-                await subscriptions_repository.update_time_limit_subscription(
-                    subscription_id=bring_user_subscription.id,
-                    new_time_limit=7)
-                text = (f"Твой друг активировал промокод. ✅"
-                        f" К текущему плану тебе добавили одну неделю!"
-                        f" Теперь твоя подписка действует до {end_date.strftime('%d.%m.%y, %H:%M')} (GMT+3)")
-            try:
-                await bot.send_message(chat_id=promo.bring_user_id, text=text,
-                                       reply_markup=menu_keyboard.as_markup())
-            except:
-                print(traceback.format_exc())
-        else:
-            await bot.send_message(chat_id=promo.bring_user_id, text=f"Твой друг активировал промокод. ✅"
-                                                                     f" По твоему промокоду уже {activations} активаций",
-                                   reply_markup=menu_keyboard.as_markup())
-    else:
-        promo_activations = await promo_activations_repository.get_activations_by_promo_id(promo_id=promo.id)
-        if promo.active is False:
-            if from_referral is None or not from_referral:
-                await message.answer("К сожалению, данный промокод уже неактивен")
-                await go_to_enter_initials(message, state, bot)
-            else:
-                await message.answer("К сожалению, данный промокод уже неактивен",
-                                     reply_markup=menu_keyboard.as_markup())
-            return
-        if len(promo_activations) >= promo.max_activations:
-            if from_referral is None or not from_referral:
-                await message.answer("К сожалению, данный промокод был активирован максимальное количество раз")
-                await go_to_enter_initials(message, state, bot)
-            else:
-                await message.answer("К сожалению, данный промокод был активирован максимальное количество раз",
-                                     reply_markup=menu_keyboard.as_markup())
-            return
-        if user_id in [promo_activation.activate_user_id for promo_activation in promo_activations]:
-            if from_referral is None or not from_referral:
-                await message.answer("Ты уже активировал данный промокод ранее")
-                await go_to_enter_initials(message, state, bot)
-            else:
-                await message.answer("Ты уже активировал данный промокод ранее",
-                                     reply_markup=menu_keyboard.as_markup())
-            return
-        await referral_system_repository.update_activations_by_promo_id(promo_id=promo.id)
-        await promo_activations_repository.add_activation(promo_id=promo.id, activate_user_id=user_id)
-        # await users_repository.update_activate_promo_by_user_id(user_id=user_id)
-        activate_user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
-        if activate_user_sub is None:
-            await subscriptions_repository.add_subscription(user_id=user_id,
-                                                            time_limit_subscription=promo.days_sub)
-            end_date = datetime.now() + timedelta(days=promo.days_sub)
-            text = f"✅ Теперь у тебя есть подписка на <b>{promo.days_sub} дней</b>! Подписка действует до {end_date.strftime('%d.%m.%y, %H:%M')} (GMT+3)"
-        else:
-            await subscriptions_repository.update_time_limit_subscription(subscription_id=activate_user_sub.id,
-                                                                          new_time_limit=promo.days_sub)
-            end_date = activate_user_sub.creation_date + timedelta(
-                days=activate_user_sub.time_limit_subscription + promo.days_sub)
-            text = f"✅ К текущему плану тебе добавили <b>{promo.days_sub} дней</b>! Подписка действует до {end_date.strftime('%d.%m.%y, %H:%M')} (GMT+3)"
-        await message.answer(text=text)
+    await user_entered_promo_code(user_id, promo_code, from_referral)
 
-        if from_referral is None and not from_referral:
-            await go_to_enter_initials(message, state, bot)
+    if not from_referral:
+        await go_to_enter_initials(message, state, bot)
 
 
 @user_router.callback_query(F.data == "cancel", InputMessage.enter_initials)
@@ -329,7 +169,7 @@ async def cancel_promo(call: CallbackQuery, state: FSMContext):
 
 
 @user_router.message(F.text, InputMessage.enter_initials)
-async def user_enter_promo_code(message: Message, state: FSMContext, bot: Bot):
+async def user_entered_initials(message: Message, state: FSMContext, bot: Bot):
     state_data = await state.get_data()
     message_delete = state_data.get("message_delete")
     if message_delete:
@@ -341,9 +181,7 @@ async def user_enter_promo_code(message: Message, state: FSMContext, bot: Bot):
     name = data[0]
     await users_repository.update_initials_id_by_user_id(user_id=message.from_user.id,
                                                          first_name=name)
-    # await message.answer("Какой возрастной диапазон тебе ближе?"
-    #                           " (Чтобы я мог лучше адаптироваться под твои запросы🧡)",
-    #                           reply_markup=age_keyboard.as_markup())
+
     await message.answer("В каком роде мне к тебе обращаться?🧡",
                          reply_markup=choice_gender_keyboard.as_markup())
 
