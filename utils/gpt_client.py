@@ -12,7 +12,7 @@ from settings import openai_api_key
 BASIC_MODEL = "gpt-4o-mini"
 ADVANCED_MODEL = "gpt-4.1"
 
-TRANSCRIPT_MODEL = "gpt-4o-mini-transcribe"
+TRANSCRIPT_MODEL = "whisper-1"
 
 TTS_MODEL = "tts-1-hd"
 

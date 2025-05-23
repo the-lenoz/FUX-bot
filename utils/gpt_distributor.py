@@ -41,7 +41,7 @@ class UserRequestHandler:
 
         if await check_is_subscribed(request.user_id):
             to_psy = False
-            text = str(request.text)
+            text = request.text if request.text else ""
 
             if self.psy_handler.active_threads.get(request.user_id):
                 to_psy = True
