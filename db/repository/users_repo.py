@@ -195,11 +195,56 @@ class UserRepository:
                 await session.commit()
 
     async def used_exercises(self, user_id: int):
+        user = await self.get_user_by_user_id(user_id)
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
                 sql = update(User).values({
-                    User.used_exercises: True
+                    User.used_exercises: user.used_exercises + 1
+                }).where(or_(User.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
+    async def user_sent_message(self, user_id: int):
+        user = await self.get_user_by_user_id(user_id)
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(User).values({
+                    User.messages_count: user.messages_count + 1
+                }).where(or_(User.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
+    async def user_got_recommendation(self, user_id: int):
+        user = await self.get_user_by_user_id(user_id)
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(User).values({
+                    User.recommendations_count: user.recommendations_count + 1
+                }).where(or_(User.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
+    async def user_tracked_emotions(self, user_id: int):
+        user = await self.get_user_by_user_id(user_id)
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(User).values({
+                    User.emotions_tracks_count: user.emotions_tracks_count + 1
+                }).where(or_(User.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
+    async def user_tracked_productivity(self, user_id: int):
+        user = await self.get_user_by_user_id(user_id)
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(User).values({
+                    User.productivity_tracks_count: user.productivity_tracks_count + 1
                 }).where(or_(User.user_id == user_id))
                 await session.execute(sql)
                 await session.commit()

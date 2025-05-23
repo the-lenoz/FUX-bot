@@ -37,6 +37,7 @@ class UserRequestHandler:
         self.psy_handler = PsyHandler()
 
     async def handle(self, request: UserRequest):
+
         if await check_is_subscribed(request.user_id):
             to_psy = False
             text = str(request.text)
