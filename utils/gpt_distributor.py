@@ -352,7 +352,6 @@ class PsyHandler(AIHandler):
 
 
                     if not user.used_free_recommendation or is_subscribed:
-                        await typing_message.delete()
                         await main_bot.send_message(
                             user_id,
                             recommendation
@@ -382,7 +381,6 @@ class PsyHandler(AIHandler):
                             await users_repository.used_free_recommendation(user_id)
 
                     else:
-                        await typing_message.delete()
                         photo_recommendation = generate_blurred_image_with_text(text=recommendation, enable_blur=True)
                         await main_bot.send_photo(
                             user_id,
@@ -390,7 +388,14 @@ class PsyHandler(AIHandler):
                             photo=BufferedInputFile(file=photo_recommendation, filename=f"recommendation.png"),
                             caption="🌰<i>Рекомендация</i> готова, но чтобы получить её, нужна <b>подписка</b>",
                             reply_markup=get_rec_keyboard(mode_id=0, mode_type="fast_help").as_markup())
+        else:
+            await main_bot.send_message(
+                user_id,
+                "Для того, чтобы получить рекомендацию, обсуди проблему"
+            )
 
+
+        await typing_message.delete()
         await self.exit(user_id)
 
     async def generate_exercise(self, user_id: int):
