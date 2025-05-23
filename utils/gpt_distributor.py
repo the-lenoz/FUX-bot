@@ -181,7 +181,8 @@ class UserRequestHandler:
         try:
             transcript = await openAI_client.audio.transcriptions.create(
                 model=TRANSCRIPT_MODEL,
-                file=(voice.filename, voice.file_bytes)
+                file=(voice.filename, voice.file_bytes),
+                language="ru"
             )
             return transcript.text
 
