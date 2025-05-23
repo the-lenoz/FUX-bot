@@ -11,6 +11,7 @@ from db.repository import subscriptions_repository, users_repository, checkup_re
     events_repository
 from settings import payment_photo, how_are_you_photo, emoji_dict, \
     speed_dict
+from utils.messages_provider import send_subscription_end_message
 from utils.сheckup_stat import generate_emotion_chart
 
 
@@ -21,11 +22,7 @@ async def edit_activation_sub(main_bot: Bot):
         if now_date - sub.creation_date >= datetime.timedelta(hours=24 * sub.time_limit_subscription):
             try:
                 await subscriptions_repository.deactivate_subscription(sub.id)
-                await main_bot.send_photo(
-                    caption="К сожалению, твоя подписка закончена. Необходимо продлить подписку:",
-                    photo=payment_photo,
-                    chat_id=sub.user_id,
-                    reply_markup=buy_sub_keyboard.as_markup())
+                await send_subscription_end_message(sub.user_id)
             except Exception as e:
                 print(e)
                 continue
