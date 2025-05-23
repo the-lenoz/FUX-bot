@@ -39,7 +39,7 @@ async def start_menu(call: CallbackQuery, state: FSMContext):
 
 @user_router.message(F.text == "/menu", any_state)
 @user_router.message(F.text == "/start", any_state)
-async def send_user_message(message: Message, state: FSMContext, bot: Bot, command: Command):
+async def send_user_message(message: Message, state: FSMContext, bot: Bot):
     user = await users_repository.get_user_by_user_id(message.from_user.id)
     user_id = message.from_user.id
 
