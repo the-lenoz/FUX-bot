@@ -63,6 +63,12 @@ async def enter_emoji_user(call: CallbackQuery, state: FSMContext):
     await call.message.answer("Спасибо за ответ!")
     if update_power_mode:
         await call.message.answer(f"{user.power_mode_days + 1} орех подряд!🌰 Продолжай с трекингом в том же духе")
+
+    if type_checkup == "emotions":
+        await users_repository.user_tracked_emotions(user_id)
+    elif type_checkup == "productivity":
+        await users_repository.user_tracked_productivity(user_id)
+
     await call.message.delete()
 
 

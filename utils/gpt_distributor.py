@@ -37,6 +37,7 @@ class UserRequestHandler:
         self.psy_handler = PsyHandler()
 
     async def handle(self, request: UserRequest):
+        await users_repository.user_sent_message(request.user_id)
 
         if await check_is_subscribed(request.user_id):
             to_psy = False
@@ -321,6 +322,8 @@ class PsyHandler(AIHandler):
             "💬<i>Печатаю…</i>"
         )
         await main_bot.send_chat_action(chat_id=user_id, action="typing")
+        await users_repository.user_got_recommendation(user_id)
+
         user = await users_repository.get_user_by_user_id(user_id)
         is_subscribed = await check_is_subscribed(user_id)
 
@@ -392,6 +395,7 @@ class PsyHandler(AIHandler):
 
     async def generate_exercise(self, user_id: int):
         await self.exit(user_id)
+        await users_repository.used_exercises(user_id)
 
         user_description = await get_user_description(user_id, True)
 

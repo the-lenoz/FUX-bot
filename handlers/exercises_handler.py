@@ -16,7 +16,6 @@ async def exercises_by_problem_call(call: CallbackQuery, state: FSMContext, bot:
     if not user.used_exercises:
         await call.message.answer_photo(caption=mechanic_dict.get("exercises_by_problem"),
                                         photo=exercises_photo)
-    await users_repository.used_exercises(user_id)
 
     await call.message.delete()
     await generate_feedback_for_user(call, state, bot)
