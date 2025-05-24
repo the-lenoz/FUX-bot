@@ -26,4 +26,4 @@ async def subscription_management_menu(user_id: int):
     else:
         await main_bot.send_photo(user_id,
                                     photo=sub_description_photo,
-                                    reply_markup=generate_sub_keyboard(mode_type=None, mode_id=None).as_markup())
+                                    reply_markup=generate_sub_keyboard(mode_type=None).as_markup())

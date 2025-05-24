@@ -139,18 +139,18 @@ mental_helper_keyboard.row(InlineKeyboardButton(text="Уйти вглубь", ca
 mental_helper_keyboard.row(menu_button)
 
 
-def generate_sub_keyboard(mode_type: str | None = None, mode_id : int | None = None):
+def generate_sub_keyboard(mode_type: str | None = None):
     subscriptions_keyboard = InlineKeyboardBuilder()
-    subscriptions_keyboard.row(InlineKeyboardButton(text="390р/неделя", callback_data=f"choice_sub|7|390.00|{mode_type}|{mode_id}"))
-    subscriptions_keyboard.row(InlineKeyboardButton(text="790р/месяц", callback_data=f"choice_sub|30|790.00|{mode_type}|{mode_id}"))
-    subscriptions_keyboard.row(InlineKeyboardButton(text="1990р/3 месяца", callback_data=f"choice_sub|90|1990.00|{mode_type}|{mode_id}"))
+    subscriptions_keyboard.row(InlineKeyboardButton(text="390р/неделя", callback_data=f"choice_sub|7|390.00|{mode_type}"))
+    subscriptions_keyboard.row(InlineKeyboardButton(text="790р/месяц", callback_data=f"choice_sub|30|790.00|{mode_type}"))
+    subscriptions_keyboard.row(InlineKeyboardButton(text="1990р/3 месяца", callback_data=f"choice_sub|90|1990.00|{mode_type}"))
     subscriptions_keyboard.row(menu_button)
     return subscriptions_keyboard
 
-def get_rec_keyboard(mode_id: int, mode_type: str):
+def get_rec_keyboard( mode_type: str):
     keyboard = InlineKeyboardBuilder()
-    # keyboard.row(InlineKeyboardButton(text="Показать рекомендацию", callback_data=f"get_recommendation|{mode_type}|{mode_id}"))
-    keyboard.row(InlineKeyboardButton(text="Подписка", callback_data=f"subscribe|{mode_type}|{mode_id}"))
+
+    keyboard.row(InlineKeyboardButton(text="Подписка", callback_data=f"subscribe|{mode_type}"))
     # keyboard.row(menu_button)
     return keyboard
 
@@ -159,12 +159,11 @@ buy_sub_keyboard.row(InlineKeyboardButton(text="Подписка", callback_data
 buy_sub_keyboard.row(menu_button)
 
 
-async def keyboard_for_pay(operation_id: str, url: str, time_limit: int,
-                           mode_type: str | None = None, mode_id: str| None = None):
+async def keyboard_for_pay(operation_id: str, url: str, time_limit: int, mode_type: str | None = None):
     pay_ai_keyboard = InlineKeyboardBuilder()
     pay_ai_keyboard.row(InlineKeyboardButton(text="Оплатить", web_app=WebAppInfo(url=url)))
     pay_ai_keyboard.row(InlineKeyboardButton(text="Оплата произведена",
-                                             callback_data=f"is_paid|{operation_id}|{time_limit}|{mode_type}|{mode_id}"))
+                                             callback_data=f"is_paid|{operation_id}|{time_limit}|{mode_type}"))
     return pay_ai_keyboard
 
 

@@ -6,6 +6,7 @@ import re
 import openai
 from aiogram.types import BufferedInputFile, FSInputFile
 from pydantic import BaseModel
+from tqdm.contrib.concurrent import thread_map
 
 from bots import main_bot
 from data.keyboards import get_rec_keyboard, buy_sub_keyboard
@@ -203,9 +204,10 @@ class AIHandler:
             self.thread_locks[request.user_id] = Lock()
         async with self.thread_locks[request.user_id]:
             if self.active_threads.get(request.user_id):
-                thread = await openAI_client.beta.threads.retrieve(self.active_threads[request.user_id])
+                thread_id = self.active_threads[request.user_id]
             else:
                 thread = await openAI_client.beta.threads.create()
+                thread_id = thread.id
                 self.active_threads[request.user_id] = thread.id
                 await openAI_client.beta.threads.messages.create(
                     thread_id=thread.id,
@@ -270,20 +272,20 @@ class AIHandler:
                 content = "Расскажи о себе"
 
             await openAI_client.beta.threads.messages.create(
-                thread_id=thread.id,
+                thread_id=thread_id,
                 role="user",
                 content=content,
                 attachments=attachments
             )
 
             run = await openAI_client.beta.threads.runs.create_and_poll(
-                thread_id=thread.id,
+                thread_id=thread_id,
                 assistant_id=self.assistant_id
             )
 
             if run.status == 'completed':
                 messages = await openAI_client.beta.threads.messages.list(
-                    thread_id=thread.id,
+                    thread_id=thread_id,
                     run_id=run.id  # Получить сообщения только из этого Run
                 )
                 await typing_message.delete()
@@ -330,22 +332,20 @@ class PsyHandler(AIHandler):
 
         if self.active_threads.get(user_id) and self.thread_locks.get(user_id):
             async with self.thread_locks[user_id]:
-                thread = await openAI_client.beta.threads.retrieve(self.active_threads[user_id])
-
                 await openAI_client.beta.threads.messages.create(
-                    thread_id=thread.id,
+                    thread_id=self.active_threads[user_id],
                     role="user",
                     content=RECOMMENDATION_PROMPT,
                 )
 
                 run = await openAI_client.beta.threads.runs.create_and_poll(
-                    thread_id=thread.id,
+                    thread_id=self.active_threads[user_id],
                     assistant_id=self.assistant_id
                 )
 
                 if run.status == 'completed':
                     messages = await openAI_client.beta.threads.messages.list(
-                        thread_id=thread.id,
+                        thread_id=self.active_threads[user_id],
                         run_id=run.id  # Получить сообщения только из этого Run
                     )
 
@@ -388,7 +388,7 @@ class PsyHandler(AIHandler):
                             has_spoiler=True,
                             photo=BufferedInputFile(file=photo_recommendation, filename=f"recommendation.png"),
                             caption="🌰<i>Рекомендация</i> готова, но чтобы получить её, нужна <b>подписка</b>",
-                            reply_markup=get_rec_keyboard(mode_id=0, mode_type="fast_help").as_markup())
+                            reply_markup=get_rec_keyboard(mode_type="fast_help").as_markup())
         else:
             await main_bot.send_message(
                 user_id,
@@ -432,23 +432,21 @@ class PsyHandler(AIHandler):
 
             if self.active_threads.get(user_id) and self.thread_locks.get(user_id):
                 async with self.thread_locks[user_id]:
-                    thread = await openAI_client.beta.threads.retrieve(self.active_threads[user_id])
-
                     message = await openAI_client.beta.threads.messages.create(
-                        thread_id=thread.id,
+                        thread_id=self.active_threads[user_id],
                         role="user",
                         content=request_text,
                     )
 
                     run = await openAI_client.beta.threads.runs.create_and_poll(
-                        thread_id=thread.id,
+                        thread_id=self.active_threads[user_id],
                         model=BASIC_MODEL,
                         assistant_id=self.assistant_id
                     )
 
                     if run.status == 'completed':
                         messages = await openAI_client.beta.threads.messages.list(
-                            thread_id=thread.id,
+                            thread_id=self.active_threads[user_id],
                             run_id=run.id  # Получить сообщения только из этого Run
                         )
 
@@ -457,7 +455,7 @@ class PsyHandler(AIHandler):
                             user_id,
                             new_mental_data
                         )
-                    await openAI_client.beta.threads.messages.delete(message_id=message.id, thread_id=thread.id)
+                    await openAI_client.beta.threads.messages.delete(message_id=message.id, thread_id=self.active_threads[user_id])
 
     async def exit(self, user_id: int):
         await self.update_user_mental_data(user_id)
