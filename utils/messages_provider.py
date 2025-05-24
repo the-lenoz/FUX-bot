@@ -16,12 +16,16 @@ async def send_subscription_end_message(user_id: int):
         days_str = "дня"
     else:
         days_str = "дней"
+    if used_time.days in (11, 12, 13, 14):
+        days_str = "дней"
 
     if user.messages_count % 10 == 1:
         messages_str = "сообщение"
     elif user.messages_count % 10 in (2, 3, 4):
         messages_str = "сообщения"
     else:
+        messages_str = "сообщений"
+    if user.messages_count in (11, 12, 13, 14):
         messages_str = "сообщений"
 
     if user.emotions_tracks_count % 10 == 1:
@@ -30,12 +34,16 @@ async def send_subscription_end_message(user_id: int):
         emotions_str = "раза"
     else:
         emotions_str = "раз"
+    if user.emotions_tracks_count in (11, 12, 13, 14):
+        emotions_str = "раз"
 
     if user.productivity_tracks_count % 10 == 1:
         productivity_str = "раз"
     elif user.productivity_tracks_count % 10 in (2, 3, 4):
         productivity_str = "раза"
     else:
+        productivity_str = "раз"
+    if user.productivity_tracks_count in (11, 12, 13, 14):
         productivity_str = "раз"
 
     if user.used_exercises % 10 == 1:
@@ -44,12 +52,16 @@ async def send_subscription_end_message(user_id: int):
         exercises_str = "упражнения"
     else:
         exercises_str = "упражнений"
+    if user.used_exercises in (11, 12, 13, 14):
+        exercises_str = "упражнений"
 
     if user.recommendations_count % 10 == 1:
         recommendations_str = "рекомендацию"
     elif user.recommendations_count % 10 in (2, 3, 4):
         recommendations_str = "рекомендации"
     else:
+        recommendations_str = "рекомендаций"
+    if user.recommendations_count in (11, 12, 13, 14):
         recommendations_str = "рекомендаций"
 
     await main_bot.send_photo(
