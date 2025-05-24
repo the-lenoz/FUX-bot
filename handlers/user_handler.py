@@ -43,7 +43,7 @@ async def send_user_message(message: Message, state: FSMContext, bot: Bot):
     user = await users_repository.get_user_by_user_id(message.from_user.id)
     user_id = message.from_user.id
 
-    if user is None or not user.confirm_politic:
+    if not user or not user.confirm_politic:
         if user is None:
             try:
                 await users_repository.add_user(user_id=message.from_user.id, username=message.from_user.username)
