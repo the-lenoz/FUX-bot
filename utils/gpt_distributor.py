@@ -325,6 +325,8 @@ class PsyHandler(AIHandler):
             await self.provide_recommendations(request.user_id)
 
     async def provide_recommendations(self, user_id: int):
+        logger.info("generating recommendation for user. "
+                    f"user_id: {user_id}")
         typing_message = await main_bot.send_message(
             user_id,
             "💬<i>Печатаю…</i>"
@@ -405,6 +407,8 @@ class PsyHandler(AIHandler):
         await self.exit(user_id)
 
     async def generate_exercise(self, user_id: int):
+        logger.info("generating exercise for user. "
+                    f"user_id: {user_id}")
         await self.exit(user_id)
         await users_repository.used_exercises(user_id)
 
