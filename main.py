@@ -2,6 +2,7 @@ import asyncio
 import logging
 import signal
 import sys
+from datetime import datetime
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -23,7 +24,14 @@ from utils.shedulers_bot import edit_activation_sub, send_checkup, notification_
     update_power_mode_days, month_checkups, send_weekly_checkups_report
 from utils.user_middleware import EventLoggerMiddleware
 
-logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+logging.basicConfig(
+    level=logging.INFO,
+    handlers=[
+        logging.FileHandler(f"logs/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log"),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
 logger = logging.getLogger(__name__)
 
 async def main():
