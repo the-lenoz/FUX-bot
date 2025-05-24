@@ -1,4 +1,5 @@
 import base64
+import logging
 import tempfile
 from asyncio import Lock
 import re
@@ -6,7 +7,6 @@ import re
 import openai
 from aiogram.types import BufferedInputFile, FSInputFile
 from pydantic import BaseModel
-from tqdm.contrib.concurrent import thread_map
 
 from bots import main_bot
 from data.keyboards import get_rec_keyboard, buy_sub_keyboard
@@ -18,6 +18,8 @@ from utils.prompts import PSY_TEXT_CHECK_PROMPT_FORMAT, IMAGE_CHECK_PROMPT, DOCU
     MENTAL_DATA_PROVIDER_PROMPT, EXERCISE_PROMPT_FORMAT, SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT
 from utils.subscription import check_is_subscribed
 from utils.user_properties import get_user_description
+
+logger = logging.getLogger()
 
 
 class UserFile(BaseModel):
@@ -38,6 +40,9 @@ class UserRequestHandler:
         self.psy_handler = PsyHandler()
 
     async def handle(self, request: UserRequest):
+        logger.info("started handling message\n" 
+                    f"user_id: {request.user_id}"
+                    f" text:\n{request.text}")
         await users_repository.user_sent_message(request.user_id)
 
         if await check_is_subscribed(request.user_id):
