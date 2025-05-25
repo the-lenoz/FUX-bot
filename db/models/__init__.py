@@ -4,7 +4,6 @@ from .checkup import Checkup
 from .checkup_day_data import CheckupDayData
 from .events import Events
 from .exercises_user import ExercisesUser
-from .mental_problems import MentalProblems
 from .operations import Operations
 from .promo_activations import PromoActivations
 from .referral_system import ReferralSystem
@@ -22,7 +21,6 @@ __all__ = ['User',
            'Operations',
            'Checkup',
            'CheckupDayData',
-           'MentalProblems',
            'ExercisesUser',
            'Events'
            ]

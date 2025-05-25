@@ -202,7 +202,6 @@ class AIHandler:
     def __init__(self):
         self.active_threads = {}
         self.thread_locks = {}
-        self.assistant = openAI_client.beta.assistants.retrieve(self.assistant_id)
 
     async def handle(self, request: UserRequest):
         if not self.thread_locks.get(request.user_id):
