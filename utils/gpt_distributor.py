@@ -10,7 +10,7 @@ from pydantic import BaseModel
 
 from bots import main_bot
 from data.keyboards import get_rec_keyboard, buy_sub_keyboard
-from db.repository import users_repository
+from db.repository import users_repository, ai_requests_repository
 from utils.gpt_client import openAI_client, BASIC_MODEL, TRANSCRIPT_MODEL, mental_assistant_id, standard_assistant_id, TTS_MODEL, ADVANCED_MODEL
 from utils.photo_recommendation import generate_blurred_image_with_text
 from utils.prompts import PSY_TEXT_CHECK_PROMPT_FORMAT, IMAGE_CHECK_PROMPT, DOCUMENT_CHECK_PROMPT, \
@@ -298,6 +298,14 @@ class AIHandler:
                     request.user_id,
                     re.sub(r'【.*】.', '', messages.data[0].content[0].text.value),
                     parse_mode=""
+                )
+                await ai_requests_repository.add_request(
+                    user_id=request.user_id,
+                    user_question=request.text,
+                    answer_ai=messages.data[0].content[0].text.value,
+                    has_photo=request.file and request.file.file_type == 'image',
+                    has_audio=request.file and request.file.file_type == 'voice',
+                    has_files=request.file and request.file.file_type == 'document'
                 )
 
 
