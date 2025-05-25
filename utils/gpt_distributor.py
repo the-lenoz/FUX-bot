@@ -408,10 +408,11 @@ class PsyHandler(AIHandler):
         await typing_message.delete()
         await self.exit(user_id)
 
-    async def generate_exercise(self, user_id: int):
+    @staticmethod
+    async def generate_exercise(user_id: int):
         logger.info("generating exercise for user. "
                     f"user_id: {user_id}")
-        await self.exit(user_id)
+
         await users_repository.used_exercises(user_id)
 
         user_description = await get_user_description(user_id, True)
