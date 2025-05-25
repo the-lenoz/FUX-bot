@@ -1,5 +1,5 @@
 import calendar
-from datetime import datetime
+
 from PIL import Image, ImageDraw, ImageFont
 
 # Задаём год и месяц

@@ -1,5 +1,3 @@
-import asyncio
-
 from aiogram import Router, types, Bot, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import any_state
@@ -7,11 +5,11 @@ from aiogram.types import InlineKeyboardButton, BufferedInputFile
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from bots import main_bot
-from data.keyboards import admin_keyboard, add_delete_admin, cancel_keyboard, choice_bot_stat, back_to_bots_keyboard, \
-    db_tables_keyboard, type_users_mailing_keyboard, statistics_keyboard
+from data.keyboards import admin_keyboard, add_delete_admin, cancel_keyboard, db_tables_keyboard, \
+    type_users_mailing_keyboard, statistics_keyboard
 from db.repository import admin_repository, users_repository, ai_requests_repository, subscriptions_repository, \
     referral_system_repository
-from settings import InputMessage, business_connection_id
+from settings import InputMessage
 from utils.generate_promo import generate_single_promo_code
 from utils.get_table_db_to_excel import export_table_to_memory
 from utils.is_main_admin import is_main_admin
@@ -238,7 +236,7 @@ async def add_mew_admin(message: types.Message, state: FSMContext, bot: Bot):
 
 @admin_router.message(F.text=="Сгенерировать промокод")
 @is_main_admin
-async def get_statistics(message: types.Message, state: FSMContext, bot: Bot):
+async def gen_promo(message: types.Message, state: FSMContext, bot: Bot):
     await state.clear()
     await state.set_state(InputMessage.enter_promo_days)
     await message.answer("Пожалуйста, введи количество дней, которое будет давать активация данного промокода",
@@ -247,7 +245,7 @@ async def get_statistics(message: types.Message, state: FSMContext, bot: Bot):
 
 @admin_router.message(F.text, InputMessage.enter_promo_days)
 @is_main_admin
-async def get_statistics(message: types.Message, state: FSMContext, bot: Bot):
+async def enter_promo_days(message: types.Message, state: FSMContext, bot: Bot):
     max_days = message.text
     if max_days.isdigit():
         await state.clear()
@@ -263,7 +261,7 @@ async def get_statistics(message: types.Message, state: FSMContext, bot: Bot):
 
 @admin_router.message(F.text, InputMessage.enter_max_activations_promo)
 @is_main_admin
-async def get_statistics(message: types.Message, state: FSMContext, bot: Bot):
+async def enter_max_activations(message: types.Message, state: FSMContext, bot: Bot):
     max_activations = message.text
     state_data = await state.get_data()
     max_days = int(state_data.get("max_days"))

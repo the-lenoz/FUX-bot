@@ -1,8 +1,7 @@
 from typing import Any, Awaitable, Callable, Dict
 
 from aiogram import BaseMiddleware
-from aiogram.types import Message, CallbackQuery, Update
-from aiogram.dispatcher.event.event import EventObserver
+from aiogram.types import Update
 
 from db.repository import events_repository, users_repository
 

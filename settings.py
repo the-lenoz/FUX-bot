@@ -17,7 +17,7 @@ load_dotenv(find_dotenv())
 token_design_level = getenv("MAIN_BOT_TOKEN")
 token_admin_bot = getenv("ADMIN_BOT_TOKEN")
 business_connection_id = getenv("BUSINESS_CONNECTION_ID")
-redis_host = getenv("HOST")
+openai_api_key = getenv("GPT_TOKEN")
 
 fast_help_promt = """Сгенерируй ТОЛЬКО ОДИН вопрос о ментальном состоянии человека,
  при этом сосредоточившись на узкой, конкретной проблеме(Если ты видишь, что человек в диалоге выше написал про
@@ -110,8 +110,8 @@ def is_valid_time(time_str: str) -> bool:
         return False
 
 
-checkup_emotions_photo = "AgACAgIAAxkBAAIDcWfloXCMz5MeVZh2JtOI8QGIrvUxAALm9jEb4OUwSzbwWz6yi_zvAQADAgADeQADNgQ"
-checkup_productivity_photo = "AgACAgIAAxkBAAIDcmfloXlwnsex1ChuwyYTeIft4ipSAALn9jEb4OUwS8V9ktImoGm9AQADAgADeQADNgQ"
+checkup_emotions_photo = FSInputFile("assets/checkup_emotions_photo.jpg")
+checkup_productivity_photo = FSInputFile("assets/checkup_productivity_photo.jpg")
 
 emoji_dict = {
     1: "😖",  # самый недовольный

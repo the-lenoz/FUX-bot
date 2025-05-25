@@ -1,13 +1,12 @@
-import random
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-from datetime import datetime, timedelta, date
 import io
 import os
-import numpy as np
-from PIL import Image, ImageDraw, ImageFont
-
+import random
+import secrets
 import warnings
+from datetime import timedelta, date
+
+import matplotlib.pyplot as plt
+from PIL import Image, ImageFont
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -38,27 +37,32 @@ def generate_emotion_chart(emotion_data=None, dates=None, checkup_type: str | No
     # Эмодзи для разных уровней эмоций
     if checkup_type == "emotions":
         emoji_levels = {
-            1: "😖",
-            2: "😒",
-            3: "😐",
-            4: "😌",
-            5: "🤩"
+            1: "assets/confounded.png",
+            2: "assets/unamused.png",
+            3: "assets/neutral_face.png",
+            4: "assets/relieved.png",
+            5: "assets/star-struck.png"
         }
     else:
         emoji_levels = {
-            1: "🪵",  # полено — вообще не движется
-            2: "🐌",  # улитка — очень медленно
-            3: "🚲",  # велосипед — средне
-            4: "🚗",  # машина — быстро
-            5: "🚀"  # ракета — очень быстро
+            1: "assets/wood.png",  # полено — вообще не движется
+            2: "assets/snail.png",  # улитка — очень медленно
+            3: "assets/bicycle.png",  # велосипед — средне
+            4: "assets/car.png",  # машина — быстро
+            5: "assets/rocket.png"  # ракета — очень быстро
         }
 
     # Создаём фигуру и оси с высоким разрешением
-    fig, ax = plt.subplots(figsize=(10, 6), facecolor='#FEEDE1', dpi=200)
+    fig, ax = plt.subplots(figsize=(8, 6), facecolor='#FEEDE1', dpi=200)
     ax.set_facecolor('#FEEDE1')
 
     # Строим график линии с оранжевыми маркерами
-    ax.plot(range(len(dates)), emotion_data, marker='o', markersize=10, color='orangered', markerfacecolor='orangered',
+    ax.plot(range(len(dates)),
+            emotion_data, marker='o',
+            markersize=10,
+            color='black',
+            markerfacecolor='orangered',
+            markeredgecolor='orangered',
             linewidth=2)
 
     # Настраиваем оси
@@ -71,15 +75,19 @@ def generate_emotion_chart(emotion_data=None, dates=None, checkup_type: str | No
 
     # Выделяем последний день недели (воскресенье)
     for i, label in enumerate(ax.get_xticklabels()):
-        if i == len(dates) - 1:  # Последний день (воскресенье)
+        if i != len(dates) - 1:
+            label.set_bbox(dict(facecolor='white', edgecolor='none', pad=5, boxstyle='round,pad=0.5'))
+            label.set_color('orangered')
+        else: # Последний день (воскресенье)
             label.set_bbox(dict(facecolor='orangered', edgecolor='none', pad=5, boxstyle='round,pad=0.5'))
             label.set_color('white')
 
-    ax.set_xlim(-0.5, len(dates) - 0.5)
+
+    ax.set_xlim(-0.7, len(dates) - 0.5)
     ax.set_ylim(0.5, 5.5)
     name = 'ТРЕКИНГ ЭМОЦИЙ' if checkup_type == "emotions" else "ТРЕКИНГ ПРОДУКТИВНОСТИ"
-    # Упрощаем заголовок до "Трекинг эмоций"
-    ax.text(0.5, 1.05, 'ТРЕКИНГ ЭМОЦИЙ', ha='center', va='center', transform=ax.transAxes,
+
+    ax.text(0.5, 1.05, name, ha='center', va='center', transform=ax.transAxes,
             fontsize=24, color='orangered', weight='bold')
 
     # Убираем рамки
@@ -91,7 +99,7 @@ def generate_emotion_chart(emotion_data=None, dates=None, checkup_type: str | No
     #         fontsize=10, color='orangered', weight='bold')
 
     # Сохраняем график во временный файл
-    temp_filename = 'temp_chart.png'
+    temp_filename = f'temp_chart_{secrets.token_hex(32)}.png'
     plt.tight_layout()
     plt.savefig(temp_filename, format='png', bbox_inches='tight', facecolor='#FEEDE1')
     plt.close(fig)
@@ -124,22 +132,12 @@ def generate_emotion_chart(emotion_data=None, dates=None, checkup_type: str | No
 
     # Новая логика для размещения эмодзи с правильными цветами
     for level in range(1, 6):
-        emoji_text = emoji_levels[level]
-        y_pos = int(y_max - (level - 1) * (y_step * 1.23)) - 30
+        y_pos = int(y_max - (level - 1) * (y_step * 1.23)) - 40
         x_pos = int(x_min * 0.5 - 60)
 
         # Создаем отдельное изображение для каждого эмодзи
-        emoji_img = Image.new("RGBA", (150, 150), (0, 0, 0, 0))
-
-        # Используем Pilmoji если доступен, иначе обычный ImageDraw
-        if pilmoji_available:
-            with Pilmoji(emoji_img) as pilmoji:
-                pilmoji.text((0, 0), emoji_text, font=emoji_font)
-        else:
-            # Альтернативный подход если Pilmoji недоступен
-            emoji_draw = ImageDraw.Draw(emoji_img)
-            emoji_draw.text((0, 0), emoji_text, font=emoji_font, embedded_color=True)
-        scaled_emoji = emoji_img.resize((230, 230), Image.Resampling.LANCZOS)
+        emoji_img = Image.open(emoji_levels[level])
+        scaled_emoji = emoji_img.resize((90, 90), Image.Resampling.LANCZOS)
         # Вставляем эмодзи на основное изображение с сохранением прозрачности
         img.paste(scaled_emoji, (x_pos, y_pos), scaled_emoji)
 

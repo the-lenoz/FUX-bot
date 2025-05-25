@@ -1,10 +1,8 @@
-import asyncio
 from os import getenv
 
 from dotenv import load_dotenv, find_dotenv
 from requests import HTTPError
 from yookassa import Configuration, Payment
-
 
 load_dotenv(find_dotenv("../.env"))
 Configuration.account_id = getenv("SHOP_ID")

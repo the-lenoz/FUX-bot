@@ -1,8 +1,11 @@
+from datetime import timedelta, datetime
+
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from db.repository import checkup_repository, days_checkups_repository
+from db.repository import checkup_repository, days_checkups_repository, subscriptions_repository
 from settings import emoji_dict, speed_dict, table_names
+from utils.checkups_ended import sent_today
 
 admin_kb = [
         [KeyboardButton(text='Статистика')],
@@ -99,25 +102,27 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
     finish_checkup_day = True
     for checkup in user_checkups:
         active_day = await days_checkups_repository.get_active_day_checkup_by_checkup_id(checkup_id=checkup.id)
-        if active_day is not None:
+        if active_day is not None or (datetime.now().time() < checkup.time_checkup
+                                      and not await sent_today(checkup.id)):
             finish_checkup_day = False
             break
     if finish_checkup_day is False:
         keyboard.row(InlineKeyboardButton(text="Пройти трекинг", callback_data="go_checkup"))
-    keyboard.row(InlineKeyboardButton(text="⭐Режимы общения", callback_data="mental_helper"))
+    # keyboard.row(InlineKeyboardButton(text="⭐Режимы общения", callback_data="mental_helper"))
     keyboard.row(InlineKeyboardButton(text="📝Упражнения", callback_data="exercises_by_problem"))
     keyboard.add(InlineKeyboardButton(text="🗓️Трекинг состояния", callback_data="checkups"))
     keyboard.row(InlineKeyboardButton(text="📜Механика сервиса", callback_data="all_mechanics"))
     keyboard.add(InlineKeyboardButton(text="⚙️Настройки", callback_data="system_settings"))
     keyboard.row(InlineKeyboardButton(text="🎁 Реферальная система", callback_data="referral_system"))
+    user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
+    if user_sub is None:
+        sub_button_text = "💸 Купить подписку"
+    else:
+        end_date = user_sub.creation_date + timedelta(days=user_sub.time_limit_subscription)
+        sub_button_text = (f"Моя подписка (до"
+                f" {end_date.strftime('%d.%m.%y, %H:%M')} +GMT3)")
+    keyboard.row(InlineKeyboardButton(text=sub_button_text, callback_data="sub_management"))
     return keyboard
-
-information_buro_keyboard = InlineKeyboardBuilder()
-information_buro_keyboard.row(InlineKeyboardButton(text="Режимы общения", callback_data="get_mechanic|mental_helper"))
-information_buro_keyboard.row(InlineKeyboardButton(text="Упражнения", callback_data="get_mechanic|exercises_by_problem"))
-information_buro_keyboard.row(InlineKeyboardButton(text="Трекинг состояния", callback_data="get_mechanic|checkups"))
-information_buro_keyboard.row(InlineKeyboardButton(text="Пригласить друзей", callback_data="get_mechanic|referral_system"))
-information_buro_keyboard.row(menu_button)
 
 
 fast_help_keyboard = InlineKeyboardBuilder()
@@ -134,18 +139,18 @@ mental_helper_keyboard.row(InlineKeyboardButton(text="Уйти вглубь", ca
 mental_helper_keyboard.row(menu_button)
 
 
-def generate_sub_keyboard(mode_type: str | None = None, mode_id : int | None = None):
+def generate_sub_keyboard(mode_type: str | None = None):
     subscriptions_keyboard = InlineKeyboardBuilder()
-    subscriptions_keyboard.row(InlineKeyboardButton(text="390р/неделя", callback_data=f"choice_sub|7|390.00|{mode_type}|{mode_id}"))
-    subscriptions_keyboard.row(InlineKeyboardButton(text="790р/месяц", callback_data=f"choice_sub|30|790.00|{mode_type}|{mode_id}"))
-    subscriptions_keyboard.row(InlineKeyboardButton(text="1990р/3 месяца", callback_data=f"choice_sub|90|1990.00|{mode_type}|{mode_id}"))
+    subscriptions_keyboard.row(InlineKeyboardButton(text="390р/неделя", callback_data=f"choice_sub|7|390.00|{mode_type}"))
+    subscriptions_keyboard.row(InlineKeyboardButton(text="790р/месяц", callback_data=f"choice_sub|30|790.00|{mode_type}"))
+    subscriptions_keyboard.row(InlineKeyboardButton(text="1990р/3 месяца", callback_data=f"choice_sub|90|1990.00|{mode_type}"))
     subscriptions_keyboard.row(menu_button)
     return subscriptions_keyboard
 
-def get_rec_keyboard(mode_id: int, mode_type: str):
+def get_rec_keyboard( mode_type: str):
     keyboard = InlineKeyboardBuilder()
-    # keyboard.row(InlineKeyboardButton(text="Показать рекомендацию", callback_data=f"get_recommendation|{mode_type}|{mode_id}"))
-    keyboard.row(InlineKeyboardButton(text="Подписка", callback_data=f"subscribe|{mode_type}|{mode_id}"))
+
+    keyboard.row(InlineKeyboardButton(text="Подписка", callback_data=f"subscribe|{mode_type}"))
     # keyboard.row(menu_button)
     return keyboard
 
@@ -154,12 +159,11 @@ buy_sub_keyboard.row(InlineKeyboardButton(text="Подписка", callback_data
 buy_sub_keyboard.row(menu_button)
 
 
-async def keyboard_for_pay(operation_id: str, url: str, time_limit: int,
-                           mode_type: str | None = None, mode_id: str| None = None):
+async def keyboard_for_pay(operation_id: str, url: str, time_limit: int, mode_type: str | None = None):
     pay_ai_keyboard = InlineKeyboardBuilder()
     pay_ai_keyboard.row(InlineKeyboardButton(text="Оплатить", web_app=WebAppInfo(url=url)))
     pay_ai_keyboard.row(InlineKeyboardButton(text="Оплата произведена",
-                                             callback_data=f"is_paid|{operation_id}|{time_limit}|{mode_type}|{mode_id}"))
+                                             callback_data=f"is_paid|{operation_id}|{time_limit}|{mode_type}"))
     return pay_ai_keyboard
 
 
@@ -195,6 +199,7 @@ def productivity_keyboard(check_data: str):
 ai_temperature_keyboard = InlineKeyboardBuilder()
 ai_temperature_keyboard.row(InlineKeyboardButton(text="Мягкая версия", callback_data="ai_temperature|1.3"))
 ai_temperature_keyboard.row(InlineKeyboardButton(text="Прямолинейная версия", callback_data="ai_temperature|0.6"))
+ai_temperature_keyboard.row(InlineKeyboardButton(text="Нейтральная версия (по умолчанию)", callback_data="ai_temperature|1"))
 ai_temperature_keyboard.row(menu_button)
 
 
@@ -221,6 +226,16 @@ statistics_keyboard = InlineKeyboardBuilder()
 statistics_keyboard.row(InlineKeyboardButton(text="Количество новых пользователей", callback_data="statistics|users"))
 statistics_keyboard.row(InlineKeyboardButton(text="Количество пользователей с активной подпиской", callback_data="statistics|active_subs"))
 statistics_keyboard.row(InlineKeyboardButton(text="Количество запросов в GPT", callback_data="statistics|gpt"))
+
+
+notification_keyboard = InlineKeyboardBuilder()
+notification_keyboard.row(
+    InlineKeyboardButton(text="Обсудить проблему", callback_data="start_problem_conversation")
+)
+notification_keyboard.row(
+    InlineKeyboardButton(text="Упражнение", callback_data="exercises_by_problem"),
+    InlineKeyboardButton(text="Трекинг", callback_data="settings|checkups")
+)
 
 
 def delete_checkups_keyboard(type_checkup: str, checkup_id: int):

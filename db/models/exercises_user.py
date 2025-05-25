@@ -1,15 +1,15 @@
-from sqlalchemy import Column, BigInteger, ForeignKey, String, Boolean
+from sqlalchemy import Column, BigInteger, ForeignKey, String
 from sqlalchemy.orm import relationship, Mapped
 
 from db.base import BaseModel, CleanModel
-from .users import Users
+from .user import User
 
 
 class ExercisesUser(BaseModel, CleanModel):
     __tablename__ = 'exercises_user'
 
     user_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=False)
-    user: Mapped[Users] = relationship("Users", backref=__tablename__, cascade='all', lazy='subquery')
+    user: Mapped[User] = relationship("User", backref=__tablename__, cascade='all', lazy='subquery')
     exercise = Column(String, nullable=False, unique=False)
     user_answer = Column(String, nullable=True, unique=False)
     feedback = Column(String, nullable=True, unique=False)

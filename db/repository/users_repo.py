@@ -1,11 +1,11 @@
-from datetime import datetime, time, timedelta
+from datetime import datetime, timedelta
 from typing import Sequence
 
-from sqlalchemy import select, or_, update, delete, func
+from sqlalchemy import select, or_, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.engine import DatabaseEngine
-from db.models import Users
+from db.models import User
 
 
 class UserRepository:
@@ -17,9 +17,10 @@ class UserRepository:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                user = Users(user_id=user_id, username=username, gender=gender, age=age, name=name)
+                user = User(user_id=user_id, username=username, gender=gender, age=age, name=name)
                 try:
                     session.add(user)
+                    await session.commit()
                 except Exception:
                     return False
                 return True
@@ -35,19 +36,19 @@ class UserRepository:
     #             await session.commit()
 
 
-    async def get_user_by_user_id(self, user_id: int) -> Users:
+    async def get_user_by_user_id(self, user_id: int) -> User:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = select(Users).where(or_(Users.user_id == user_id))
+                sql = select(User).where(or_(User.user_id == user_id))
                 query = await session.execute(sql)
                 return query.scalars().one_or_none()
 
-    async def select_all_users(self) -> Sequence[Users]:
+    async def select_all_users(self) -> Sequence[User]:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = select(Users)
+                sql = select(User)
                 query = await session.execute(sql)
                 return query.scalars().all()
 
@@ -57,9 +58,9 @@ class UserRepository:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = update(Users).values({
-                    Users.mental_ai_threat_id: thread_id
-                }).where(or_(Users.user_id == user_id))
+                sql = update(User).values({
+                    User.mental_ai_threat_id: thread_id
+                }).where(or_(User.user_id == user_id))
                 await session.execute(sql)
                 await session.commit()
 
@@ -67,9 +68,9 @@ class UserRepository:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = update(Users).values({
-                    Users.standard_ai_threat_id: thread_id
-                }).where(or_(Users.user_id == user_id))
+                sql = update(User).values({
+                    User.standard_ai_threat_id: thread_id
+                }).where(or_(User.user_id == user_id))
                 await session.execute(sql)
                 await session.commit()
 
@@ -77,9 +78,9 @@ class UserRepository:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = update(Users).values({
-                    Users.name: first_name
-                }).where(or_(Users.user_id == user_id))
+                sql = update(User).values({
+                    User.name: first_name
+                }).where(or_(User.user_id == user_id))
                 await session.execute(sql)
                 await session.commit()
 
@@ -87,9 +88,9 @@ class UserRepository:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = update(Users).values({
-                    Users.age: age
-                }).where(or_(Users.user_id == user_id))
+                sql = update(User).values({
+                    User.age: age
+                }).where(or_(User.user_id == user_id))
                 await session.execute(sql)
                 await session.commit()
 
@@ -97,9 +98,9 @@ class UserRepository:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = update(Users).values({
-                    Users.full_registration: True
-                }).where(or_(Users.user_id == user_id))
+                sql = update(User).values({
+                    User.full_registration: True
+                }).where(or_(User.user_id == user_id))
                 await session.execute(sql)
                 await session.commit()
 
@@ -107,9 +108,9 @@ class UserRepository:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = update(Users).values({
-                    Users.confirm_politic: True
-                }).where(or_(Users.user_id == user_id))
+                sql = update(User).values({
+                    User.confirm_politic: True
+                }).where(or_(User.user_id == user_id))
                 await session.execute(sql)
                 await session.commit()
 
@@ -117,9 +118,9 @@ class UserRepository:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = update(Users).values({
-                    Users.activate_promo: True
-                }).where(or_(Users.user_id == user_id))
+                sql = update(User).values({
+                    User.activate_promo: True
+                }).where(or_(User.user_id == user_id))
                 await session.execute(sql)
                 await session.commit()
 
@@ -127,9 +128,9 @@ class UserRepository:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = update(Users).values({
-                    Users.gender: gender
-                }).where(or_(Users.user_id == user_id))
+                sql = update(User).values({
+                    User.gender: gender
+                }).where(or_(User.user_id == user_id))
                 await session.execute(sql)
                 await session.commit()
 
@@ -137,9 +138,9 @@ class UserRepository:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = update(Users).values({
-                    Users.email: email
-                }).where(or_(Users.user_id == user_id))
+                sql = update(User).values({
+                    User.email: email
+                }).where(or_(User.user_id == user_id))
                 await session.execute(sql)
                 await session.commit()
 
@@ -147,9 +148,9 @@ class UserRepository:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = update(Users).values({
-                    Users.ai_temperature: ai_temperature
-                }).where(or_(Users.user_id == user_id))
+                sql = update(User).values({
+                    User.ai_temperature: ai_temperature
+                }).where(or_(User.user_id == user_id))
                 await session.execute(sql)
                 await session.commit()
 
@@ -157,9 +158,9 @@ class UserRepository:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = update(Users).values({
-                    Users.last_rec_week_date: datetime.now()
-                }).where(or_(Users.user_id == user_id))
+                sql = update(User).values({
+                    User.last_rec_week_date: datetime.now()
+                }).where(or_(User.user_id == user_id))
                 await session.execute(sql)
                 await session.commit()
 
@@ -167,9 +168,84 @@ class UserRepository:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = update(Users).values({
-                    Users.power_mode_days: new_days
-                }).where(or_(Users.user_id == user_id))
+                sql = update(User).values({
+                    User.power_mode_days: new_days
+                }).where(or_(User.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
+    async def update_mental_data_by_user_id(self, user_id: int, new_mental_data: str):
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(User).values({
+                    User.mental_data: new_mental_data
+                }).where(or_(User.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
+    async def used_free_recommendation(self, user_id: int):
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(User).values({
+                    User.used_free_recommendation: True
+                }).where(or_(User.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
+    async def used_exercises(self, user_id: int):
+        user = await self.get_user_by_user_id(user_id)
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(User).values({
+                    User.used_exercises: user.used_exercises + 1
+                }).where(or_(User.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
+    async def user_sent_message(self, user_id: int):
+        user = await self.get_user_by_user_id(user_id)
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(User).values({
+                    User.messages_count: user.messages_count + 1
+                }).where(or_(User.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
+    async def user_got_recommendation(self, user_id: int):
+        user = await self.get_user_by_user_id(user_id)
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(User).values({
+                    User.recommendations_count: user.recommendations_count + 1
+                }).where(or_(User.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
+    async def user_tracked_emotions(self, user_id: int):
+        user = await self.get_user_by_user_id(user_id)
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(User).values({
+                    User.emotions_tracks_count: user.emotions_tracks_count + 1
+                }).where(or_(User.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
+    async def user_tracked_productivity(self, user_id: int):
+        user = await self.get_user_by_user_id(user_id)
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(User).values({
+                    User.productivity_tracks_count: user.productivity_tracks_count + 1
+                }).where(or_(User.user_id == user_id))
                 await session.execute(sql)
                 await session.commit()
 
@@ -185,26 +261,26 @@ class UserRepository:
                 quarter_ago = now - timedelta(days=90)  # упрощённый вариант
 
                 # За день
-                day_count_sql = select(func.count(Users.user_id)).where(Users.creation_date >= day_ago)
+                day_count_sql = select(func.count(User.user_id)).where(User.creation_date >= day_ago)
                 day_count_result = await session.execute(day_count_sql)
                 day_count = day_count_result.scalar() or 0
 
                 # За неделю
-                week_count_sql = select(func.count(Users.user_id)).where(Users.creation_date >= week_ago)
+                week_count_sql = select(func.count(User.user_id)).where(User.creation_date >= week_ago)
                 week_count_result = await session.execute(week_count_sql)
                 week_count = week_count_result.scalar() or 0
 
                 # За месяц
-                month_count_sql = select(func.count(Users.user_id)).where(Users.creation_date >= month_ago)
+                month_count_sql = select(func.count(User.user_id)).where(User.creation_date >= month_ago)
                 month_count_result = await session.execute(month_count_sql)
                 month_count = month_count_result.scalar() or 0
 
                 # За квартал
-                quarter_count_sql = select(func.count(Users.user_id)).where(Users.creation_date >= quarter_ago)
+                quarter_count_sql = select(func.count(User.user_id)).where(User.creation_date >= quarter_ago)
                 quarter_count_result = await session.execute(quarter_count_sql)
                 quarter_count = quarter_count_result.scalar() or 0
 
-                all_time_sql = select(func.count(Users.user_id))
+                all_time_sql = select(func.count(User.user_id))
                 all_time_result = await session.execute(all_time_sql)
                 all_time_count = all_time_result.scalar() or 0
 

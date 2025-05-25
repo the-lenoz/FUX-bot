@@ -1,6 +1,5 @@
 from aiogram import BaseMiddleware
 from aiogram.types import Update
-from datetime import datetime
 
 from utils.user_activity_redis import UserActivityRedis
 

@@ -1,31 +1,26 @@
-import asyncio
 import datetime
 
 from aiogram import Router, F, types, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import any_state
-from aiogram.types import BufferedInputFile
 
 from data.keyboards import cancel_keyboard, menu_keyboard, keyboard_for_pay, generate_sub_keyboard
-from db.repository import users_repository, subscriptions_repository, operation_repository, go_deeper_repository, \
-    fast_help_repository
+from db.repository import users_repository, subscriptions_repository, operation_repository
 from settings import InputMessage, is_valid_email, sub_description_photo, you_fooher_photo, \
     sub_description_photo2
+from utils.gpt_distributor import user_request_handler
 from utils.payment_for_services import create_payment, check_payment
-from utils.rating_chat_gpt import GPT
 
 payment_router = Router()
 
 
 @payment_router.callback_query(F.data.startswith("subscribe"), any_state)
-async def get_day_statistic(call: types.CallbackQuery, state: FSMContext, bot: Bot):
+async def subscribe(call: types.CallbackQuery, state: FSMContext, bot: Bot):
     user = await users_repository.get_user_by_user_id(call.from_user.id)
     call_data = call.data.split("|")
     if len(call_data) > 1:
-        mode_id = call_data[2]
         mode_type = call_data[1]
     else:
-        mode_id = None
         mode_type = None
     sub = await subscriptions_repository.get_active_subscription_by_user_id(user.user_id)
     # if sub:
@@ -33,7 +28,7 @@ async def get_day_statistic(call: types.CallbackQuery, state: FSMContext, bot: B
     #                               reply_markup=menu_keyboard.as_markup())
     if user.email is None:
         await state.set_state(InputMessage.enter_email)
-        await state.update_data(mode_id=mode_id, mode_type=mode_type)
+        await state.update_data(mode_type=mode_type)
         await call.message.answer("Для проведения оплаты нам понадобиться адрес электронной почты,"
                                   " чтобы направить чек о покупке 🧾\n\nПожалуйста, введи свой email 🍏",
                                   reply_markup=menu_keyboard.as_markup())
@@ -42,8 +37,7 @@ async def get_day_statistic(call: types.CallbackQuery, state: FSMContext, bot: B
         finally:
             return
     await call.message.answer_photo(photo=sub_description_photo,
-                                    reply_markup=generate_sub_keyboard(mode_type=mode_type,
-                                                                       mode_id=mode_id).as_markup())
+                                    reply_markup=generate_sub_keyboard(mode_type=mode_type).as_markup())
     try:
         await call.message.delete()
     finally:
@@ -53,15 +47,25 @@ async def get_day_statistic(call: types.CallbackQuery, state: FSMContext, bot: B
 @payment_router.callback_query(F.data.startswith("choice_sub"), any_state)
 async def get_choice_of_sub(call: types.CallbackQuery, state: FSMContext, bot: Bot):
     call_data = call.data.split("|")
-    days, amount, mode_type, mode_id = call_data[1], call_data[2], call_data[3], call_data[4]
+    days, amount, mode_type = call_data[1], call_data[2], call_data[3]
     user = await users_repository.get_user_by_user_id(call.from_user.id)
+    if user.email is None:
+        await state.set_state(InputMessage.enter_email)
+        await state.update_data(mode_type=mode_type)
+        await call.message.answer("Для проведения оплаты нам понадобиться адрес электронной почты,"
+                                  " чтобы направить чек о покупке 🧾\n\nПожалуйста, введи свой email 🍏",
+                                  reply_markup=menu_keyboard.as_markup())
+        try:
+            await call.message.delete()
+        finally:
+            return
     payment = await create_payment(user.email, amount=amount)
     await operation_repository.add_operation(operation_id=payment[0], user_id=call.from_user.id, is_paid=False,
                                              url=payment[1])
     operation = await operation_repository.get_operation_by_operation_id(payment[0])
-    keyboard = await keyboard_for_pay(operation_id=operation.id, url=payment[1], time_limit=int(days), mode_type=mode_type,
-                                      mode_id=mode_id)
-    await call.message.answer(text=f'Для дальнейше работы ассистента нужно приобрести подписку'
+    keyboard = await keyboard_for_pay(operation_id=operation.id, url=payment[1],
+                                      time_limit=int(days), mode_type=mode_type)
+    await call.message.answer(text=f'Для дальнейшей работы ассистента нужно приобрести подписку'
                                    f' за {amount[:-3]} рублей.\n\nПосле проведения платежа нажми на кнопку "Оплата произведена",'
                                    ' чтобы подтвердить платеж', reply_markup=keyboard.as_markup())
     try:
@@ -73,14 +77,13 @@ async def get_choice_of_sub(call: types.CallbackQuery, state: FSMContext, bot: B
 @payment_router.message(F.text, InputMessage.enter_email)
 async def enter_user_email(message: types.Message, state: FSMContext, bot: Bot):
     state_data = await state.get_data()
-    mode_type, mode_id = state_data.get("mode_type"), state_data.get("mode_id")
+    mode_type = state_data.get("mode_type")
     if await is_valid_email(email=message.text):
         await state.clear()
         await message.answer("Отлично, мы сохранили твой email для следующих покупок")
-        await asyncio.sleep(1)
         await users_repository.update_email_by_user_id(user_id=message.from_user.id, email=message.text)
-        await message.answer_photo(photo=sub_description_photo, reply_markup=generate_sub_keyboard(mode_type=mode_type,
-                                                                       mode_id=mode_id).as_markup())
+        await message.answer_photo(photo=sub_description_photo,
+                                   reply_markup=generate_sub_keyboard(mode_type=mode_type).as_markup())
     else:
         del_message = await message.answer("Введеный тобой email некорректен, попробуй еще раз",
                                            reply_markup=cancel_keyboard.as_markup())
@@ -91,11 +94,8 @@ async def check_payment_callback(message: types.CallbackQuery, state: FSMContext
     data = message.data.split("|")
     operation_id = data[1]
     days = int(data[2])
-    mode_type, mode_id = data[3], data[4]
-    update = False
-    if mode_id is not None and mode_id != "None":
-        mode_id = int(mode_id)
-        update = True
+    mode_type = data[3]
+
     user_id = message.from_user.id
     user = await users_repository.get_user_by_user_id(message.from_user.id)
     operation = await operation_repository.get_operation_info_by_id(int(operation_id))
@@ -128,25 +128,13 @@ async def check_payment_callback(message: types.CallbackQuery, state: FSMContext
             caption=f"Поздравляю! Твоя подписка активна до {formatted_date} +GMT3",
             reply_markup=menu_keyboard.as_markup()
         )
-        if update:
-            if mode_type == "go_deeper":
-                dialog = await go_deeper_repository.get_go_deeper_by_go_deeper_id(go_deeper_id=mode_id)
-            else:
-                dialog = await fast_help_repository.get_fast_help_by_fast_help_id(fast_help_id=mode_id)
-            recommendation = dialog.recommendation
-            await message.message.answer(text=recommendation)
-            audio_file = await GPT(thread_id=user.mental_ai_threat_id).generate_audio_by_text(text=recommendation)
-            audio_file.seek(0)  # сброс указателя в начало файла
-            audio_bytes = audio_file.read()
-            # Отправка голосового сообщения
-            await message.message.answer_voice(
-                voice=BufferedInputFile(file=audio_bytes, filename="voice.mp3")
-            )
+        if mode_type is not None:
+            await user_request_handler.psy_handler.provide_recommendations(user_id)
     else:
         try:
             payment = await operation_repository.get_operation_by_operation_id(payment_id)
-            keyboard = await keyboard_for_pay(operation_id=operation_id, url=payment.url, time_limit=30,
-                                              mode_id=str(mode_id), mode_type=mode_type)
+            keyboard = await keyboard_for_pay(operation_id=operation_id, url=payment.url,
+                                              time_limit=30, mode_type=mode_type)
             await message.message.edit_text("Пока мы не видим, чтобы оплата была произведена( Погоди"
                                             " еще немного времени и убедись,"
                                             " что ты действительно произвел оплату(",

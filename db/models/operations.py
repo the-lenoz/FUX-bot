@@ -2,7 +2,7 @@ from sqlalchemy import Column, BigInteger, ForeignKey, Boolean, String
 from sqlalchemy.orm import relationship, Mapped
 
 from db.base import BaseModel, CleanModel
-from .users import Users
+from .user import User
 
 
 class Operations(BaseModel, CleanModel):
@@ -14,7 +14,7 @@ class Operations(BaseModel, CleanModel):
     url = Column(String, nullable=False)
 
     user_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=False)
-    user: Mapped[Users] = relationship("Users", backref=__tablename__, cascade='all', lazy='subquery')
+    user: Mapped[User] = relationship("User", backref=__tablename__, cascade='all', lazy='subquery')
 
     @property
     def stats(self) -> str:

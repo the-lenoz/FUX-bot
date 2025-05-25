@@ -24,7 +24,7 @@ class OperationRepository:
         url = Column(String, nullable=False)
 
         user_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=False)
-        user: Mapped[Users] = relationship("Users", backref=__tablename__, cascade='all', lazy='subquery')
+        user: Mapped[Users] = relationship("User", backref=__tablename__, cascade='all', lazy='subquery')
 
         """
         async with self.session_maker() as session:

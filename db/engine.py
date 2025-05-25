@@ -1,16 +1,17 @@
 """
     Функции для работы с базой данных
 """
-import asyncio
-from typing import Union, Any
-from .configuration import DatabaseConfig
-from .base import BaseModel
+from typing import Union
+
 import sqlalchemy.ext.asyncio  # type: ignore
 from sqlalchemy import MetaData  # type: ignore
 from sqlalchemy.engine import URL  # type: ignore
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine, \
     create_async_engine as _create_async_engine  # type: ignore
 from sqlalchemy.orm import sessionmaker  # type: ignore
+
+from .base import BaseModel
+from .configuration import DatabaseConfig
 
 
 class DatabaseEngine:

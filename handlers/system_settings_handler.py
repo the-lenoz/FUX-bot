@@ -4,10 +4,10 @@ from aiogram.fsm.state import any_state
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from data.keyboards import  menu_keyboard, menu_button, ai_temperature_keyboard
+from data.keyboards import menu_keyboard, menu_button, ai_temperature_keyboard
 from db.repository import users_repository, checkup_repository, subscriptions_repository
-from settings import InputMessage, mechanic_text, mechanic_checkup, is_valid_email, fast_help_promt, go_deeper_promt, \
-    ai_temperature_text, is_valid_time, temperature_ai_photo
+from settings import InputMessage, ai_temperature_text, is_valid_time, temperature_ai_photo
+from utils.gpt_distributor import user_request_handler
 
 system_settings_router = Router()
 
@@ -15,6 +15,8 @@ system_settings_router = Router()
 @system_settings_router.callback_query(F.data == "system_settings", any_state)
 async def system_settings_callback(call: CallbackQuery, state: FSMContext):
     user_id = call.from_user.id
+    await user_request_handler.psy_handler.exit(user_id)
+    await user_request_handler.general_handler.exit(user_id)
     keyboard = InlineKeyboardBuilder()
     user_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id=user_id)
     if user_checkups:
@@ -31,9 +33,12 @@ async def system_settings_callback(call: CallbackQuery, state: FSMContext):
     await call.message.delete()
 
 
+
 @system_settings_router.callback_query(F.data.startswith("settings"), any_state)
 async def set_system_settings(call: CallbackQuery, state: FSMContext):
     user_id = call.from_user.id
+    await user_request_handler.psy_handler.exit(user_id)
+    await user_request_handler.general_handler.exit(user_id)
     type_setting = call.data.split("|")[1]
     if type_setting == "checkups":
         user_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id=user_id)
@@ -58,9 +63,12 @@ async def set_system_settings(call: CallbackQuery, state: FSMContext):
         await call.message.delete()
 
 
+
 @system_settings_router.callback_query(F.data.startswith("ai_temperature"), any_state)
 async def ai_temperature_callback(call: CallbackQuery, state: FSMContext):
     user_id = call.from_user.id
+    await user_request_handler.psy_handler.exit(user_id)
+    await user_request_handler.general_handler.exit(user_id)
     ai_temperature = float(call.data.split("|")[1])
     await users_repository.update_ai_temperature_by_user_id(user_id, ai_temperature)
     await call.message.answer("Отлично, настройки твоего ассистента изменены!",
@@ -68,9 +76,12 @@ async def ai_temperature_callback(call: CallbackQuery, state: FSMContext):
     await call.message.delete()
 
 
+
 @system_settings_router.callback_query(F.data.startswith("edit_checkup"), any_state)
 async def edit_checkup_time_call(call: CallbackQuery, state: FSMContext):
     user_id = call.from_user.id
+    await user_request_handler.psy_handler.exit(user_id)
+    await user_request_handler.general_handler.exit(user_id)
     checkup_id = int(call.data.split("|")[1])
     checkup = await checkup_repository.get_checkup_by_checkup_id(checkup_id=checkup_id)
     await state.set_state(InputMessage.edit_time_checkup)
@@ -81,9 +92,12 @@ async def edit_checkup_time_call(call: CallbackQuery, state: FSMContext):
     await call.message.delete()
 
 
+
 @system_settings_router.message(F.text, InputMessage.edit_time_checkup)
 async def enter_new_checkup_time(message: Message, state: FSMContext):
     user_id = message.from_user.id
+    await user_request_handler.psy_handler.exit(user_id)
+    await user_request_handler.general_handler.exit(user_id)
     result = is_valid_time(message.text)
     state_data = await state.get_data()
     await state.clear()
@@ -98,3 +112,4 @@ async def enter_new_checkup_time(message: Message, state: FSMContext):
     await state.update_data(checkup_id=checkup_id)
     await message.answer("Введенное тобой время имеет неправильный формат. Пример - 13:45. Попробуй еще раз",
                          reply_markup=menu_keyboard.as_markup())
+

@@ -1,13 +1,9 @@
-import asyncio
-
-from aiogram import Router, F, Dispatcher
+from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import any_state
-from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto
-from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.types import CallbackQuery, InputMediaPhoto
 
-from data.keyboards import menu_keyboard, information_buro_keyboard
-from settings import mechanic_dict, photos_pages
+from settings import photos_pages
 from utils.paginator import MechanicsPaginator
 
 information_router = Router()

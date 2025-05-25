@@ -1,4 +1,4 @@
-from typing import Sequence, Optional
+from typing import Sequence
 
 from sqlalchemy import select, or_, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,7 +21,7 @@ class ReferralSystemRepository:
         """
 
     bring_user_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=False, unique=True)
-    user: Mapped[Users] = relationship("Users", backref=__tablename__, cascade='all', lazy='subquery')
+    user: Mapped[Users] = relationship("User", backref=__tablename__, cascade='all', lazy='subquery')
     activate_user_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=True, default=None, unique=True)
     promo_code = Column(String, nullable=False, primary_key=True, unique=True)
     activated = Column(Boolean, nullable=False, default=False)

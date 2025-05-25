@@ -1,8 +1,8 @@
-from sqlalchemy import Column, BigInteger, String, Boolean, DateTime, ForeignKey, Integer, func
+from sqlalchemy import Column, BigInteger, Boolean, DateTime, ForeignKey, Integer, func
 from sqlalchemy.orm import Mapped, relationship
 
 from db.base import BaseModel, CleanModel
-from .users import Users
+from .user import User
 
 
 class Subscriptions(BaseModel, CleanModel):
@@ -12,7 +12,7 @@ class Subscriptions(BaseModel, CleanModel):
     __tablename__ = 'subscriptions'
 
     user_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=False, unique=False)
-    user: Mapped[Users] = relationship("Users", backref=__tablename__, cascade='all', lazy='subquery')
+    user: Mapped[User] = relationship("User", backref=__tablename__, cascade='all', lazy='subquery')
     start_date = Column(DateTime, nullable=False, default=func.now())
     time_limit_subscription = Column(Integer, nullable=False)
     active = Column(Boolean, nullable=False, default=True)

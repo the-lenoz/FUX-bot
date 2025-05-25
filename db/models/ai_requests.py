@@ -2,7 +2,7 @@ from sqlalchemy import Column, BigInteger, ForeignKey, String, Boolean
 from sqlalchemy.orm import relationship, Mapped
 
 from db.base import BaseModel, CleanModel
-from .users import Users
+from .user import User
 
 
 class AiRequests(BaseModel, CleanModel):
@@ -10,8 +10,8 @@ class AiRequests(BaseModel, CleanModel):
     __tablename__ = 'ai_requests'
 
     user_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=False)
-    user: Mapped[Users] = relationship("Users", backref=__tablename__, cascade='all', lazy='subquery')
-    user_question = Column(String, nullable=False, unique=False)
+    user: Mapped[User] = relationship("User", backref=__tablename__, cascade='all', lazy='subquery')
+    user_question = Column(String, nullable=True, unique=False)
     answer_ai = Column(String, nullable=True, default="default_answer")
     has_photo = Column(Boolean, nullable=False, default=False)
     photo_id = Column(String, nullable=True)

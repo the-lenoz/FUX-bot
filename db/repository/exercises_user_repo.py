@@ -1,7 +1,6 @@
-from datetime import datetime, time
 from typing import Sequence
 
-from sqlalchemy import select, or_, update, delete
+from sqlalchemy import select, or_, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.engine import DatabaseEngine
@@ -22,12 +21,9 @@ class ExercisesUserRepository:
                     user_answer=answer,
                     feedback=feedback
                 )
-                try:
-                    session.add(exercise_obj)
-                    # Выполнить flush, чтобы id был назначен
-                    await session.flush()
-                except Exception:
-                    return False
+                session.add(exercise_obj)
+                # Выполнить flush, чтобы id был назначен
+                await session.commit()
                 return exercise_obj
 
     async def get_exercise_by_exercise_id(self, exercise_id: int) -> ExercisesUser:

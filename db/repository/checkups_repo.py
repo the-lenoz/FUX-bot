@@ -1,12 +1,12 @@
 import datetime
-from typing import Sequence, Optional
+from typing import Sequence
 
 from sqlalchemy import select, or_, update, and_, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from db.engine import DatabaseEngine
-from db.models import Checkups, DaysCheckups
+from db.models import Checkup, CheckupDayData
 
 
 class CheckupRepository:
@@ -21,9 +21,10 @@ class CheckupRepository:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = Checkups(user_id=user_id, number_checkup=number_checkup, type_checkup=type_checkup, time_checkup=time_checkup)
+                sql = Checkup(user_id=user_id, number_checkup=number_checkup, type_checkup=type_checkup, time_checkup=time_checkup)
                 try:
                     session.add(sql)
+                    await session.commit()
                 except Exception:
                     return False
                 return True
@@ -36,64 +37,74 @@ class CheckupRepository:
     #             query = await session.execute(sql)
     #             return query.scalars().one_or_none()
 
-    async def select_all_checkups(self) -> Sequence[Checkups]:
+    async def select_all_checkups(self) -> Sequence[Checkup]:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = select(Checkups)
+                sql = select(Checkup)
                 query = await session.execute(sql)
                 return query.scalars().all()
 
-    async def select_all_active_checkups(self) -> Sequence[Checkups]:
+    async def select_all_active_checkups(self) -> Sequence[Checkup]:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = select(Checkups).where(or_(Checkups.end_checkup == False))
+                sql = select(Checkup).where(or_(Checkup.end_checkup == False))
                 query = await session.execute(sql)
                 return query.scalars().all()
 
-    async def get_checkups_by_user_id(self, user_id: int) -> Sequence[Checkups]:
+    async def get_checkups_by_user_id(self, user_id: int) -> Sequence[Checkup]:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = select(Checkups).where(or_(Checkups.user_id == user_id))
+                sql = select(Checkup).where(or_(Checkup.user_id == user_id))
                 query = await session.execute(sql)
                 return query.scalars().all()
 
-    async def get_checkup_by_checkup_id(self, checkup_id: int) -> Checkups:
+    async def get_checkup_by_checkup_id(self, checkup_id: int) -> Checkup:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = select(Checkups).where(or_(Checkups.id == checkup_id))
+                sql = select(Checkup).where(or_(Checkup.id == checkup_id))
                 query = await session.execute(sql)
                 return query.scalars().one_or_none()
 
-    async def get_active_checkups_by_user_id(self, user_id: int) -> Sequence[Checkups]:
+    async def get_active_checkups_by_user_id(self, user_id: int) -> Sequence[Checkup]:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = select(Checkups).options(selectinload(Checkups.user)).where(and_(Checkups.user_id == user_id, Checkups.end_checkup == False))
+                sql = select(Checkup).options(selectinload(Checkup.user)).where(and_(Checkup.user_id == user_id, Checkup.end_checkup == False))
                 query = await session.execute(sql)
                 return query.scalars().all()
 
 
-    async def get_ended_checkups_per_month_by_user_id(self, user_id: int) -> Sequence[Checkups]:
+    async def get_ended_checkups_per_month_by_user_id(self, user_id: int) -> Sequence[Checkup]:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
                 now_date = datetime.datetime.now()
-                sql = select(Checkups).where(and_(Checkups.user_id == user_id, Checkups.end_checkup == True,
-                                                  now_date - Checkups.creation_date <= datetime.timedelta(days=31)))
+                sql = select(Checkup).where(and_(Checkup.user_id == user_id, Checkup.end_checkup == True,
+                                                 now_date - Checkup.creation_date <= datetime.timedelta(days=31)))
                 query = await session.execute(sql)
                 return query.scalars().all()
 
-    async def get_active_checkup_by_user_id_type_checkup(self, user_id: int, type_checkup) -> Checkups:
+    async def get_ended_checkups_per_week_by_user_id(self, user_id: int) -> Sequence[Checkup]:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = select(Checkups).options(selectinload(Checkups.user)).where(and_(Checkups.user_id == user_id,
-                                                                                       Checkups.end_checkup == False,
-                                                                                       Checkups.type_checkup == type_checkup))
+                now_date = datetime.datetime.now()
+                sql = select(Checkup).where(and_(Checkup.user_id == user_id, Checkup.end_checkup == True,
+                                                 now_date - Checkup.creation_date <= datetime.timedelta(weeks=1)))
+                query = await session.execute(sql)
+                return query.scalars().all()
+
+    async def get_active_checkup_by_user_id_type_checkup(self, user_id: int, type_checkup) -> Checkup:
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = select(Checkup).options(selectinload(Checkup.user)).where(and_(Checkup.user_id == user_id,
+                                                                                     Checkup.end_checkup == False,
+                                                                                     Checkup.type_checkup == type_checkup))
                 query = await session.execute(sql)
                 return query.scalars().one_or_none()
 
@@ -101,9 +112,9 @@ class CheckupRepository:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = update(Checkups).values({
-                    Checkups.end_checkup: True
-                }).where(or_(Checkups.id == checkup_id))
+                sql = update(Checkup).values({
+                    Checkup.end_checkup: True
+                }).where(or_(Checkup.id == checkup_id))
                 await session.execute(sql)
                 await session.commit()
 
@@ -113,9 +124,9 @@ class CheckupRepository:
             async with session.begin():
                 if type(time_checkup) == str:
                     time_checkup = datetime.datetime.strptime(time_checkup, '%H:%M')
-                sql = update(Checkups).values({
-                    Checkups.time_checkup: time_checkup
-                }).where(or_(Checkups.id == checkup_id))
+                sql = update(Checkup).values({
+                    Checkup.time_checkup: time_checkup
+                }).where(or_(Checkup.id == checkup_id))
                 await session.execute(sql)
                 await session.commit()
 
@@ -123,9 +134,9 @@ class CheckupRepository:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                sql = update(Checkups).values({
-                    Checkups.last_date_send: last_date_send
-                }).where(or_(Checkups.id == checkup_id))
+                sql = update(Checkup).values({
+                    Checkup.last_date_send: last_date_send
+                }).where(or_(Checkup.id == checkup_id))
                 await session.execute(sql)
                 await session.commit()
 
@@ -134,9 +145,10 @@ class CheckupRepository:
             async with session.begin():
                 # 1) удаляем дни проверки
                 await session.execute(
-                    delete(DaysCheckups).where( DaysCheckups.checkup_id == checkup_id)
+                    delete(CheckupDayData).where(CheckupDayData.checkup_id == checkup_id)
                 )
                 # 2) затем саму проверку
                 await session.execute(
-                    delete(Checkups).where(Checkups.id == checkup_id)
+                    delete(Checkup).where(Checkup.id == checkup_id)
                 )
+                await session.commit()

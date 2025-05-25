@@ -17,7 +17,6 @@ def export_table_to_memory(table_name: str):
     Подключается к PostgreSQL, выгружает данные из указанной таблицы
     и сохраняет результат в Excel-файл (в памяти, как объект BytesIO).
 
-    :param db_url:     Строка подключения к базе (например, "postgresql://user:password@host:port/dbname").
     :param table_name: Название таблицы в БД, которую нужно выгрузить.
     :return:           Объект BytesIO, содержащий Excel-файл.
     """

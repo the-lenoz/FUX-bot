@@ -1,6 +1,6 @@
-from typing import Sequence, Optional
+from typing import Sequence
 
-from sqlalchemy import select, or_, update
+from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.engine import DatabaseEngine

@@ -13,7 +13,7 @@ class SubscriptionsRepository:
 
     async def add_subscription(self, user_id: int, time_limit_subscription: int, active: bool = True):
         """    user_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=False)
-                user: Mapped[Users] = relationship("Users", backref=__tablename__, cascade='all', lazy='subquery')
+                user: Mapped[Users] = relationship("User", backref=__tablename__, cascade='all', lazy='subquery')
                 start_subscription_date = Column(DateTime, nullable=False)
                 time_limit_subscription = Column(Integer, nullable=False)
                 active = Column(Boolean, nullable=False, default=True)"""
@@ -24,6 +24,7 @@ class SubscriptionsRepository:
                                      active=active)
                 try:
                     session.add(user)
+                    await session.commit()
                 except Exception:
                     return False
                 return True
@@ -71,12 +72,12 @@ class SubscriptionsRepository:
                 await session.execute(sql)
                 await session.commit()
 
-    async def update_time_limit_subscription(self, subscription_id: int, new_time_limit):
+    async def increase_subscription_time_limit(self, subscription_id: int, time_to_add):
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
                 sql = update(Subscriptions).values({
-                    Subscriptions.time_limit_subscription: Subscriptions.time_limit_subscription + new_time_limit
+                    Subscriptions.time_limit_subscription: Subscriptions.time_limit_subscription + time_to_add
                 }).where(or_(Subscriptions.id == subscription_id))
                 await session.execute(sql)
                 await session.commit()
