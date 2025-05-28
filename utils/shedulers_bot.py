@@ -61,8 +61,8 @@ async def notification_reminder(main_bot: Bot):
 
         delta = now - last_event.creation_date
 
-        # Если не отправлялось уведомление о дневном пороге и прошло >= 1 день
-        if not last_event.day_notif_sent and delta >= datetime.timedelta(hours=24):
+        # Если не отправлялось уведомление о дневном пороге и прошло >= 2 дня
+        if not last_event.day_notif_sent and delta >= datetime.timedelta(hours=48):
             try:
                 await main_bot.send_photo(
                     photo=how_are_you_photo,

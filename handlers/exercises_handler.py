@@ -13,7 +13,7 @@ exercises_router = Router()
 async def exercises_by_problem_call(call: CallbackQuery, state: FSMContext, bot: Bot):
     user_id = call.from_user.id
     user = await users_repository.get_user_by_user_id(user_id)
-    if not user.used_exercises:
+    if not user.used_exercises or user.used_exercises < 3:
         await call.message.answer_photo(caption=mechanic_dict.get("exercises_by_problem"),
                                         photo=exercises_photo)
 
