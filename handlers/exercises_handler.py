@@ -1,4 +1,7 @@
+import logging
+
 from aiogram import Router, F, Bot
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
@@ -9,6 +12,8 @@ from utils.gpt_distributor import PsyHandler
 
 exercises_router = Router()
 
+logger = logging.getLogger(__name__)
+
 @exercises_router.callback_query(F.data == "exercises_by_problem")
 async def exercises_by_problem_call(call: CallbackQuery, state: FSMContext, bot: Bot):
     user_id = call.from_user.id
@@ -17,7 +22,10 @@ async def exercises_by_problem_call(call: CallbackQuery, state: FSMContext, bot:
         await call.message.answer_photo(caption=mechanic_dict.get("exercises_by_problem"),
                                         photo=exercises_photo)
 
-    await call.message.delete()
+    try:
+        await call.message.delete()
+    except TelegramBadRequest as e:
+        logger.error(str(e))
     await generate_feedback_for_user(call, state, bot)
 
 
