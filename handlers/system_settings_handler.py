@@ -1,9 +1,11 @@
-from aiogram import Router, F
+from aiogram import Router, F, Bot
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import any_state
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from bots import main_bot
 from data.keyboards import menu_keyboard, menu_button, ai_temperature_keyboard
 from db.repository import users_repository, checkup_repository, subscriptions_repository
 from settings import InputMessage, ai_temperature_text, is_valid_time, temperature_ai_photo
@@ -12,9 +14,18 @@ from utils.gpt_distributor import user_request_handler
 system_settings_router = Router()
 
 
+@system_settings_router.message(Command("settings"))
+async def settings_command_handler(message: Message, bot: Bot):
+    await send_system_settings(message.from_user.id)
+
+
 @system_settings_router.callback_query(F.data == "system_settings", any_state)
 async def system_settings_callback(call: CallbackQuery, state: FSMContext):
-    user_id = call.from_user.id
+    await send_system_settings(call.from_user.id)
+    await call.message.delete()
+
+
+async def send_system_settings(user_id: int):
     await user_request_handler.psy_handler.exit(user_id)
     await user_request_handler.general_handler.exit(user_id)
     keyboard = InlineKeyboardBuilder()
@@ -23,16 +34,13 @@ async def system_settings_callback(call: CallbackQuery, state: FSMContext):
         keyboard.row(InlineKeyboardButton(text="Настройка трекингов", callback_data="settings|checkups"))
     keyboard.row(InlineKeyboardButton(text="Формат общения", callback_data="settings|temperature"))
     keyboard.row(menu_button)
-    await call.message.answer("Я также умею <b>говорить прямо</b> — без сюсюканья и лишней мягкости.🎯\n\n"
+    await main_bot.send_message("Я также умею <b>говорить прямо</b> — без сюсюканья и лишней мягкости.🎯\n\n"
                               "Если тебе комфортнее, когда с тобой говорят по делу, чётко и без обёрток — просто"
                               " включи прямолинейный режим.\n\nПример, как я не буду:\n\n“Ты справляешься, даже если чувствуешь усталость. "
                               "Всё ок, просто постарайся немного замедлиться.”\n\n🐿️Пример, как я буду:\n\n“Ты выгорел,"
                               " потому что сам себя загнал. Отдохни уже, а не героически страдай.”\n\n"
                               "🌰доступно только в платной версии.",
                               reply_markup=keyboard.as_markup())
-    await call.message.delete()
-
-
 
 @system_settings_router.callback_query(F.data.startswith("settings"), any_state)
 async def set_system_settings(call: CallbackQuery, state: FSMContext):
