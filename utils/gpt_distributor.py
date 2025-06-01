@@ -391,7 +391,8 @@ class PsyHandler(AIHandler):
                                 )
                                 await main_bot.send_voice(
                                     user_id,
-                                    FSInputFile(voice_file.name)
+                                    FSInputFile(voice_file.name),
+                                    #TODO клавиатура упражнения
                                 )
 
                             if not is_subscribed:
