@@ -32,6 +32,7 @@ class User(BaseModel, CleanModel):
     recommendations_count = Column(BigInteger, nullable=False, default=0)
     emotions_tracks_count = Column(BigInteger, nullable=False, default=0)
     productivity_tracks_count = Column(BigInteger, nullable=False, default=0)
+    notified_with_recommendation = Column(BigInteger, nullable=False, default=0)
 
     @property
     def stats(self) -> str:

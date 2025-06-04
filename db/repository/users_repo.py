@@ -205,6 +205,17 @@ class UserRepository:
                 await session.execute(sql)
                 await session.commit()
 
+    async def notified_with_recommendation(self, user_id: int):
+        user = await self.get_user_by_user_id(user_id)
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(User).values({
+                    User.notified_with_recommendation: user.notified_with_recommendation + 1
+                }).where(or_(User.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
     async def user_sent_message(self, user_id: int):
         user = await self.get_user_by_user_id(user_id)
         async with self.session_maker() as session:
