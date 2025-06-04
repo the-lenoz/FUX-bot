@@ -152,9 +152,10 @@ async def user_enter_promo_code(message: Message, state: FSMContext, bot: Bot):
 
     await user_entered_promo_code(user_id, promo_code, from_referral)
 
-    if not from_referral:
+    if from_referral:
+        await state.clear()
+    else:
         await go_to_enter_initials(message, state, bot)
-
 
 @user_router.callback_query(F.data == "cancel", InputMessage.enter_initials)
 async def cancel_promo(call: CallbackQuery, state: FSMContext):
