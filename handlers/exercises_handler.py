@@ -30,7 +30,7 @@ async def exercises_by_problem_call(call: CallbackQuery, state: FSMContext, bot:
 
 
 @exercises_router.callback_query(F.data == "recommendation_exercise")
-async def exercises_by_problem_call(call: CallbackQuery, state: FSMContext, bot: Bot):
+async def exercises_by_recommendation(call: CallbackQuery, state: FSMContext, bot: Bot):
     pass #TODO - выдавать рекомендации по специфической проблеме
 
     try:
