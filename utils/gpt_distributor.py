@@ -1,5 +1,4 @@
 import base64
-import logging
 import tempfile
 from asyncio import Lock
 import re
@@ -18,8 +17,6 @@ from utils.prompts import PSY_TEXT_CHECK_PROMPT_FORMAT, IMAGE_CHECK_PROMPT, DOCU
     MENTAL_DATA_PROVIDER_PROMPT, EXERCISE_PROMPT_FORMAT, SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT
 from utils.subscription import check_is_subscribed
 from utils.user_properties import get_user_description
-
-logger = logging.getLogger()
 
 
 class UserFile(BaseModel):
@@ -40,9 +37,6 @@ class UserRequestHandler:
         self.psy_handler = PsyHandler()
 
     async def handle(self, request: UserRequest):
-        logger.info("started handling message\n" 
-                    f"user_id: {request.user_id}"
-                    f" text:\n{request.text}")
         await users_repository.user_sent_message(request.user_id)
 
         if await check_is_subscribed(request.user_id):
@@ -333,8 +327,6 @@ class PsyHandler(AIHandler):
             await self.provide_recommendations(request.user_id)
 
     async def provide_recommendations(self, user_id: int):
-        logger.info("generating recommendation for user. "
-                    f"user_id: {user_id}")
         typing_message = await main_bot.send_message(
             user_id,
             "💬<i>Печатаю…</i>"
@@ -418,8 +410,6 @@ class PsyHandler(AIHandler):
 
     @staticmethod
     async def generate_exercise(user_id: int):
-        logger.info("generating exercise for user. "
-                    f"user_id: {user_id}")
 
         await users_repository.used_exercises(user_id)
 
