@@ -249,3 +249,6 @@ def delete_checkups_keyboard(type_checkup: str, checkup_id: int):
     return keyboard
 
 
+practice_exercise_recommendation_keyboard = InlineKeyboardBuilder()
+practice_exercise_recommendation_keyboard.row(InlineKeyboardButton(text="📝Получить упражнение",
+                                                                   callback_data="recommendation_exercise"))

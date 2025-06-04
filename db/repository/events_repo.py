@@ -62,6 +62,7 @@ class EventsRepository:
             async with session.begin():
                 try:
                     await session.merge(event)
+                    await session.commit()
                 except Exception:
                     return False
         return True

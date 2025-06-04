@@ -9,7 +9,7 @@ from aiogram.types import BufferedInputFile, FSInputFile
 from pydantic import BaseModel
 
 from bots import main_bot
-from data.keyboards import get_rec_keyboard, buy_sub_keyboard
+from data.keyboards import get_rec_keyboard, buy_sub_keyboard, practice_exercise_recommendation_keyboard
 from db.repository import users_repository, ai_requests_repository
 from utils.gpt_client import openAI_client, BASIC_MODEL, TRANSCRIPT_MODEL, mental_assistant_id, standard_assistant_id, TTS_MODEL, ADVANCED_MODEL
 from utils.photo_recommendation import generate_blurred_image_with_text
@@ -392,7 +392,7 @@ class PsyHandler(AIHandler):
                                 await main_bot.send_voice(
                                     user_id,
                                     FSInputFile(voice_file.name),
-                                    #TODO клавиатура упражнения
+                                    reply_markup=practice_exercise_recommendation_keyboard.as_markup()
                                 )
 
                             if not is_subscribed:

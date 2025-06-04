@@ -11,6 +11,7 @@ from db.repository import subscriptions_repository, users_repository, checkup_re
     events_repository
 from settings import payment_photo, how_are_you_photo, emoji_dict, \
     speed_dict
+from utils.gpt_distributor import user_request_handler
 from utils.messages_provider import send_subscription_end_message
 from utils.сheckup_stat import generate_emotion_chart
 
@@ -47,6 +48,16 @@ async def send_checkup(main_bot: Bot):
         except Exception as e:
             print(f"\n\nВОЗНИКЛА ОШИБКА ОТПРАВКИ ПОЛЬЗОВАТЕЛЮ {checkup.user_id}\n\n" + traceback.format_exc() + "\n\n")
             continue
+
+async def send_recommendations(main_bot: Bot):
+    users = await users_repository.select_all_users()
+    now = datetime.datetime.now()  # Можно использовать локальное время, если требуется
+
+    for user in users:
+        last_event = await events_repository.get_last_event_by_user_id(user_id=user.user_id)
+        if user_request_handler.psy_handler.active_threads.get(user.user_id) \
+                and now - last_event.creation_date >= datetime.timedelta(minutes=90):
+            await user_request_handler.psy_handler.provide_recommendations(user.user_id)
 
 
 async def notification_reminder(main_bot: Bot):
