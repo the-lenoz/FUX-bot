@@ -326,7 +326,7 @@ class PsyHandler(AIHandler):
         else:
             await self.provide_recommendations(request.user_id)
 
-    async def provide_recommendations(self, user_id: int):
+    async def provide_recommendations(self, user_id: int, from_notification: bool = False):
         typing_message = await main_bot.send_message(
             user_id,
             "💬<i>Печатаю…</i>"
@@ -372,7 +372,7 @@ class PsyHandler(AIHandler):
                             response = await openAI_client.audio.speech.create(
                                 model=TTS_MODEL,
                                 voice="alloy",  # Выберите один из голосов: alloy, echo, fable, onyx, nova, shimmer
-                                input=recommendation,
+                                input=f"<b>{recommendation}</b>\n\n{'Ты всегда можешь получить рекомендацию с /recommendation' if from_notification else ''}",
                                 response_format="opus"  # mp3, opus, aac, flac, wav, pcm
                             )
                             with tempfile.NamedTemporaryFile(mode="w+", suffix=".ogg") as voice_file:

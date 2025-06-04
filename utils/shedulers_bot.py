@@ -58,7 +58,7 @@ async def send_recommendations(main_bot: Bot):
         if user_request_handler.psy_handler.active_threads.get(user.user_id) \
                 and now - last_event.creation_date >= datetime.timedelta(minutes=120):
             if user.notified_with_recommendation < 3:
-                await user_request_handler.psy_handler.provide_recommendations(user.user_id)
+                await user_request_handler.psy_handler.provide_recommendations(user.user_id, from_notification=True)
             else:
                 await user_request_handler.psy_handler.exit(user.user_id)
 
