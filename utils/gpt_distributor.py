@@ -366,48 +366,48 @@ class PsyHandler(AIHandler):
                         recommendation = messages.data[0].content[0].text.value
 
 
-                        if not user.used_free_recommendation or is_subscribed:
-                            await main_bot.send_message(
-                                user_id,
-                                f"<b>{recommendation}</b>\n\n{'Ты всегда можешь получить рекомендацию с /recommendation' if from_notification else ''}"
-                            ) # Дать рекомендации
-                            await main_bot.send_chat_action(
-                                user_id,
-                                action="record_voice"
-                            )
-                            response = await openAI_client.audio.speech.create(
-                                model=TTS_MODEL,
-                                voice="alloy",  # Выберите один из голосов: alloy, echo, fable, onyx, nova, shimmer
-                                input=recommendation,
-                                response_format="opus"  # mp3, opus, aac, flac, wav, pcm
-                            )
-                            logger.info("writing voice to file...")
-                            with tempfile.NamedTemporaryFile(mode="w+", suffix=".ogg") as voice_file:
-                                response.stream_to_file(voice_file.name)
-                                await main_bot.send_chat_action(
-                                    user_id,
-                                    action="upload_voice"
-                                )
-                                logger.info("exiting thread...")
-                                problem_id = await self.exit(user_id)
-                                logger.info("sending voice")
-                                await main_bot.send_voice(
-                                    user_id,
-                                    FSInputFile(voice_file.name),
-                                    reply_markup=create_practice_exercise_recommendation_keyboard(problem_id)
-                                )
+            if not user.used_free_recommendation or is_subscribed:
+                await main_bot.send_message(
+                    user_id,
+                    f"<b>{recommendation}</b>\n\n{'Ты всегда можешь получить рекомендацию с /recommendation' if from_notification else ''}"
+                ) # Дать рекомендации
+                await main_bot.send_chat_action(
+                    user_id,
+                    action="record_voice"
+                )
+                response = await openAI_client.audio.speech.create(
+                    model=TTS_MODEL,
+                    voice="alloy",  # Выберите один из голосов: alloy, echo, fable, onyx, nova, shimmer
+                    input=recommendation,
+                    response_format="opus"  # mp3, opus, aac, flac, wav, pcm
+                )
+                logger.info("writing voice to file...")
+                with tempfile.NamedTemporaryFile(mode="w+", suffix=".ogg") as voice_file:
+                    response.stream_to_file(voice_file.name)
+                    await main_bot.send_chat_action(
+                        user_id,
+                        action="upload_voice"
+                    )
+                    logger.info("exiting thread...")
+                    problem_id = await self.exit(user_id)
+                    logger.info("sending voice")
+                    await main_bot.send_voice(
+                        user_id,
+                        FSInputFile(voice_file.name),
+                        reply_markup=create_practice_exercise_recommendation_keyboard(problem_id)
+                    )
 
-                            if not is_subscribed:
-                                await users_repository.used_free_recommendation(user_id)
+                if not is_subscribed:
+                    await users_repository.used_free_recommendation(user_id)
 
-                        else:
-                            photo_recommendation = generate_blurred_image_with_text(text=recommendation, enable_blur=True)
-                            await main_bot.send_photo(
-                                user_id,
-                                has_spoiler=True,
-                                photo=BufferedInputFile(file=photo_recommendation, filename=f"recommendation.png"),
-                                caption="🌰<i>Рекомендация</i> готова, но чтобы получить её, нужна <b>подписка</b>",
-                                reply_markup=get_rec_keyboard(mode_type="fast_help").as_markup())
+            else:
+                photo_recommendation = generate_blurred_image_with_text(text=recommendation, enable_blur=True)
+                await main_bot.send_photo(
+                    user_id,
+                    has_spoiler=True,
+                    photo=BufferedInputFile(file=photo_recommendation, filename=f"recommendation.png"),
+                    caption="🌰<i>Рекомендация</i> готова, но чтобы получить её, нужна <b>подписка</b>",
+                    reply_markup=get_rec_keyboard(mode_type="fast_help").as_markup())
 
         else:
             await main_bot.send_message(
@@ -448,17 +448,16 @@ class PsyHandler(AIHandler):
 
 
     async def summarize_dialog_problem(self, user_id: int) -> int | None:
+        logger.info("Summarizing dialog...")
         user = await users_repository.get_user_by_user_id(user_id)
         if user:
-            request_text = MENTAL_PROBLEM_SUMMARY_PROMPT
-
             if self.thread_locks.get(user_id):
                 async with self.thread_locks[user_id]:
                     if self.active_threads.get(user_id):
                         await openAI_client.beta.threads.messages.create(
                             thread_id=self.active_threads[user_id],
                             role="user",
-                            content=request_text,
+                            content=MENTAL_PROBLEM_SUMMARY_PROMPT,
                         )
 
                         run = await openAI_client.beta.threads.runs.create_and_poll(
