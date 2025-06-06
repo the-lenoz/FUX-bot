@@ -246,6 +246,7 @@ def delete_checkups_keyboard(type_checkup: str, checkup_id: int):
     else:
         keyboard.row(InlineKeyboardButton(text="❌Приостановить трекинг", callback_data=f"delete_checkups|productivity|{checkup_id}"))
         keyboard.row(InlineKeyboardButton(text="🤩Трекинг эмоций", callback_data="checkups|emotions"))
+    keyboard.row(menu_button)
     return keyboard
 
 
