@@ -68,7 +68,7 @@ class MentalProblemsRepository:
             session: AsyncSession
             async with session.begin():
                 sql = update(MentalProblem).values({
-                    MentalProblem.used_exercises: problem.worked_out + 1
+                    MentalProblem.worked_out: problem.worked_out + 1
                 }).where(or_(MentalProblem.id == problem_id))
                 await session.execute(sql)
                 await session.commit()
