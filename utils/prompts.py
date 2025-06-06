@@ -1,13 +1,19 @@
 
-PSY_TEXT_CHECK_PROMPT_FORMAT = """Analyze the following text: "{text}"
+PSY_TEXT_CHECK_PROMPT_FORMAT = """Проанализируй следующий текст: "{text}"
 
-Based on the content and sentiment of the text, determine if it should be directed to a psychologist bot for sensitive, emotional, mental health-related,
-or any psychology-related topics,  
-or to a regular chatbot for general inquiries, factual questions, or casual conversation.
-If the text is related to psychology or psychologists, answer true. 
+Твоя задача: определить, упоминаются ли в этом тексте **'упражнения'** (или их прямые синонимы, подразумевающие конкретные методики самопомощи или задания от психолога, например, 'техники', 'практики', 'задания', 'методики, которые я делал/а').
 
-Respond with only "true" if the text should be sent to a psychologist bot.
-Respond with only "false" if the text should be sent to a regular chatbot."""
+**Ключевой критерий для ответа 'true':** В тексте должно быть явное или косвенное упоминание того, что пользователь говорит о каких-либо **психологических упражнениях, техниках самопомощи, заданиях, полученных ранее (возможно, от ИИ-помощника), или обсуждает процесс их выполнения, результаты, или задает вопросы по ним.**
+
+Примеры ситуаций для 'true':
+*   "Я попробовал сделать то упражнение, о котором мы говорили..."
+*   "Эта техника дыхания мне не очень помогла, есть ли другие?"
+*   "Как правильно выполнять задание на выявление негативных мыслей?"
+*   "Я записал свои мысли, как вы советовали в прошлом упражнении."
+*   "Расскажи подробнее про упражнение 'безопасное место'."
+
+Если текст содержит упоминание таких упражнений или техник, ответь только "true".
+Во всех остальных случаях, если конкретные упражнения или психологические практики не упоминаются, ответь только "false"."""
 
 
 SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT = """
