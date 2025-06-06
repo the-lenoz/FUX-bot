@@ -32,11 +32,6 @@ async def exercises_by_problem_call(call: CallbackQuery, state: FSMContext, bot:
 @exercises_router.callback_query(F.data.startswith("recommendation_exercise"))
 async def exercises_by_recommendation(call: CallbackQuery, state: FSMContext, bot: Bot):
     problem_id = int(call.data.split('|')[1])
-
-    try:
-        await call.message.delete()
-    except TelegramBadRequest as e:
-        logger.error(str(e))
     await generate_feedback_for_user(call, bot, problem_id)
 
 
