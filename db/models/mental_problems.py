@@ -1,19 +1,15 @@
 from sqlalchemy import Column, BigInteger, ForeignKey, String
-from sqlalchemy.orm import relationship, Mapped
 
 from db.base import BaseModel, CleanModel
-from .user import User
 
 
-class Exercise(BaseModel, CleanModel):
-    __tablename__ = 'exercises'
+class MentalProblem(BaseModel, CleanModel):
+    __tablename__ = 'mental_problems'
 
     user_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=False)
-    problem_id = Column(BigInteger, ForeignKey('mental_problems.id'), nullable=False)
 
-    text = Column(String)
-
-
+    problem_summary = Column(String)
+    worked_out = Column(BigInteger, nullable=False, default=0)
 
     @property
     def stats(self) -> str:

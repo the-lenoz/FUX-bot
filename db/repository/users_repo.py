@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Sequence
 
+import deprecated
 from sqlalchemy import select, or_, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -174,6 +175,7 @@ class UserRepository:
                 await session.execute(sql)
                 await session.commit()
 
+    @deprecated.deprecated
     async def update_mental_data_by_user_id(self, user_id: int, new_mental_data: str):
         async with self.session_maker() as session:
             session: AsyncSession

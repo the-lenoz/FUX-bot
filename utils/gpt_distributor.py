@@ -2,19 +2,22 @@ import base64
 import tempfile
 from asyncio import Lock
 import re
+from json import dumps
+from random import choice
 
 import openai
 from aiogram.types import BufferedInputFile, FSInputFile
 from pydantic import BaseModel
 
 from bots import main_bot
-from data.keyboards import get_rec_keyboard, buy_sub_keyboard, practice_exercise_recommendation_keyboard
-from db.repository import users_repository, ai_requests_repository
+from data.keyboards import get_rec_keyboard, buy_sub_keyboard, create_practice_exercise_recommendation_keyboard
+from db.repository import users_repository, ai_requests_repository, mental_problems_repository, \
+    exercises_user_repository
 from utils.gpt_client import openAI_client, BASIC_MODEL, TRANSCRIPT_MODEL, mental_assistant_id, standard_assistant_id, TTS_MODEL, ADVANCED_MODEL
 from utils.photo_recommendation import generate_blurred_image_with_text
 from utils.prompts import PSY_TEXT_CHECK_PROMPT_FORMAT, IMAGE_CHECK_PROMPT, DOCUMENT_CHECK_PROMPT, \
     RECOMMENDATION_PROMPT, \
-    MENTAL_DATA_PROVIDER_PROMPT, EXERCISE_PROMPT_FORMAT, SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT
+    MENTAL_PROBLEM_SUMMARY_PROMPT, EXERCISE_PROMPT_FORMAT, SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT
 from utils.subscription import check_is_subscribed
 from utils.user_properties import get_user_description
 
@@ -331,6 +334,7 @@ class PsyHandler(AIHandler):
             user_id,
             "💬<i>Печатаю…</i>"
         )
+
         await main_bot.send_chat_action(chat_id=user_id, action="typing")
         await users_repository.user_got_recommendation(user_id)
 
@@ -381,10 +385,11 @@ class PsyHandler(AIHandler):
                                     user_id,
                                     action="upload_voice"
                                 )
+                                problem_id = await self.exit(user_id)
                                 await main_bot.send_voice(
                                     user_id,
                                     FSInputFile(voice_file.name),
-                                    reply_markup=practice_exercise_recommendation_keyboard.as_markup()
+                                    reply_markup=create_practice_exercise_recommendation_keyboard(problem_id)
                                 )
 
                             if not is_subscribed:
@@ -398,6 +403,7 @@ class PsyHandler(AIHandler):
                                 photo=BufferedInputFile(file=photo_recommendation, filename=f"recommendation.png"),
                                 caption="🌰<i>Рекомендация</i> готова, но чтобы получить её, нужна <b>подписка</b>",
                                 reply_markup=get_rec_keyboard(mode_type="fast_help").as_markup())
+
         else:
             await main_bot.send_message(
                 user_id,
@@ -409,41 +415,42 @@ class PsyHandler(AIHandler):
         await self.exit(user_id)
 
     @staticmethod
-    async def generate_exercise(user_id: int):
+    async def generate_exercise(user_id: int, problem_id: int | None = None) -> str | None:
+        if problem_id is None:
+            problems = await mental_problems_repository.get_problems_by_user_id(user_id=user_id, worked_out_threshold=4)
+            if not problems:
+                return None
+            problem = choice(problems)
+        else:
+            problem = await mental_problems_repository.get_problem_by_id(problem_id=problem_id)
 
         await users_repository.used_exercises(user_id)
 
-        user_description = await get_user_description(user_id, True)
-
         response = await openAI_client.responses.create(
-            input=EXERCISE_PROMPT_FORMAT.format(user_description=user_description),
+            input=EXERCISE_PROMPT_FORMAT.format(problem_summary=problem.problem_summary),
             model=ADVANCED_MODEL if await check_is_subscribed(user_id) else BASIC_MODEL,
         )
 
-        exercise = response.output_text
+        exercise_text = response.output_text
 
-        response = await openAI_client.responses.create(
-            input=MENTAL_DATA_PROVIDER_PROMPT + "\n\nПользователю было дано задание КПТ:\n" + exercise,
-            model=ADVANCED_MODEL if await check_is_subscribed(user_id) else BASIC_MODEL,
+        await exercises_user_repository.add_exercise(
+            user_id=user_id,
+            text=exercise_text,
+            problem_id=problem.id
         )
 
-        await users_repository.update_mental_data_by_user_id(
-            user_id,
-            response.output_text
-        )
-
-        return exercise
+        return exercise_text
 
 
-    async def update_user_mental_data(self, user_id: int):
+    async def summarize_dialog_problem(self, user_id: int) -> int | None:
         user = await users_repository.get_user_by_user_id(user_id)
         if user:
-            request_text = MENTAL_DATA_PROVIDER_PROMPT + "\n\nCurrent information about user:\n" + str(user.mental_data)
+            request_text = MENTAL_PROBLEM_SUMMARY_PROMPT
 
             if self.thread_locks.get(user_id):
                 async with self.thread_locks[user_id]:
                     if self.active_threads.get(user_id):
-                        message = await openAI_client.beta.threads.messages.create(
+                        await openAI_client.beta.threads.messages.create(
                             thread_id=self.active_threads[user_id],
                             role="user",
                             content=request_text,
@@ -461,18 +468,21 @@ class PsyHandler(AIHandler):
                                 run_id=run.id  # Получить сообщения только из этого Run
                             )
 
-                            new_mental_data = messages.data[0].content[0].text.value
-                            await users_repository.update_mental_data_by_user_id(
-                                user_id,
-                                new_mental_data
-                            )
-                        await openAI_client.beta.threads.messages.delete(message_id=message.id,
-                                                                         thread_id=self.active_threads[user_id])
+                            problem_summary = messages.data[0].content[0].text.value
 
-    async def exit(self, user_id: int):
-        await self.update_user_mental_data(user_id)
+                            return await mental_problems_repository.add_problem(
+                                user_id=user_id,
+                                problem_summary=problem_summary
+                            )
+
+        return None
+
+    async def exit(self, user_id: int) -> int | None:
+        problem_id = await self.summarize_dialog_problem(user_id)
         await super().exit(user_id)
         self.messages_count[user_id] = 0
+
+        return problem_id
 
 
 class GeneralHandler(AIHandler):

@@ -4,6 +4,7 @@ from .checkups_repo import CheckupRepository
 from .days_checkups_repo import DaysCheckupRepository
 from .events_repo import EventsRepository
 from .exercises_user_repo import ExercisesUserRepository
+from .mental_problems_repo import MentalProblemsRepository
 from .operations_repo import OperationRepository
 from .promo_activations_repo import PromoActivationsRepository
 from .refferal_repo import ReferralSystemRepository
@@ -22,6 +23,7 @@ checkup_repository = CheckupRepository()
 days_checkups_repository = DaysCheckupRepository()
 exercises_user_repository = ExercisesUserRepository()
 events_repository = EventsRepository()
+mental_problems_repository = MentalProblemsRepository()
 
 __all__ = ['users_repository',
            'admin_repository',
@@ -33,5 +35,6 @@ __all__ = ['users_repository',
            'checkup_repository',
            'days_checkups_repository',
            'exercises_user_repository',
-           'events_repository'
+           'events_repository',
+           'mental_problems_repository'
           ]

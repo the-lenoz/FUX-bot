@@ -249,6 +249,8 @@ def delete_checkups_keyboard(type_checkup: str, checkup_id: int):
     return keyboard
 
 
-practice_exercise_recommendation_keyboard = InlineKeyboardBuilder()
-practice_exercise_recommendation_keyboard.row(InlineKeyboardButton(text="📝Получить упражнение",
-                                                                   callback_data="recommendation_exercise"))
+def create_practice_exercise_recommendation_keyboard(problem_id: int):
+    practice_exercise_recommendation_keyboard = InlineKeyboardBuilder()
+    practice_exercise_recommendation_keyboard.row(InlineKeyboardButton(text="📝Получить упражнение",
+                                                                       callback_data=f"recommendation_exercise|{problem_id}"))
+    return practice_exercise_recommendation_keyboard.as_markup()
