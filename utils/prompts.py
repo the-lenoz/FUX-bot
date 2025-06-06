@@ -1,14 +1,14 @@
 
-PSY_TEXT_CHECK_PROMPT_FORMAT = """Проанализируй следующий текст: "{text}"  
-Определи, должен ли он обрабатываться с особым вниманием к психологическому контексту.  
-Ответь только “true” или “false”:  
+PSY_TEXT_CHECK_PROMPT_FORMAT = """Analyze the following text: "{text}"
 
-Условия, при которых возвращается “true” (хотя бы одно из них):  
-1. В тексте встречаются слова «упражнение», «техника», «практика», «задание», «методика», «психолог» (или их формы/синонимы) в любом контексте, даже если неясна связь с психологией.  
-2. Текст затрагивает чувствительные или эмоциональные темы, психическое здоровье, психологию или упоминает психологов, терапию, стресс, тревогу, подавленность и т. п.  
+Based on the content and sentiment of the text, determine if it should be directed to a psychologist bot for sensitive, emotional, mental health-related,
+or any psychology-related topics,  
+or to a regular chatbot for general inquiries, factual questions, or casual conversation.
+If the text is related to psychology or psychologists, answer true. 
+If text contains any information about exercises, trainings, etc. answer true. 
 
-Если ни одно из условий не выполняется, верни “false”.  
-Формат ответа: только “true” или “false”."""
+Respond with only "true" if the text should be sent to a psychologist bot.
+Respond with only "false" if the text should be sent to a regular chatbot."""
 
 
 SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT = """
