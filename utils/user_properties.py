@@ -23,11 +23,11 @@ async def get_user_description(user_id: int, is_psy: bool = False) -> str:
         user_problems = await mental_problems_repository.get_problems_by_user_id(user_id=user_id)
 
         problems_data = "\n\n\nПроблемы пользователя:(\n\n\n" + "\n\n".join(
-            (problem.problem_summary + "\nПользователь прорабатывал проблему следующими упражнениями:[" +
-             "\n-\n".join((exercise.text
-                           for exercise in await exercises_user_repository.get_exercises_by_problem_id(problem.id))) +
+            [problem.problem_summary + "\nПользователь прорабатывал проблему следующими упражнениями:[" +
+             "\n-\n".join([exercise.text
+                           for exercise in await exercises_user_repository.get_exercises_by_problem_id(problem.id)]) +
              "]"
-             for problem in user_problems)
+             for problem in user_problems]
         ) + ")"
 
         description.append(problems_data)

@@ -57,8 +57,8 @@ class MentalProblemsRepository:
             session: AsyncSession
             async with session.begin():
                 sql = select(MentalProblem).where(and_(MentalProblem.user_id == user_id,
-                                                       (MentalProblem.worked_out < worked_out_threshold
-                                                        if worked_out_threshold is not None else True)))
+                                                       MentalProblem.worked_out < worked_out_threshold
+                                                        if worked_out_threshold is not None else True))
                 query = await session.execute(sql)
                 return query.scalars().all()
 
