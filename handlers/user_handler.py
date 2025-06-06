@@ -22,6 +22,7 @@ from utils.promocode import user_entered_promo_code
 user_router = Router()
 
 
+@user_router.callback_query(F.data=="cancel", any_state)
 @user_router.callback_query(F.data == "start_menu", any_state)
 async def start_menu(call: CallbackQuery, state: FSMContext):
     await state.clear()
