@@ -443,6 +443,7 @@ class PsyHandler(AIHandler):
             text=exercise_text,
             problem_id=problem.id
         )
+        await mental_problems_repository.worked_out(problem.id)
 
         return exercise_text
 
