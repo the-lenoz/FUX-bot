@@ -1,4 +1,5 @@
 import base64
+import logging
 import tempfile
 from asyncio import Lock
 import re
@@ -21,6 +22,7 @@ from utils.prompts import PSY_TEXT_CHECK_PROMPT_FORMAT, IMAGE_CHECK_PROMPT, DOCU
 from utils.subscription import check_is_subscribed
 from utils.user_properties import get_user_description
 
+logger = logging.getLogger(__name__)
 
 class UserFile(BaseModel):
     file_bytes: bytes
@@ -367,7 +369,7 @@ class PsyHandler(AIHandler):
                         if not user.used_free_recommendation or is_subscribed:
                             await main_bot.send_message(
                                 user_id,
-                                recommendation
+                                f"<b>{recommendation}</b>\n\n{'Ты всегда можешь получить рекомендацию с /recommendation' if from_notification else ''}"
                             ) # Дать рекомендации
                             await main_bot.send_chat_action(
                                 user_id,
@@ -376,16 +378,19 @@ class PsyHandler(AIHandler):
                             response = await openAI_client.audio.speech.create(
                                 model=TTS_MODEL,
                                 voice="alloy",  # Выберите один из голосов: alloy, echo, fable, onyx, nova, shimmer
-                                input=f"<b>{recommendation}</b>\n\n{'Ты всегда можешь получить рекомендацию с /recommendation' if from_notification else ''}",
+                                input=recommendation,
                                 response_format="opus"  # mp3, opus, aac, flac, wav, pcm
                             )
+                            logger.info("writing voice to file...")
                             with tempfile.NamedTemporaryFile(mode="w+", suffix=".ogg") as voice_file:
                                 response.stream_to_file(voice_file.name)
                                 await main_bot.send_chat_action(
                                     user_id,
                                     action="upload_voice"
                                 )
+                                logger.info("exiting thread...")
                                 problem_id = await self.exit(user_id)
+                                logger.info("sending voice")
                                 await main_bot.send_voice(
                                     user_id,
                                     FSInputFile(voice_file.name),
