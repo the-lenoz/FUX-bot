@@ -424,7 +424,9 @@ class PsyHandler(AIHandler):
         if problem_id is None:
             problems = await mental_problems_repository.get_problems_by_user_id(user_id=user_id, worked_out_threshold=4)
             if not problems:
-                return None
+                problems = await mental_problems_repository.get_problems_by_user_id(user_id=user_id)
+                if not problems:
+                    return None
             problem = choice(problems)
         else:
             problem = await mental_problems_repository.get_problem_by_id(problem_id=problem_id)
