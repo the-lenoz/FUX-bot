@@ -51,7 +51,7 @@ class UserRequestHandler:
             if self.psy_handler.active_threads.get(request.user_id):
                 to_psy = True
 
-            if request.file is not None and not to_psy:
+            '''if request.file is not None and not to_psy:
                 if request.file.file_type == 'image':
                     if await UserRequestHandler.is_image_mental(request.file):
                         to_psy = True
@@ -71,9 +71,9 @@ class UserRequestHandler:
                     if await UserRequestHandler.is_document_mental(document_file.id):
                         to_psy = True
 
-                    await openAI_client.files.delete(document_file.id)
+                    await openAI_client.files.delete(document_file.id)'''
 
-            if to_psy or await UserRequestHandler.is_text_mental(text):
+            if to_psy or await self.general_handler.check_is_dialog_psy_now(request): # UserRequestHandler.is_text_mental(text):
                 await self.psy_handler.handle(request)
             else:
                 await self.general_handler.handle(request)  # РАБОТАЕМ - к gpt
