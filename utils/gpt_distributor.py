@@ -527,10 +527,19 @@ class GeneralHandler(AIHandler):
                 result = 'true' in messages.data[0].content[0].text.value.lower()
 
                 for message in messages.data:
-                    await openAI_client.beta.threads.messages.delete(message.id)
+                    await openAI_client.beta.threads.messages.delete(
+                        message_id=message.id,
+                        thread_id=thread_id
+                    )
 
-                await openAI_client.beta.threads.messages.delete(message_id)
-                await openAI_client.beta.threads.messages.delete(check_message_id)
+                await openAI_client.beta.threads.messages.delete(
+                    message_id=message_id,
+                    thread_id=thread_id
+                )
+                await openAI_client.beta.threads.messages.delete(
+                    message_id=check_message_id,
+                    thread_id=thread_id
+                )
         return result
 
 
