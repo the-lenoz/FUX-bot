@@ -79,8 +79,8 @@ class UserRequestHandler:
                 await self.general_handler.handle(request)  # РАБОТАЕМ - к gpt
         else:
             if request.file is None:
-                if await UserRequestHandler.is_text_mental(request.text) \
-                        or self.psy_handler.active_threads.get(request.user_id):
+                if self.psy_handler.active_threads.get(request.user_id) \
+                        or self.general_handler.check_is_dialog_psy_now(request):
                     await self.psy_handler.handle(request) # РАБОТАЕМ - к психологу
                 else:
                     if await UserRequestHandler.is_text_smalltalk(request.text):
