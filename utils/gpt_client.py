@@ -25,7 +25,7 @@ openAI_client = AsyncOpenAI(api_key=openai_api_key) if proxy_url is None or prox
 
 
 class ModelChatMessage(BaseModel):
-    role: Literal["user", "assistant", "developer"]
+    role: Literal["user", "assistant", "developer", "system"]
     content: str | List
 
     def __init__(self, content: str | List, role: str = "user"):
