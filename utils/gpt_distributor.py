@@ -222,7 +222,6 @@ class AIHandler:
                     thread_id=thread_id,
                     run_id=run.id  # Получить сообщения только из этого Run
                 )
-                await typing_message.delete()
                 await main_bot.send_message(
                     request.user_id,
                     re.sub(r'【.*】.', '', messages.data[0].content[0].text.value),
@@ -236,6 +235,11 @@ class AIHandler:
                     has_audio=request.file and request.file.file_type == 'voice',
                     has_files=request.file and request.file.file_type == 'document'
                 )
+            else:
+                logger.error(f"Thread with id {thread_id} run ended with non-success status {run.status}. "
+                             f"Error message: {run.last_error.message}"
+                             )
+        await typing_message.delete()
 
 
     async def create_message(self, request: UserRequest) -> int:
@@ -526,20 +530,26 @@ class GeneralHandler(AIHandler):
 
                 result = 'true' in messages.data[0].content[0].text.value.lower()
 
-
+                logger.info(f"Deleting message with id {messages.data[0].id}")
                 await openAI_client.beta.threads.messages.delete(
                     message_id=messages.data[0].id,
                     thread_id=thread_id
                 )
+            else:
+                logger.error(f"Thread with id {thread_id} run ended with non-success status {run.status}. "
+                             f"Error message: {run.last_error.message}"
+                             )
 
-                await openAI_client.beta.threads.messages.delete(
-                    message_id=message_id,
-                    thread_id=thread_id
-                )
-                await openAI_client.beta.threads.messages.delete(
-                    message_id=check_message_id,
-                    thread_id=thread_id
-                )
+            logger.info(f"Deleting message with id {message_id}")
+            await openAI_client.beta.threads.messages.delete(
+                message_id=message_id,
+                thread_id=thread_id
+            )
+            logger.info(f"Deleting message with id {check_message_id}")
+            await openAI_client.beta.threads.messages.delete(
+                message_id=check_message_id,
+                thread_id=thread_id
+            )
         return result
 
 
