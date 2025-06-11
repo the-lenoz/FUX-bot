@@ -1,4 +1,5 @@
 import base64
+import json
 import logging
 import re
 import tempfile
@@ -230,6 +231,9 @@ class AIHandler:
 
 
     async def run_thread(self, user_id, save_answer: bool = True) -> str | None:
+        logging.info(json.dumps(
+            self.active_threads[user_id].get_messages(), indent=2
+        ))
         response = await openAI_client.responses.create(
             model=ADVANCED_MODEL if await check_is_subscribed(user_id) else BASIC_MODEL,
             input=self.active_threads[user_id].get_messages()

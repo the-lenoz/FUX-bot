@@ -52,4 +52,4 @@ class ModelChatThread:
             return False
 
     def get_messages(self) -> List[ModelChatMessage]:
-        return [message for _, message in sorted(self._messages.items(), key=lambda x: x[0]) if message is not None]
+        return [message for _, message in sorted(list(self._messages.items()), key=lambda x: x[0]) if message is not None]
