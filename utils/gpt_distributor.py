@@ -377,24 +377,13 @@ class PsyHandler(AIHandler):
         if self.thread_locks.get(user_id):
             async with self.thread_locks[user_id]:
                 if self.active_threads.get(user_id):
-                    await openAI_client.beta.threads.messages.create(
-                        thread_id=self.active_threads[user_id],
-                        role="user",
-                        content=RECOMMENDATION_PROMPT,
+                    recommendation_request = UserRequest(
+                        user_id=user_id,
+                        text=RECOMMENDATION_PROMPT
                     )
+                    await self.create_message(recommendation_request)
 
-                    run = await openAI_client.beta.threads.runs.create_and_poll(
-                        thread_id=self.active_threads[user_id],
-                        assistant_id=self.assistant_id
-                    )
-
-                    if run.status == 'completed':
-                        messages = await openAI_client.beta.threads.messages.list(
-                            thread_id=self.active_threads[user_id],
-                            run_id=run.id  # Получить сообщения только из этого Run
-                        )
-
-                        recommendation = messages.data[0].content[0].text.value
+                    recommendation = await self.run_thread(user_id, save_answer=False)
 
 
             if not user.used_free_recommendation or is_subscribed:
