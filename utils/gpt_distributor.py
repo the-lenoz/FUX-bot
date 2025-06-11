@@ -209,8 +209,33 @@ class AIHandler:
         )
         await main_bot.send_chat_action(chat_id=request.user_id, action="typing")
         await self.create_message(request)
-        async with self.thread_locks[request.user_id]:
-            thread_id = self.active_threads[request.user_id]
+
+        result = await self.run_thread(request.user_id)
+
+        await main_bot.send_message(
+            request.user_id,
+            re.sub(r'【.*】.', '', result),
+            parse_mode=""
+        )
+
+        await ai_requests_repository.add_request(
+            user_id=request.user_id,
+            user_question=request.text,
+            answer_ai=result,
+            has_photo=request.file and request.file.file_type == 'image',
+            has_audio=request.file and request.file.file_type == 'voice',
+            has_files=request.file and request.file.file_type == 'document'
+            )
+
+        await typing_message.delete()
+
+
+    async def run_thread(self, user_id, save_answer: bool = True) -> str | None:
+        if not self.thread_locks.get(user_id):
+            self.thread_locks[user_id] = Lock()
+        result = None
+        async with self.thread_locks[user_id]:
+            thread_id = self.active_threads[user_id]
 
             run = await openAI_client.beta.threads.runs.create_and_poll(
                 thread_id=thread_id,
@@ -222,24 +247,19 @@ class AIHandler:
                     thread_id=thread_id,
                     run_id=run.id  # Получить сообщения только из этого Run
                 )
-                await main_bot.send_message(
-                    request.user_id,
-                    re.sub(r'【.*】.', '', messages.data[0].content[0].text.value),
-                    parse_mode=""
-                )
-                await ai_requests_repository.add_request(
-                    user_id=request.user_id,
-                    user_question=request.text,
-                    answer_ai=messages.data[0].content[0].text.value,
-                    has_photo=request.file and request.file.file_type == 'image',
-                    has_audio=request.file and request.file.file_type == 'voice',
-                    has_files=request.file and request.file.file_type == 'document'
-                )
+                result = messages.data[0].content[0].text.value
+                if not save_answer:
+                    await openAI_client.beta.threads.messages.delete(
+                        message_id=messages.data[0].id,
+                        thread_id=thread_id
+                    )
             else:
                 logger.error(f"Thread with id {thread_id} run ended with non-success status {run.status}. "
-                             f"Error message: {run.last_error.message}"
-                             )
-        await typing_message.delete()
+                             f"Error message: {run.last_error.message}")
+        return result
+
+
+
 
 
     async def create_message(self, request: UserRequest) -> int:

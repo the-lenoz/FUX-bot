@@ -1,5 +1,5 @@
 import os
-from typing import Literal
+from typing import Literal, Dict, List
 
 import httpx
 from openai import AsyncOpenAI
@@ -26,9 +26,9 @@ openAI_client = AsyncOpenAI(api_key=openai_api_key) if proxy_url is None or prox
 
 class ModelChatMessage(BaseModel):
     role: Literal["user", "assistant", "developer"]
-    content: str | list
+    content: str | List
 
-    def __init__(self, content: str | list, role: str = "user"):
+    def __init__(self, content: str | List, role: str = "user"):
         super().__init__(
             content=content,
             role=role
@@ -36,14 +36,20 @@ class ModelChatMessage(BaseModel):
 
 
 class ModelChatThread:
-    _messages = []
-
-    def __init__(self):
-        pass
+    _messages: Dict[int, ModelChatMessage | None] = {}
+    __current_id = 0
 
     def add_message(self, message: ModelChatMessage) -> int:
-        self._messages.append(message)
-        return len(self._messages) - 1
+        self._messages[self.__current_id] = message
+        self.__current_id += 1
+        return self.__current_id - 1
 
-    def get_messages(self):
-        return self._messages
+    def delete_message(self, message_id: int) -> bool:
+        if self._messages.get(message_id) is not None:
+            self._messages[message_id] = None
+            return True
+        else:
+            return False
+
+    def get_messages(self) -> List:
+        return [message for _, message in sorted(self._messages.items(), key=lambda x: x[0]) if message is not None]
