@@ -534,6 +534,9 @@ class GeneralHandler(AIHandler):
             text=DIALOG_CHECK_PROMPT
         )
 
+        if not self.thread_locks.get(request.user_id):
+            self.thread_locks[request.user_id] = Lock()
+
         async with self.thread_locks[request.user_id]:
             check_message_id = await self.create_message(check_request)
             result = False
