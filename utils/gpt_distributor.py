@@ -546,6 +546,7 @@ class GeneralHandler(AIHandler):
 
             result = False
             response = await self.run_thread(request.user_id, False)
+            logger.info(f"Checker response: {response}")
             result = 'true' in response.lower()
 
             self.active_threads[request.user_id].delete_message(message_id)
