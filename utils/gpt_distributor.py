@@ -343,7 +343,6 @@ class AIHandler:
         if self.thread_locks.get(user_id):
             async with self.thread_locks[user_id]:
                 if self.active_threads.get(user_id):
-                    await openAI_client.beta.threads.delete(self.active_threads[user_id])
                     self.active_threads[user_id] = None
 
 
@@ -491,30 +490,18 @@ class PsyHandler(AIHandler):
             if self.thread_locks.get(user_id):
                 async with self.thread_locks[user_id]:
                     if self.active_threads.get(user_id):
-                        await openAI_client.beta.threads.messages.create(
-                            thread_id=self.active_threads[user_id],
-                            role="user",
-                            content=MENTAL_PROBLEM_SUMMARY_PROMPT,
+                        summary_request = UserRequest(
+                            user_id=user_id,
+                            text=MENTAL_PROBLEM_SUMMARY_PROMPT
                         )
+                        await self.create_message(summary_request)
 
-                        run = await openAI_client.beta.threads.runs.create_and_poll(
-                            thread_id=self.active_threads[user_id],
-                            model=BASIC_MODEL,
-                            assistant_id=self.assistant_id
+                        problem_summary = await self.run_thread(user_id)
+
+                        return await mental_problems_repository.add_problem(
+                            user_id=user_id,
+                            problem_summary=problem_summary
                         )
-
-                        if run.status == 'completed':
-                            messages = await openAI_client.beta.threads.messages.list(
-                                thread_id=self.active_threads[user_id],
-                                run_id=run.id  # Получить сообщения только из этого Run
-                            )
-
-                            problem_summary = messages.data[0].content[0].text.value
-
-                            return await mental_problems_repository.add_problem(
-                                user_id=user_id,
-                                problem_summary=problem_summary
-                            )
 
         return None
 
