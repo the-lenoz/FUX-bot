@@ -237,6 +237,7 @@ class AIHandler:
         async with self.thread_locks[user_id]:
             thread_id = self.active_threads[user_id]
 
+            logger.info(f"Running thread with id {thread_id}")
             run = await openAI_client.beta.threads.runs.create_and_poll(
                 thread_id=thread_id,
                 assistant_id=self.assistant_id
