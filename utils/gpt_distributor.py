@@ -61,7 +61,13 @@ class UserRequestHandler:
                 to_psy = True
 
             if to_psy or await self.general_handler.check_is_dialog_psy_now(request):
-                self.psy_handler.active_threads[request.user_id] = self.general_handler.active_threads[request.user_id]
+                message_id = await self.psy_handler.create_message(request)
+                self.psy_handler.active_threads[request.user_id].delete_message(message_id)
+
+                for message in self.general_handler.active_threads[request.user_id].get_messages():
+                    if message.role != "system":
+                        self.psy_handler.active_threads[request.user_id].add_message(message)
+
                 await self.psy_handler.handle(request)
             else:
                 await self.general_handler.handle(request)  # РАБОТАЕМ - к gpt
