@@ -4,6 +4,7 @@ import logging
 import re
 import tempfile
 from asyncio import Lock
+from pprint import pprint
 from random import choice
 from typing import Dict
 
@@ -231,9 +232,7 @@ class AIHandler:
 
 
     async def run_thread(self, user_id, save_answer: bool = True) -> str | None:
-        logging.info(json.dumps(
-            self.active_threads[user_id].get_messages(), indent=2
-        ))
+        pprint(self.active_threads[user_id].get_messages())
         response = await openAI_client.responses.create(
             model=ADVANCED_MODEL if await check_is_subscribed(user_id) else BASIC_MODEL,
             input=self.active_threads[user_id].get_messages()

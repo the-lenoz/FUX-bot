@@ -34,6 +34,9 @@ class ModelChatMessage(BaseModel):
             role=role
         )
 
+    def __str__(self):
+        return f"{{\n  role: {self.role},\n  content: {self.content}\n}}"
+
 
 class ModelChatThread:
     _messages: Dict[int, ModelChatMessage | None] = {}
