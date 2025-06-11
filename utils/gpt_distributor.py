@@ -236,6 +236,7 @@ class AIHandler:
 
 
     async def run_thread(self, user_id, save_answer: bool = True) -> str | None:
+        pprint(self.active_threads[user_id].get_messages())
         response = await openAI_client.responses.create(
             model=ADVANCED_MODEL if await check_is_subscribed(user_id) else BASIC_MODEL,
             input=self.active_threads[user_id].get_messages()
