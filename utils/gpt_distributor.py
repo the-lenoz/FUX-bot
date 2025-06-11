@@ -208,9 +208,14 @@ class AIHandler:
             "💬<i>Печатаю…</i>"
         )
         await main_bot.send_chat_action(chat_id=request.user_id, action="typing")
-        await self.create_message(request)
 
-        result = await self.run_thread(request.user_id)
+        if not self.thread_locks.get(request.user_id):
+            self.thread_locks[request.user_id] = Lock()
+
+        async with self.thread_locks[request.user_id]:
+            await self.create_message(request)
+
+            result = await self.run_thread(request.user_id)
 
         await main_bot.send_message(
             request.user_id,
@@ -234,29 +239,28 @@ class AIHandler:
         if not self.thread_locks.get(user_id):
             self.thread_locks[user_id] = Lock()
         result = None
-        async with self.thread_locks[user_id]:
-            thread_id = self.active_threads[user_id]
+        thread_id = self.active_threads[user_id]
 
-            logger.info(f"Running thread with id {thread_id}")
-            run = await openAI_client.beta.threads.runs.create_and_poll(
+        logger.info(f"Running thread with id {thread_id}")
+        run = await openAI_client.beta.threads.runs.create_and_poll(
+            thread_id=thread_id,
+            assistant_id=self.assistant_id
+        )
+
+        if run.status == 'completed':
+            messages = await openAI_client.beta.threads.messages.list(
                 thread_id=thread_id,
-                assistant_id=self.assistant_id
+                run_id=run.id  # Получить сообщения только из этого Run
             )
-
-            if run.status == 'completed':
-                messages = await openAI_client.beta.threads.messages.list(
-                    thread_id=thread_id,
-                    run_id=run.id  # Получить сообщения только из этого Run
+            result = messages.data[0].content[0].text.value
+            if not save_answer:
+                await openAI_client.beta.threads.messages.delete(
+                    message_id=messages.data[0].id,
+                    thread_id=thread_id
                 )
-                result = messages.data[0].content[0].text.value
-                if not save_answer:
-                    await openAI_client.beta.threads.messages.delete(
-                        message_id=messages.data[0].id,
-                        thread_id=thread_id
-                    )
-            else:
-                logger.error(f"Thread with id {thread_id} run ended with non-success status {run.status}. "
-                             f"Error message: {run.last_error.message}")
+        else:
+            logger.error(f"Thread with id {thread_id} run ended with non-success status {run.status}. "
+                         f"Error message: {run.last_error.message}")
         return result
 
 
@@ -264,77 +268,74 @@ class AIHandler:
 
 
     async def create_message(self, request: UserRequest) -> int:
-        if not self.thread_locks.get(request.user_id):
-            self.thread_locks[request.user_id] = Lock()
-        async with self.thread_locks[request.user_id]:
-            if self.active_threads.get(request.user_id):
-                thread_id = self.active_threads[request.user_id]
-            else:
-                thread = await openAI_client.beta.threads.create()
-                thread_id = thread.id
-                self.active_threads[request.user_id] = thread.id
-                await openAI_client.beta.threads.messages.create(
-                    thread_id=thread.id,
-                    role="user",
-                    content=f"Description of the client:\n{await get_user_description(request.user_id, isinstance(self, PsyHandler))}",
+        if self.active_threads.get(request.user_id):
+            thread_id = self.active_threads[request.user_id]
+        else:
+            thread = await openAI_client.beta.threads.create()
+            thread_id = thread.id
+            self.active_threads[request.user_id] = thread.id
+            await openAI_client.beta.threads.messages.create(
+                thread_id=thread.id,
+                role="user",
+                content=f"Description of the client:\n{await get_user_description(request.user_id, isinstance(self, PsyHandler))}",
+            )
+
+        content = [
+                {
+                    "type": "text",
+                    "text": request.text
+                }
+        ] if request.text else []
+        attachments = None
+        if request.file:
+            if request.file.file_type == "image":
+                image_file = await openAI_client.files.create(
+                    file=(request.file.filename, request.file.file_bytes),
+                    purpose="vision"
                 )
 
-            content = [
+                content.append(
                     {
-                        "type": "text",
-                        "text": request.text
-                    }
-            ] if request.text else []
-            attachments = None
-            if request.file:
-                if request.file.file_type == "image":
-                    image_file = await openAI_client.files.create(
-                        file=(request.file.filename, request.file.file_bytes),
-                        purpose="vision"
-                    )
-
-                    content.append(
-                        {
-                            "type": "image_file",
-                            "image_file": {
-                                "file_id": image_file.id,
-                            }
+                        "type": "image_file",
+                        "image_file": {
+                            "file_id": image_file.id,
                         }
-                    )
-                elif request.file.file_type == "voice":
-                    text = await UserRequestHandler.get_transcription(request.file)
-                    if content:
-                        content[0]["text"] += text
-                    elif text:
-                        content.append({
-                            "type": "text",
-                            "text": text
-                        })
-                elif request.file.file_type == "document":
-                    document_file = await openAI_client.files.create(
-                        file=(request.file.filename, request.file.file_bytes),
-                        purpose="assistants"
-                    )
+                    }
+                )
+            elif request.file.file_type == "voice":
+                text = await UserRequestHandler.get_transcription(request.file)
+                if content:
+                    content[0]["text"] += text
+                elif text:
+                    content.append({
+                        "type": "text",
+                        "text": text
+                    })
+            elif request.file.file_type == "document":
+                document_file = await openAI_client.files.create(
+                    file=(request.file.filename, request.file.file_bytes),
+                    purpose="assistants"
+                )
 
-                    if not content:
-                        content = "Опиши файл"
+                if not content:
+                    content = "Опиши файл"
 
-                    attachments = [{
-                        "file_id": document_file.id,
-                        "tools": [{"type": "file_search"}]
-                    }]
+                attachments = [{
+                    "file_id": document_file.id,
+                    "tools": [{"type": "file_search"}]
+                }]
 
-            if content:
-                pass
-            else:
-                content = "Расскажи о себе"
+        if content:
+            pass
+        else:
+            content = "Расскажи о себе"
 
-            return (await openAI_client.beta.threads.messages.create(
-                thread_id=thread_id,
-                role="user",
-                content=content,
-                attachments=attachments
-            )).id
+        return (await openAI_client.beta.threads.messages.create(
+            thread_id=thread_id,
+            role="user",
+            content=content,
+            attachments=attachments
+        )).id
 
     async def exit(self, user_id: int):
         if self.thread_locks.get(user_id):
@@ -532,10 +533,10 @@ class GeneralHandler(AIHandler):
             user_id=request.user_id,
             text=DIALOG_CHECK_PROMPT
         )
-        check_message_id = await self.create_message(check_request)
-        result = False
 
         async with self.thread_locks[request.user_id]:
+            check_message_id = await self.create_message(check_request)
+            result = False
             thread_id = self.active_threads[request.user_id]
 
             run = await openAI_client.beta.threads.runs.create_and_poll(
