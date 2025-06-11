@@ -25,6 +25,7 @@ from utils.prompts import PSY_TEXT_CHECK_PROMPT_FORMAT, IMAGE_CHECK_PROMPT, DOCU
     MENTAL_PROBLEM_SUMMARY_PROMPT, EXERCISE_PROMPT_FORMAT, SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT, DIALOG_CHECK_PROMPT, \
     MENTAL_ASSISTANT_SYSTEM_PROMPT, STANDARD_ASSISTANT_SYSTEM_PROMPT
 from utils.subscription import check_is_subscribed
+from utils.text import split_long_message
 from utils.user_properties import get_user_description
 
 logger = logging.getLogger(__name__)
@@ -213,11 +214,14 @@ class AIHandler:
 
             result = await self.run_thread(request.user_id)
 
-        await main_bot.send_message(
-            request.user_id,
-            re.sub(r'【.*】.', '', result),
-            parse_mode=""
-        )
+        message_text = re.sub(r'【.*】.', '', result)
+        messages = split_long_message(message_text)
+        for message in messages:
+            await main_bot.send_message(
+                request.user_id,
+                message,
+                parse_mode=""
+            )
 
         await ai_requests_repository.add_request(
             user_id=request.user_id,
