@@ -61,12 +61,12 @@ class UserRequestHandler:
                 to_psy = True
 
             if to_psy or await self.general_handler.check_is_dialog_psy_now(request):
-                message_id = await self.psy_handler.create_message(request)
-                self.psy_handler.active_threads[request.user_id].delete_message(message_id)
+                #message_id = await self.psy_handler.create_message(request)
+                #self.psy_handler.active_threads[request.user_id].delete_message(message_id)
 
-                for message in self.general_handler.active_threads[request.user_id].get_messages():
-                    if message.role != "system":
-                        self.psy_handler.active_threads[request.user_id].add_message(message)
+                #for message in self.general_handler.active_threads[request.user_id].get_messages():
+                #    if message.role != "system":
+                #        self.psy_handler.active_threads[request.user_id].add_message(message)
 
                 await self.psy_handler.handle(request)
             else:
@@ -261,7 +261,7 @@ class AIHandler:
             )
             self.active_threads[request.user_id].add_message(
                 ModelChatMessage(
-                    role="system",
+                    role="user",
                     content="Description of the client:\n" +
                             await get_user_description(request.user_id, isinstance(self, PsyHandler))
                 )
@@ -327,8 +327,7 @@ class AIHandler:
     async def exit(self, user_id: int):
         if self.thread_locks.get(user_id):
             async with self.thread_locks[user_id]:
-                if self.active_threads.get(user_id):
-                    self.active_threads[user_id] = None
+                self.active_threads[user_id] = None
 
 
 
@@ -468,9 +467,12 @@ class PsyHandler(AIHandler):
                             user_id=user_id,
                             text=MENTAL_PROBLEM_SUMMARY_PROMPT
                         )
+
                         await self.create_message(summary_request)
 
                         problem_summary = await self.run_thread(user_id)
+
+
 
                         return await mental_problems_repository.add_problem(
                             user_id=user_id,
