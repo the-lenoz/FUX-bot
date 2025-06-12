@@ -77,7 +77,7 @@ class UserRequestHandler:
         else:
             if request.file is None:
                 if self.psy_handler.active_threads.get(request.user_id) \
-                        or self.general_handler.check_is_dialog_psy_now(request):
+                        or await self.general_handler.check_is_dialog_psy_now(request):
                     await self.psy_handler.handle(request) # РАБОТАЕМ - к психологу
                 else:
                     if await UserRequestHandler.is_text_smalltalk(request.text):
