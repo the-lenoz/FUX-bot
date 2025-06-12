@@ -35,12 +35,16 @@ class ModelChatMessage(BaseModel):
         )
 
     def __str__(self):
-        return f"{{\n  role: {self.role},\n  content: {self.content}\n}}"
+        return f"{{\n  role: {self.role},\n  content: {self.content[:32]}...\n}}"
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class ModelChatThread:
-    _messages: Dict[int, ModelChatMessage | None] = {}
-    __current_id = 0
+    def __init__(self):
+        self._messages: Dict[int, ModelChatMessage | None] = {}
+        self.__current_id = 0
 
     def add_message(self, message: ModelChatMessage) -> int:
         self._messages[self.__current_id] = message
@@ -56,3 +60,9 @@ class ModelChatThread:
 
     def get_messages(self) -> List[ModelChatMessage]:
         return [message for _, message in sorted(list(self._messages.items()), key=lambda x: x[0]) if message is not None]
+
+    def __str__(self):
+        return '[\n  ' + '\n  '.join((str(message) for message in self.get_messages())) + '\n]'
+
+    def __repr__(self):
+        return self.__str__()

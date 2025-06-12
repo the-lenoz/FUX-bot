@@ -236,7 +236,7 @@ class AIHandler:
 
 
     async def run_thread(self, user_id, save_answer: bool = True) -> str | None:
-        pprint(self.active_threads[user_id].get_messages())
+        pprint(self.active_threads)
         response = await openAI_client.responses.create(
             model=ADVANCED_MODEL if await check_is_subscribed(user_id) else BASIC_MODEL,
             input=self.active_threads[user_id].get_messages()
@@ -258,6 +258,10 @@ class AIHandler:
 
     async def create_message(self, request: UserRequest) -> int:
         if not self.active_threads.get(request.user_id):
+            user_description = await get_user_description(request.user_id, isinstance(self, PsyHandler))
+        else:
+            user_description = ""
+        if user_description and self.active_threads.get(request.user_id):
             self.active_threads[request.user_id] = ModelChatThread()
             self.active_threads[request.user_id].add_message(
                 ModelChatMessage(
@@ -269,8 +273,8 @@ class AIHandler:
             self.active_threads[request.user_id].add_message(
                 ModelChatMessage(
                     role="user",
-                    content="Description of the client:\n" +
-                            await get_user_description(request.user_id, isinstance(self, PsyHandler))
+                    content="Description of the client:\n" + user_description
+
                 )
             )
 
