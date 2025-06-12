@@ -272,7 +272,7 @@ class AIHandler:
             )
             self.active_threads[request.user_id].add_message(
                 ModelChatMessage(
-                    role="user",
+                    role="system",
                     content="Description of the client:\n" + user_description
 
                 )
