@@ -261,7 +261,7 @@ class AIHandler:
             user_description = await get_user_description(request.user_id, isinstance(self, PsyHandler))
         else:
             user_description = ""
-        if user_description and self.active_threads.get(request.user_id):
+        if user_description and not self.active_threads.get(request.user_id):
             self.active_threads[request.user_id] = ModelChatThread()
             self.active_threads[request.user_id].add_message(
                 ModelChatMessage(
