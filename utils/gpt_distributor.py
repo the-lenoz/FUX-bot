@@ -436,7 +436,7 @@ class PsyHandler(AIHandler):
         return None
 
     async def exit(self, user_id: int) -> int | None:
-        if self.check_is_dialog_psy_now(UserRequest(user_id=user_id, text=" ")):
+        if await self.check_is_dialog_psy_now(UserRequest(user_id=user_id, text=" ")):
             problem_id = await self.summarize_dialog_problem(user_id)
         else:
             problem_id = None
