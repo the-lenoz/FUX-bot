@@ -26,8 +26,7 @@ async def system_settings_callback(call: CallbackQuery, state: FSMContext):
 
 
 async def send_system_settings(user_id: int):
-    await user_request_handler.psy_handler.exit(user_id)
-    await user_request_handler.general_handler.exit(user_id)
+    await user_request_handler.AI_handler.exit(user_id)
     keyboard = InlineKeyboardBuilder()
     user_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id=user_id)
     if user_checkups:
@@ -46,8 +45,7 @@ async def send_system_settings(user_id: int):
 @system_settings_router.callback_query(F.data.startswith("settings"), any_state)
 async def set_system_settings(call: CallbackQuery, state: FSMContext):
     user_id = call.from_user.id
-    await user_request_handler.psy_handler.exit(user_id)
-    await user_request_handler.general_handler.exit(user_id)
+    await user_request_handler.AI_handler.exit(user_id)
     type_setting = call.data.split("|")[1]
     if type_setting == "checkups":
         user_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id=user_id)
@@ -76,8 +74,7 @@ async def set_system_settings(call: CallbackQuery, state: FSMContext):
 @system_settings_router.callback_query(F.data.startswith("ai_temperature"), any_state)
 async def ai_temperature_callback(call: CallbackQuery, state: FSMContext):
     user_id = call.from_user.id
-    await user_request_handler.psy_handler.exit(user_id)
-    await user_request_handler.general_handler.exit(user_id)
+    await user_request_handler.AI_handler.exit(user_id)
     ai_temperature = float(call.data.split("|")[1])
     await users_repository.update_ai_temperature_by_user_id(user_id, ai_temperature)
     await call.message.answer("Отлично, настройки твоего ассистента изменены!",
@@ -89,8 +86,7 @@ async def ai_temperature_callback(call: CallbackQuery, state: FSMContext):
 @system_settings_router.callback_query(F.data.startswith("edit_checkup"), any_state)
 async def edit_checkup_time_call(call: CallbackQuery, state: FSMContext):
     user_id = call.from_user.id
-    await user_request_handler.psy_handler.exit(user_id)
-    await user_request_handler.general_handler.exit(user_id)
+    await user_request_handler.AI_handler.exit(user_id)
     checkup_id = int(call.data.split("|")[1])
     checkup = await checkup_repository.get_checkup_by_checkup_id(checkup_id=checkup_id)
     await state.set_state(InputMessage.edit_time_checkup)
@@ -105,8 +101,7 @@ async def edit_checkup_time_call(call: CallbackQuery, state: FSMContext):
 @system_settings_router.message(F.text, InputMessage.edit_time_checkup)
 async def enter_new_checkup_time(message: Message, state: FSMContext):
     user_id = message.from_user.id
-    await user_request_handler.psy_handler.exit(user_id)
-    await user_request_handler.general_handler.exit(user_id)
+    await user_request_handler.AI_handler.exit(user_id)
     result = is_valid_time(message.text)
     state_data = await state.get_data()
     await state.clear()

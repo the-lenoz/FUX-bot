@@ -24,7 +24,7 @@ async def start_problem_conversation(call: CallbackQuery, state: FSMContext, bot
 
 @standard_router.message(Command("recommendation"))
 async def provide_recommendation(message: Message, bot: Bot):
-    await user_request_handler.psy_handler.provide_recommendations(message.from_user.id)
+    await user_request_handler.AI_handler.provide_recommendations(message.from_user.id)
 
 
 @standard_router.message(F.text)

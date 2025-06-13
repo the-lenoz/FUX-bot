@@ -55,13 +55,13 @@ async def send_recommendations(main_bot: Bot):
 
     for user in users:
         last_event = await events_repository.get_last_event_by_user_id(user_id=user.user_id)
-        if user_request_handler.psy_handler.active_threads.get(user.user_id) \
+        if user_request_handler.AI_handler.active_threads.get(user.user_id) \
                 and now - last_event.creation_date >= datetime.timedelta(minutes=120):
             if user.notified_with_recommendation < 3 \
-                    and user_request_handler.psy_handler.messages_count.get(user.user_id) >= 6:
-                await user_request_handler.psy_handler.provide_recommendations(user.user_id, from_notification=True)
+                    and user_request_handler.AI_handler.messages_count.get(user.user_id) >= 6:
+                await user_request_handler.AI_handler.provide_recommendations(user.user_id, from_notification=True)
             else:
-                await user_request_handler.psy_handler.exit(user.user_id)
+                await user_request_handler.AI_handler.exit(user.user_id)
 
 
 async def notification_reminder(main_bot: Bot):

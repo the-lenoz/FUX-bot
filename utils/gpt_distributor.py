@@ -1,5 +1,3 @@
-import base64
-import json
 import logging
 import re
 import tempfile
@@ -17,13 +15,12 @@ from data.keyboards import get_rec_keyboard, buy_sub_keyboard, create_practice_e
 from db.repository import users_repository, ai_requests_repository, mental_problems_repository, \
     exercises_user_repository
 from utils.documents import convert_to_pdf
-from utils.gpt_client import openAI_client, BASIC_MODEL, TRANSCRIPT_MODEL, mental_assistant_id, standard_assistant_id, \
-    TTS_MODEL, ADVANCED_MODEL, ModelChatThread, ModelChatMessage
+from utils.gpt_client import openAI_client, BASIC_MODEL, TRANSCRIPT_MODEL, mental_assistant_id, TTS_MODEL, \
+    ADVANCED_MODEL, ModelChatThread, ModelChatMessage
 from utils.photo_recommendation import generate_blurred_image_with_text
-from utils.prompts import PSY_TEXT_CHECK_PROMPT_FORMAT, IMAGE_CHECK_PROMPT, DOCUMENT_CHECK_PROMPT, \
-    RECOMMENDATION_PROMPT, \
+from utils.prompts import RECOMMENDATION_PROMPT, \
     MENTAL_PROBLEM_SUMMARY_PROMPT, EXERCISE_PROMPT_FORMAT, SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT, DIALOG_CHECK_PROMPT, \
-    MENTAL_ASSISTANT_SYSTEM_PROMPT, STANDARD_ASSISTANT_SYSTEM_PROMPT, STANDARD_PLUS_PSY_ADDITIONAL_PROMPT
+    ASSISTANT_SYSTEM_PROMPT
 from utils.subscription import check_is_subscribed
 from utils.text import split_long_message
 from utils.user_properties import get_user_description
@@ -44,8 +41,7 @@ class UserRequest(BaseModel):
 
 class UserRequestHandler:
     def __init__(self):
-        self.general_handler = GeneralHandler()
-        self.psy_handler = PsyHandler()
+        self.AI_handler = PsyHandler()
 
     async def handle(self, request: UserRequest):
         await users_repository.user_sent_message(request.user_id)
@@ -57,37 +53,18 @@ class UserRequestHandler:
 
 
         if await check_is_subscribed(request.user_id):
-            to_psy = False
-            text = request.text if request.text else ""
-
-            if self.psy_handler.active_threads.get(request.user_id):
-                to_psy = True
-
-            if to_psy or await self.general_handler.check_is_dialog_psy_now(request):
-                #message_id = await self.psy_handler.create_message(request)
-                #self.psy_handler.active_threads[request.user_id].delete_message(message_id)
-
-                #for message in self.general_handler.active_threads[request.user_id].get_messages():
-                #    if message.role != "system":
-                #        self.psy_handler.active_threads[request.user_id].add_message(message)
-
-                await self.psy_handler.handle(request)
-            else:
-                await self.general_handler.handle(request)  # РАБОТАЕМ - к gpt
+            await self.AI_handler.handle(request)
         else:
             if request.file is None:
-                if self.psy_handler.active_threads.get(request.user_id) \
-                        or await self.general_handler.check_is_dialog_psy_now(request):
-                    await self.psy_handler.handle(request) # РАБОТАЕМ - к психологу
+                if await self.is_text_smalltalk(request.text) \
+                        or await self.AI_handler.check_is_dialog_psy_now(request):
+                    await self.AI_handler.handle(request)
                 else:
-                    if await UserRequestHandler.is_text_smalltalk(request.text):
-                        await self.general_handler.handle(request)  # Разрешаем приветствия и смол-ток
-                    else:
-                        await main_bot.send_message(
-                            request.user_id,
-                            "Чтобы общаться с 🤖 <i>универсальным ассистентом</i> — оформи <b>подписку</b>",
-                            reply_markup=buy_sub_keyboard.as_markup()
-                        )
+                    await main_bot.send_message(
+                        request.user_id,
+                        "Чтобы общаться с 🤖 <i>универсальным ассистентом</i> — оформи <b>подписку</b>",
+                        reply_markup=buy_sub_keyboard.as_markup()
+                    )
             else:
                 if request.file.file_type == 'image':
                     await main_bot.send_message(
@@ -117,63 +94,6 @@ class UserRequestHandler:
                 max_output_tokens=32
             )
             return response.output_text == 'true'
-        except openai.BadRequestError:
-            return False
-
-    @staticmethod
-    async def is_text_mental(text: str):
-        try:
-            response = await openAI_client.responses.create(
-                model=BASIC_MODEL,
-                input=PSY_TEXT_CHECK_PROMPT_FORMAT.format(text=text),
-                max_output_tokens=32
-            )
-            return response.output_text == 'true'
-        except openai.BadRequestError:
-            return False
-
-    @staticmethod
-    async def is_image_mental(image: UserFile):
-        try:
-            response = await openAI_client.chat.completions.create(
-                model=BASIC_MODEL,
-                messages=[
-                    {"role": "user", "content": [
-                        {"type": "text", "text": IMAGE_CHECK_PROMPT},
-                        {"type": "image_url", "image_url": {
-                            "url": f"data:image/{image.filename.split('.')[-1]};base64,{base64.b64encode(image.file_bytes).decode()}"
-                        }}
-                    ]}
-                ],
-                max_tokens=32
-            )
-
-            return response.choices[0].message.content == "true"
-
-        except openai.BadRequestError:
-            return False
-
-    @staticmethod
-    async def is_document_mental(document_file_id: str):
-        try:
-            response = await openAI_client.chat.completions.create(
-                model=BASIC_MODEL,
-                messages=[
-                    {"role": "user", "content": [
-                        {"type": "text", "text": DOCUMENT_CHECK_PROMPT},
-                        {
-                            "type": "file",
-                            "file": {
-                                "file_id": document_file_id
-                            }
-                        }
-                    ]}
-                ],
-                max_tokens=32
-            )
-
-            return response.choices[0].message.content == "true"
-
         except openai.BadRequestError:
             return False
 
@@ -252,33 +172,19 @@ class AIHandler:
             )
         return result
 
-
-
-
-
     async def create_message(self, request: UserRequest) -> int:
         if not self.active_threads.get(request.user_id):
-            user_description = await get_user_description(request.user_id, isinstance(self, PsyHandler))
-            is_subscribed = check_is_subscribed(request.user_id)
+            user_description = await get_user_description(request.user_id, True)
         else:
             user_description = ""
-            is_subscribed = False
         if user_description and not self.active_threads.get(request.user_id):
             self.active_threads[request.user_id] = ModelChatThread()
             self.active_threads[request.user_id].add_message(
                 ModelChatMessage(
                     role="system",
-                    content=MENTAL_ASSISTANT_SYSTEM_PROMPT
-                    if isinstance(self, PsyHandler) else STANDARD_ASSISTANT_SYSTEM_PROMPT
+                    content=ASSISTANT_SYSTEM_PROMPT
                 )
             )
-            if is_subscribed and isinstance(self, PsyHandler):
-                self.active_threads[request.user_id].add_message(
-                    ModelChatMessage(
-                        role="system",
-                        content=STANDARD_PLUS_PSY_ADDITIONAL_PROMPT
-                    )
-                )
             self.active_threads[request.user_id].add_message(
                 ModelChatMessage(
                     role="system",
@@ -348,6 +254,30 @@ class AIHandler:
         if self.thread_locks.get(user_id):
             async with self.thread_locks[user_id]:
                 self.active_threads[user_id] = None
+
+
+    async def check_is_dialog_psy_now(self, request: UserRequest) -> bool:
+        if not self.thread_locks.get(request.user_id):
+            self.thread_locks[request.user_id] = Lock()
+
+        async with self.thread_locks[request.user_id]:
+            check_request = UserRequest(
+                user_id=request.user_id,
+                text=DIALOG_CHECK_PROMPT
+            )
+
+            message_id = await self.create_message(request)
+            check_message_id = await self.create_message(check_request)
+
+            result = False
+            response = await self.run_thread(request.user_id, False)
+            logger.info(f"Checker response: {response}")
+            result = 'true' in response.lower()
+
+            self.active_threads[request.user_id].delete_message(message_id)
+            self.active_threads[request.user_id].delete_message(check_message_id)
+
+        return result
 
 
 
@@ -506,37 +436,6 @@ class PsyHandler(AIHandler):
         self.messages_count[user_id] = 0
 
         return problem_id
-
-
-class GeneralHandler(AIHandler):
-    assistant_id = standard_assistant_id
-
-    async def check_is_dialog_psy_now(self, request: UserRequest) -> bool:
-
-
-        if not self.thread_locks.get(request.user_id):
-            self.thread_locks[request.user_id] = Lock()
-
-        async with self.thread_locks[request.user_id]:
-            check_request = UserRequest(
-                user_id=request.user_id,
-                text=DIALOG_CHECK_PROMPT
-            )
-
-            message_id = await self.create_message(request)
-            check_message_id = await self.create_message(check_request)
-
-            result = False
-            response = await self.run_thread(request.user_id, False)
-            logger.info(f"Checker response: {response}")
-            result = 'true' in response.lower()
-
-            self.active_threads[request.user_id].delete_message(message_id)
-            self.active_threads[request.user_id].delete_message(check_message_id)
-
-        return result
-
-
 
 
 user_request_handler = UserRequestHandler()

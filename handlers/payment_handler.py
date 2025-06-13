@@ -129,7 +129,7 @@ async def check_payment_callback(message: types.CallbackQuery, state: FSMContext
             reply_markup=menu_keyboard.as_markup()
         )
         if mode_type is not None:
-            await user_request_handler.psy_handler.provide_recommendations(user_id)
+            await user_request_handler.AI_handler.provide_recommendations(user_id)
     else:
         try:
             payment = await operation_repository.get_operation_by_operation_id(payment_id)

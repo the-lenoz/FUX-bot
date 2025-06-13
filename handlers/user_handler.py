@@ -34,8 +34,7 @@ async def start_menu(call: CallbackQuery, state: FSMContext):
                                     caption=text,
                                     reply_markup=keyboard.as_markup())
     await call.message.delete()
-    await user_request_handler.general_handler.exit(user_id)
-    await user_request_handler.psy_handler.exit(user_id)
+    await user_request_handler.AI_handler.exit(user_id)
 
 
 @user_router.message(F.text == "/menu", any_state)
@@ -72,8 +71,7 @@ async def send_user_message(message: Message, state: FSMContext, bot: Bot):
                                    photo=menu_photo,
                                    reply_markup=keyboard.as_markup())
 
-    await user_request_handler.general_handler.exit(user_id)
-    await user_request_handler.psy_handler.exit(user_id)
+    await user_request_handler.AI_handler.exit(user_id)
 
 
 @user_router.callback_query(F.data == "confirm_politic")
