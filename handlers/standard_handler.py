@@ -36,7 +36,7 @@ async def standard_message_handler(message: Message, bot: Bot):
         pass
 
     request = UserRequest(
-        user_id=user_id,
+        user_id=message.from_user.id,
         text=message.text
     )
 
