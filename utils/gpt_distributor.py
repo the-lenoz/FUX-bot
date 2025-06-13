@@ -23,7 +23,7 @@ from utils.photo_recommendation import generate_blurred_image_with_text
 from utils.prompts import PSY_TEXT_CHECK_PROMPT_FORMAT, IMAGE_CHECK_PROMPT, DOCUMENT_CHECK_PROMPT, \
     RECOMMENDATION_PROMPT, \
     MENTAL_PROBLEM_SUMMARY_PROMPT, EXERCISE_PROMPT_FORMAT, SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT, DIALOG_CHECK_PROMPT, \
-    MENTAL_ASSISTANT_SYSTEM_PROMPT, STANDARD_ASSISTANT_SYSTEM_PROMPT
+    MENTAL_ASSISTANT_SYSTEM_PROMPT, STANDARD_ASSISTANT_SYSTEM_PROMPT, STANDARD_PLUS_PSY_ADDITIONAL_PROMPT
 from utils.subscription import check_is_subscribed
 from utils.text import split_long_message
 from utils.user_properties import get_user_description
@@ -259,8 +259,10 @@ class AIHandler:
     async def create_message(self, request: UserRequest) -> int:
         if not self.active_threads.get(request.user_id):
             user_description = await get_user_description(request.user_id, isinstance(self, PsyHandler))
+            is_subscribed = check_is_subscribed(request.user_id)
         else:
             user_description = ""
+            is_subscribed = False
         if user_description and not self.active_threads.get(request.user_id):
             self.active_threads[request.user_id] = ModelChatThread()
             self.active_threads[request.user_id].add_message(
@@ -270,6 +272,13 @@ class AIHandler:
                     if isinstance(self, PsyHandler) else STANDARD_ASSISTANT_SYSTEM_PROMPT
                 )
             )
+            if is_subscribed and isinstance(self, PsyHandler):
+                self.active_threads[request.user_id].add_message(
+                    ModelChatMessage(
+                        role="system",
+                        content=STANDARD_PLUS_PSY_ADDITIONAL_PROMPT
+                    )
+                )
             self.active_threads[request.user_id].add_message(
                 ModelChatMessage(
                     role="system",
