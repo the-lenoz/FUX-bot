@@ -308,7 +308,12 @@ class PsyHandler(AIHandler):
         user = await users_repository.get_user_by_user_id(user_id)
         is_subscribed = await check_is_subscribed(user_id)
 
-        if self.thread_locks.get(user_id) and self.active_threads.get(user_id):
+        if self.thread_locks.get(user_id) and self.active_threads.get(user_id) and await self.check_is_dialog_psy_now(
+            UserRequest(
+                user_id=user_id,
+                text=" "
+            )
+        ):
             async with self.thread_locks[user_id]:
                 recommendation_request = UserRequest(
                     user_id=user_id,
@@ -431,8 +436,13 @@ class PsyHandler(AIHandler):
         return None
 
     async def exit(self, user_id: int) -> int | None:
-        problem_id = await self.summarize_dialog_problem(user_id)
+        if self.check_is_dialog_psy_now(UserRequest(user_id=user_id, text=" ")):
+            problem_id = await self.summarize_dialog_problem(user_id)
+        else:
+            problem_id = None
+
         await super().exit(user_id)
+
         self.messages_count[user_id] = 0
 
         return problem_id
