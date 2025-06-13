@@ -369,16 +369,15 @@ class PsyHandler(AIHandler):
         user = await users_repository.get_user_by_user_id(user_id)
         is_subscribed = await check_is_subscribed(user_id)
 
-        if self.thread_locks.get(user_id):
+        if self.thread_locks.get(user_id) and self.active_threads.get(user_id):
             async with self.thread_locks[user_id]:
-                if self.active_threads.get(user_id):
-                    recommendation_request = UserRequest(
-                        user_id=user_id,
-                        text=RECOMMENDATION_PROMPT
-                    )
-                    await self.create_message(recommendation_request)
+                recommendation_request = UserRequest(
+                    user_id=user_id,
+                    text=RECOMMENDATION_PROMPT
+                )
+                await self.create_message(recommendation_request)
 
-                    recommendation = await self.run_thread(user_id, save_answer=False)
+                recommendation = await self.run_thread(user_id, save_answer=False)
 
 
             if not user.used_free_recommendation or is_subscribed:
