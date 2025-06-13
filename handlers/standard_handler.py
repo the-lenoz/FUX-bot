@@ -1,6 +1,7 @@
 import io
 
 from aiogram import Router, F, Bot
+from aiogram.exceptions import TelegramRetryAfter
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
@@ -29,9 +30,10 @@ async def provide_recommendation(message: Message, bot: Bot):
 
 @standard_router.message(F.text)
 async def standard_message_handler(message: Message, bot: Bot):
-    user_id = message.from_user.id
-    await bot.send_chat_action(chat_id=message.chat.id, action="typing")
-
+    try:
+        await bot.send_chat_action(chat_id=message.from_user.id, action="typing")
+    except TelegramRetryAfter:
+        pass
 
     request = UserRequest(
         user_id=user_id,
@@ -44,7 +46,10 @@ async def standard_message_handler(message: Message, bot: Bot):
 @standard_router.message(F.photo)
 async def standard_message_photo_handler(message: Message, bot: Bot):
     user_id = message.from_user.id
-    await bot.send_chat_action(chat_id=message.chat.id, action="typing")
+    try:
+        await bot.send_chat_action(chat_id=message.from_user.id, action="typing")
+    except TelegramRetryAfter:
+        pass
     file_buffer = io.BytesIO()
     await bot.download(message.photo[-1], destination=file_buffer)
     file_buffer.seek(0)
@@ -68,7 +73,10 @@ async def standard_message_photo_handler(message: Message, bot: Bot):
 @standard_router.message(F.voice)
 async def standard_message_voice_handler(message: Message, bot: Bot):
     user_id = message.from_user.id
-    await bot.send_chat_action(chat_id=message.chat.id, action="typing")
+    try:
+        await bot.send_chat_action(chat_id=message.from_user.id, action="typing")
+    except TelegramRetryAfter:
+        pass
     file_buffer = io.BytesIO()
     await bot.download(message.voice, destination=file_buffer)
     file_buffer.seek(0)
@@ -91,7 +99,10 @@ async def standard_message_voice_handler(message: Message, bot: Bot):
 @standard_router.message(F.document)
 async def standard_message_document_handler(message: Message, bot: Bot):
     user_id = message.from_user.id
-    await bot.send_chat_action(chat_id=message.chat.id, action="typing")
+    try:
+        await bot.send_chat_action(chat_id=message.from_user.id, action="typing")
+    except TelegramRetryAfter:
+        pass
     file_buffer = io.BytesIO()
     await bot.download(message.document, destination=file_buffer)
     file_buffer.seek(0)

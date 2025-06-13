@@ -7,6 +7,7 @@ from random import choice
 from typing import Dict
 
 import openai
+from aiogram.exceptions import TelegramRetryAfter
 from aiogram.types import BufferedInputFile, FSInputFile
 from pydantic import BaseModel
 
@@ -124,7 +125,10 @@ class AIHandler:
             request.user_id,
             "💬<i>Печатаю…</i>"
         )
-        await main_bot.send_chat_action(chat_id=request.user_id, action="typing")
+        try:
+            await main_bot.send_chat_action(chat_id=request.user_id, action="typing")
+        except TelegramRetryAfter:
+            pass
 
         if not self.thread_locks.get(request.user_id):
             self.thread_locks[request.user_id] = Lock()
@@ -302,7 +306,10 @@ class PsyHandler(AIHandler):
             "💬<i>Печатаю…</i>"
         )
 
-        await main_bot.send_chat_action(chat_id=user_id, action="typing")
+        try:
+            await main_bot.send_chat_action(chat_id=user_id, action="typing")
+        except TelegramRetryAfter:
+            pass
         await users_repository.user_got_recommendation(user_id)
 
         user = await users_repository.get_user_by_user_id(user_id)
