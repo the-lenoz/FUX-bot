@@ -1,43 +1,28 @@
 import logging
 import re
-import tempfile
 from asyncio import Lock
-from pprint import pprint
 from random import choice
 from typing import Dict
 
-import openai
 from aiogram.exceptions import TelegramRetryAfter
-from aiogram.types import BufferedInputFile, FSInputFile
-from pydantic import BaseModel
+from aiogram.types import BufferedInputFile
 
 from bots import main_bot
 from data.keyboards import get_rec_keyboard, buy_sub_keyboard, create_practice_exercise_recommendation_keyboard
 from db.repository import users_repository, ai_requests_repository, mental_problems_repository, \
     exercises_user_repository
 from utils.documents import convert_to_pdf
-from utils.gpt_client import openAI_client, BASIC_MODEL, TRANSCRIPT_MODEL, mental_assistant_id, TTS_MODEL, \
-    ADVANCED_MODEL, ModelChatThread, ModelChatMessage
+from utils.gpt_client import BASIC_MODEL, ADVANCED_MODEL, ModelChatThread, LLMProvider
 from utils.photo_recommendation import generate_blurred_image_with_text
 from utils.prompts import RECOMMENDATION_PROMPT, \
-    MENTAL_PROBLEM_SUMMARY_PROMPT, EXERCISE_PROMPT_FORMAT, SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT, DIALOG_CHECK_PROMPT, \
+    MENTAL_PROBLEM_SUMMARY_PROMPT, EXERCISE_PROMPT_FORMAT, DIALOG_CHECK_PROMPT, \
     ASSISTANT_SYSTEM_PROMPT
 from utils.subscription import check_is_subscribed
 from utils.text import split_long_message
 from utils.user_properties import get_user_description
+from utils.user_request_types import UserRequest
 
 logger = logging.getLogger(__name__)
-
-class UserFile(BaseModel):
-    file_bytes: bytes
-    file_type: str
-    filename: str
-
-
-class UserRequest(BaseModel):
-    user_id: int
-    text: str | None = None
-    file: UserFile | None = None
 
 
 class UserRequestHandler:
@@ -57,7 +42,7 @@ class UserRequestHandler:
             await self.AI_handler.handle(request)
         else:
             if request.file is None:
-                if await self.is_text_smalltalk(request.text) \
+                if await LLMProvider.is_text_smalltalk(request.text) \
                         or await self.AI_handler.check_is_dialog_psy_now(request):
                     await self.AI_handler.handle(request)
                 else:
@@ -86,32 +71,6 @@ class UserRequestHandler:
                         reply_markup=buy_sub_keyboard.as_markup()
                     )
 
-    @staticmethod
-    async def is_text_smalltalk(text: str):
-        try:
-            response = await openAI_client.responses.create(
-                model=BASIC_MODEL,
-                input=SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT.format(text=text),
-                max_output_tokens=32
-            )
-            return response.output_text == 'true'
-        except openai.BadRequestError:
-            return False
-
-
-    @staticmethod
-    async def get_transcription(voice: UserFile) -> str:
-        try:
-            transcript = await openAI_client.audio.transcriptions.create(
-                model=TRANSCRIPT_MODEL,
-                file=(voice.filename, voice.file_bytes),
-                language="ru"
-            )
-            return transcript.text
-
-        except openai.BadRequestError:
-            return ""
-
 
 class AIHandler:
     assistant_id: str
@@ -119,6 +78,8 @@ class AIHandler:
     def __init__(self):
         self.active_threads: Dict[int, ModelChatThread | None] = {}
         self.thread_locks = {}
+        self.basic_model_provider = LLMProvider(BASIC_MODEL)
+        self.advanced_model_provider = LLMProvider(ADVANCED_MODEL)
 
     async def handle(self, request: UserRequest):
         typing_message = await main_bot.send_message(
@@ -160,21 +121,22 @@ class AIHandler:
 
 
     async def run_thread(self, user_id, save_answer: bool = True) -> str | None:
-        pprint(self.active_threads)
-        response = await openAI_client.responses.create(
-            model=ADVANCED_MODEL if await check_is_subscribed(user_id) else BASIC_MODEL,
-            input=self.active_threads[user_id].get_messages()
-        )
+        if self.active_threads.get(user_id):
+            input = self.active_threads[user_id].get_messages()
+            if check_is_subscribed(user_id):
+                result = await self.advanced_model_provider.process_request(input)
+            else:
+                result = await self.basic_model_provider.process_request(input)
 
-        result = response.output_text
-        if save_answer:
-            self.active_threads[user_id].add_message(
-                ModelChatMessage(
-                    role="assistant",
-                    content=result
+            if save_answer:
+                self.active_threads[user_id].add_message(
+                    LLMProvider.create_message(
+                        content=result,
+                        role="assistant"
+                    )
                 )
-            )
-        return result
+            return result
+        return None
 
     async def create_message(self, request: UserRequest) -> int:
         if not self.active_threads.get(request.user_id):
@@ -184,63 +146,45 @@ class AIHandler:
         if user_description and not self.active_threads.get(request.user_id):
             self.active_threads[request.user_id] = ModelChatThread()
             self.active_threads[request.user_id].add_message(
-                ModelChatMessage(
-                    role="system",
-                    content=ASSISTANT_SYSTEM_PROMPT
+                LLMProvider.create_message(
+                    content=ASSISTANT_SYSTEM_PROMPT,
+                    role="system"
                 )
             )
             self.active_threads[request.user_id].add_message(
-                ModelChatMessage(
+                LLMProvider.create_message(
                     role="system",
                     content="Description of the client:\n" + user_description
 
                 )
             )
 
-        content = [
-                {
-                    "type": "input_text",
-                    "text": request.text
-                }
-        ] if request.text else []
+        content = []
+
+        if request.text:
+            content.append(
+                LLMProvider.create_text_content_item(request.text)
+            )
 
         if request.file:
             if request.file.file_type == "image":
-                image_file = await openAI_client.files.create(
-                    file=(request.file.filename, request.file.file_bytes),
-                    purpose="vision"
-                )
-
                 content.append(
-                    {
-                        "type": "input_image",
-                        "file_id": image_file.id,
-                    },
+                    LLMProvider.create_image_content_item(
+                        request.file
+                    )
                 )
             elif request.file.file_type == "voice":
-                text = await UserRequestHandler.get_transcription(request.file)
-                if content:
-                    content[0]["text"] += text
-                elif text:
-                    content.append({
-                        "type": "input_text",
-                        "text": text
-                    })
-            elif request.file.file_type == "document":
-                document_file = await openAI_client.files.create(
-                    file=(request.file.filename, request.file.file_bytes),
-                    purpose="user_data"
+                content.append(
+                    LLMProvider.create_voice_content_item(
+                        request.file
+                    )
                 )
-                content.append({
-                    "type": "input_file",
-                    "file_id": document_file.id,
-                })
-
-                if len(content) == 1:
-                    content.append({
-                        "type": "input_text",
-                        "text": "Опиши файл"
-                    })
+            elif request.file.file_type == "document":
+                content.append(
+                    LLMProvider.create_document_content_item(
+                        request.file
+                    )
+                )
 
         if content:
             pass
@@ -248,9 +192,9 @@ class AIHandler:
             content = "Расскажи о себе"
 
         return self.active_threads[request.user_id].add_message(
-                ModelChatMessage(
-                    role="user",
-                    content=content
+                LLMProvider.create_message(
+                    content=content,
+                    role="user"
                 )
             )
 
@@ -286,7 +230,6 @@ class AIHandler:
 
 
 class PsyHandler(AIHandler):
-    assistant_id = mental_assistant_id
     messages_count = {}
     MESSAGES_LIMIT = 6
 
@@ -340,27 +283,19 @@ class PsyHandler(AIHandler):
                     user_id,
                     action="record_voice"
                 )
-                response = await openAI_client.audio.speech.create(
-                    model=TTS_MODEL,
-                    voice="alloy",  # Выберите один из голосов: alloy, echo, fable, onyx, nova, shimmer
-                    input=recommendation,
-                    response_format="opus"  # mp3, opus, aac, flac, wav, pcm
+                voice_file = LLMProvider.generate_speech(recommendation)
+                await main_bot.send_chat_action(
+                    user_id,
+                    action="upload_voice"
                 )
-                logger.info("writing voice to file...")
-                with tempfile.NamedTemporaryFile(mode="w+", suffix=".ogg") as voice_file:
-                    response.stream_to_file(voice_file.name)
-                    await main_bot.send_chat_action(
-                        user_id,
-                        action="upload_voice"
-                    )
-                    logger.info("exiting thread...")
-                    problem_id = await self.exit(user_id)
-                    logger.info("sending voice")
-                    await main_bot.send_voice(
-                        user_id,
-                        FSInputFile(voice_file.name),
-                        reply_markup=create_practice_exercise_recommendation_keyboard(problem_id)
-                    )
+                logger.info("exiting thread...")
+                problem_id = await self.exit(user_id)
+                logger.info("sending voice")
+                await main_bot.send_voice(
+                    user_id,
+                    voice_file,
+                    reply_markup=create_practice_exercise_recommendation_keyboard(problem_id)
+                )
 
                 if not is_subscribed:
                     await users_repository.used_free_recommendation(user_id)
@@ -386,8 +321,7 @@ class PsyHandler(AIHandler):
         await typing_message.delete()
         await self.exit(user_id)
 
-    @staticmethod
-    async def generate_exercise(user_id: int, problem_id: int | None = None) -> str | None:
+    async def generate_exercise(self, user_id: int, problem_id: int | None = None) -> str | None:
         if problem_id is None:
             problems = await mental_problems_repository.get_problems_by_user_id(user_id=user_id, worked_out_threshold=4)
             if not problems:
@@ -400,12 +334,12 @@ class PsyHandler(AIHandler):
 
         await users_repository.used_exercises(user_id)
 
-        response = await openAI_client.responses.create(
-            input=EXERCISE_PROMPT_FORMAT.format(problem_summary=problem.problem_summary),
-            model=ADVANCED_MODEL if await check_is_subscribed(user_id) else BASIC_MODEL,
-        )
-
-        exercise_text = response.output_text
+        if check_is_subscribed(user_id):
+            exercise_text = await self.advanced_model_provider\
+                .process_request(EXERCISE_PROMPT_FORMAT.format(problem_summary=problem.problem_summary))
+        else:
+            exercise_text = await self.basic_model_provider\
+                .process_request(EXERCISE_PROMPT_FORMAT.format(problem_summary=problem.problem_summary))
 
         await exercises_user_repository.add_exercise(
             user_id=user_id,

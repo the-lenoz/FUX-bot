@@ -8,7 +8,7 @@ from aiogram.types import CallbackQuery
 from data.keyboards import menu_keyboard
 from db.repository import users_repository
 from settings import mechanic_dict, exercises_photo
-from utils.gpt_distributor import PsyHandler
+from utils.gpt_distributor import PsyHandler, user_request_handler
 
 exercises_router = Router()
 
@@ -40,7 +40,7 @@ async def generate_feedback_for_user(call: CallbackQuery, bot: Bot, problem_id: 
     delete_message = await call.message.answer(
         "📙Генерирую <b>индивидуальное</b> задание для тебя!")
 
-    exercise = await PsyHandler.generate_exercise(user_id, problem_id)
+    exercise = await user_request_handler.AI_handler.generate_exercise(user_id, problem_id)
     if exercise:
         await call.message.answer(exercise + "\n\n" + "Ответ на упражнение пиши в любое время",
                                   reply_markup=menu_keyboard.as_markup())

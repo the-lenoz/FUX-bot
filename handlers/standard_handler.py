@@ -8,7 +8,8 @@ from aiogram.types import Message, CallbackQuery
 
 # from data.keyboards import choice_keyboard
 # from data.messages import start_message, wait_manager, update_language
-from utils.gpt_distributor import UserRequest, UserFile, user_request_handler
+from utils.gpt_distributor import user_request_handler
+from utils.user_request_types import UserFile, UserRequest
 
 standard_router = Router()
 
