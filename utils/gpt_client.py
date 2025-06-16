@@ -178,7 +178,9 @@ class LLMProvider: #TODO files api для файлов больше 20мб
             contents=contents,
             config=types.GenerateContentConfig(system_instruction=system_prompt),
         )
-        pprint(input)
+        for content in input:
+            for part in content.parts:
+                print(part.text[:32] + '...')
         print("\n\n")
         pprint(contents)
 
