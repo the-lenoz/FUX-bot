@@ -153,7 +153,8 @@ class LLMProvider: #TODO files api для файлов больше 20мб
             return False
 
     @staticmethod
-    def create_message(content: str | List, role: str = "user"):
+    def create_message(content: List, role: str = "user"):
+
         return types.Content(
             parts=content,
             role="model" if role == "model" else "user"

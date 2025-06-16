@@ -147,15 +147,22 @@ class AIHandler:
             self.active_threads[request.user_id] = ModelChatThread()
             self.active_threads[request.user_id].add_message(
                 LLMProvider.create_message(
-                    content=ASSISTANT_SYSTEM_PROMPT,
+                    content=[
+                        LLMProvider.create_text_content_item(
+                            ASSISTANT_SYSTEM_PROMPT
+                        )
+                    ],
                     role="system"
                 )
             )
             self.active_threads[request.user_id].add_message(
                 LLMProvider.create_message(
                     role="system",
-                    content="Description of the client:\n" + user_description
-
+                    content=[
+                        LLMProvider.create_text_content_item(
+                            "Description of the client:\n" + user_description
+                        )
+                    ]
                 )
             )
 
