@@ -346,9 +346,11 @@ class PsyHandler(AIHandler):
 
         await users_repository.used_exercises(user_id)
 
-        exercise_text = await self.advanced_model_provider.process_request(EXERCISE_PROMPT_FORMAT.format(
-            problem_summary=problem.problem_summary
-        ))
+        exercise_text = await self.advanced_model_provider.process_request(
+                EXERCISE_PROMPT_FORMAT.format(
+                problem_summary=problem.problem_summary
+            )
+        )
 
 
         await exercises_user_repository.add_exercise(
