@@ -172,6 +172,9 @@ class LLMProvider: #TODO files api для файлов больше 20мб
                 system_prompt = message.parts[0].text
             elif message.role in ("model", "user"):
                 contents.append(message)
+            else:
+
+                print(message.role, message.parts[0].text[:32] if message.parts[0].text else None)
         response = await google_genai_client.aio.models.generate_content(
             model=self.model_name,
             contents=contents,
