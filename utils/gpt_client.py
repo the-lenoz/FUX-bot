@@ -104,7 +104,7 @@ class LLMProvider: #TODO files api для файлов больше 20мб
         )
 
     @staticmethod
-    def create_text_content_item(text: str):
+    async def create_text_content_item(text: str):
         return types.Part.from_text(
             text=text
         )

@@ -173,25 +173,25 @@ class AIHandler:
 
         if request.text:
             content.append(
-                LLMProvider.create_text_content_item(request.text)
+                await LLMProvider.create_text_content_item(request.text)
             )
 
         if request.file:
             if request.file.file_type == "image":
                 content.append(
-                    LLMProvider.create_image_content_item(
+                    await LLMProvider.create_image_content_item(
                         request.file
                     )
                 )
             elif request.file.file_type == "voice":
                 content.append(
-                    LLMProvider.create_voice_content_item(
+                    await LLMProvider.create_voice_content_item(
                         request.file
                     )
                 )
             elif request.file.file_type == "document":
                 content.append(
-                    LLMProvider.create_document_content_item(
+                    await LLMProvider.create_document_content_item(
                         request.file
                     )
                 )
