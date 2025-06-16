@@ -180,7 +180,8 @@ class LLMProvider: #TODO files api для файлов больше 20мб
         )
         for content in input:
             for part in content.parts:
-                print(part.text[:32] + '...')
+                if part.text:
+                    print(part.text[:32] + '...')
         print("\n\n")
         pprint(contents)
 
