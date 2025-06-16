@@ -16,7 +16,7 @@ from utils.prompts import SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT
 from utils.user_request_types import UserFile
 
 BASIC_MODEL = "gemini-2.0-flash-lite"
-ADVANCED_MODEL = "gemini-2.5-flash"
+ADVANCED_MODEL = "gemini-2.5-flash-preview-05-20"
 
 TTS_MODEL = "gemini-2.5-flash-preview-tts"
 
