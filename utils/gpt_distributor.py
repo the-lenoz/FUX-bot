@@ -383,16 +383,18 @@ class PsyHandler(AIHandler):
         return None
 
     async def exit(self, user_id: int) -> int | None:
-        if await self.check_is_dialog_psy_now(UserRequest(user_id=user_id, text=" ")):
-            problem_id = await self.summarize_dialog_problem(user_id)
-        else:
-            problem_id = None
+        if self.active_threads.get(user_id):
+            if await self.check_is_dialog_psy_now(UserRequest(user_id=user_id, text=" ")):
+                problem_id = await self.summarize_dialog_problem(user_id)
+            else:
+                problem_id = None
 
-        await super().exit(user_id)
+            await super().exit(user_id)
 
-        self.messages_count[user_id] = 0
+            self.messages_count[user_id] = 0
 
-        return problem_id
+            return problem_id
+        return None
 
 
 user_request_handler = UserRequestHandler()
