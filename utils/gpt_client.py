@@ -2,6 +2,7 @@ import logging
 import mimetypes
 import os
 from io import BytesIO
+from pprint import pprint
 from typing import Literal, Dict, List
 
 import httpx
@@ -176,5 +177,8 @@ class LLMProvider: #TODO files api для файлов больше 20мб
             contents=contents,
             config=types.GenerateContentConfig(system_instruction=system_prompt),
         )
+        pprint(input)
+        print("\n\n")
+        pprint(contents)
 
         return response.text
