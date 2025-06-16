@@ -17,7 +17,7 @@ from utils.gpt_client import BASIC_MODEL, ADVANCED_MODEL, ModelChatThread, LLMPr
 from utils.photo_recommendation import generate_blurred_image_with_text
 from utils.prompts import RECOMMENDATION_PROMPT, \
     MENTAL_PROBLEM_SUMMARY_PROMPT, EXERCISE_PROMPT_FORMAT, DIALOG_CHECK_PROMPT, \
-    ASSISTANT_SYSTEM_PROMPT
+    DEFAULT_ASSISTANT_SYSTEM_PROMPT, get_assistant_system_prompt
 from utils.subscription import check_is_subscribed
 from utils.text import split_long_message
 from utils.user_properties import get_user_description
@@ -144,15 +144,17 @@ class AIHandler:
     async def create_message(self, request: UserRequest) -> int:
         if not self.active_threads.get(request.user_id):
             user_description = await get_user_description(request.user_id, True)
+            system_prompt = await get_assistant_system_prompt(request.user_id)
         else:
             user_description = ""
+            system_prompt = DEFAULT_ASSISTANT_SYSTEM_PROMPT
         if user_description and not self.active_threads.get(request.user_id):
             self.active_threads[request.user_id] = ModelChatThread()
             self.active_threads[request.user_id].add_message(
                 LLMProvider.create_message(
                     content=[
                         await LLMProvider.create_text_content_item(
-                            ASSISTANT_SYSTEM_PROMPT
+                            system_prompt
                         )
                     ],
                     role="system"
@@ -160,10 +162,10 @@ class AIHandler:
             )
             self.active_threads[request.user_id].add_message(
                 LLMProvider.create_message(
-                    role="system",
+                    role="model",
                     content=[
                         await LLMProvider.create_text_content_item(
-                            "Description of the client:\n" + user_description
+                            "Мои конспекты с информацией о пользователе:\n" + user_description
                         )
                     ]
                 )

@@ -152,22 +152,29 @@ class LLMProvider: #TODO files api для файлов больше 20мб
                 contents=SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT.format(text=text)
             )
             logger.info(f"Smalltalk - {'true'in response.text}")
-            return 'true'in response.text
+            return 'true' in response.text
         except openai.BadRequestError:
             return False
 
     @staticmethod
     def create_message(content: List, role: str = "user"):
-
         return types.Content(
             parts=content,
-            role="model" if role == "model" else "user"
+            role=role
         )
 
     async def process_request(self, input: List | str):
+        contents = []
+        system_prompt = "You are an helpful assistant"
+        for message in input:
+            if message.role == "system":
+                system_prompt = message.parts[0].text
+            elif message.role in ("model", "user"):
+                contents.append(message)
         response = await google_genai_client.aio.models.generate_content(
             model=self.model_name,
-            contents=input
+            contents=input,
+            config=types.GenerateContentConfig(system_instruction=system_prompt),
         )
 
         return response.text
