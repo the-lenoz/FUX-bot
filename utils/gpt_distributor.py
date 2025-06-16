@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import re
 from asyncio import Lock
@@ -41,6 +42,7 @@ class UserRequestHandler:
         if await check_is_subscribed(request.user_id):
             await self.AI_handler.handle(request)
         else:
+            await asyncio.sleep(2)
             if request.file is None:
                 if await LLMProvider.is_text_smalltalk(request.text) \
                         or await self.AI_handler.check_is_dialog_psy_now(request):
