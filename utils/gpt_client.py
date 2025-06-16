@@ -1,3 +1,4 @@
+import logging
 import mimetypes
 import os
 from io import BytesIO
@@ -24,13 +25,14 @@ mental_assistant_id = os.getenv("MENTAL_ASSISTANT_ID")
 standard_assistant_id = os.getenv("STANDARD_ASSISTANT_ID")
 
 
+logger = logging.getLogger(__name__)
+
 
 proxy_url = os.environ.get("OPENAI_PROXY_URL")
 openAI_client = AsyncOpenAI(api_key=openai_api_key) if proxy_url is None or proxy_url == "" else \
     AsyncOpenAI(http_client=httpx.AsyncClient(proxy=proxy_url), api_key=openai_api_key)
 
 google_genai_client = Client(api_key=gemini_api_key)
-
 
 class ModelChatMessage(BaseModel):
     role: Literal["user", "assistant", "developer", "system"]
@@ -143,12 +145,14 @@ class LLMProvider: #TODO files api для файлов больше 20мб
 
     @staticmethod
     async def is_text_smalltalk(text: str):
+
         try:
             response = await google_genai_client.aio.models.generate_content(
                 model=BASIC_MODEL,
                 contents=SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT.format(text=text)
             )
-            return response.text == 'true'
+            logger.info(f"Smalltalk - {'true'in response.text}")
+            return 'true'in response.text
         except openai.BadRequestError:
             return False
 
