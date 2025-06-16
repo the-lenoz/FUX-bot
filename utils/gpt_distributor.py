@@ -131,7 +131,11 @@ class AIHandler:
             if save_answer:
                 self.active_threads[user_id].add_message(
                     LLMProvider.create_message(
-                        content=result,
+                        content=[
+                            LLMProvider.create_text_content_item(
+                                result
+                            )
+                        ],
                         role="assistant"
                     )
                 )
