@@ -131,7 +131,7 @@ class AIHandler:
                 self.active_threads[user_id].add_message(
                     LLMProvider.create_message(
                         content=[
-                            LLMProvider.create_text_content_item(
+                            await LLMProvider.create_text_content_item(
                                 result
                             )
                         ],
@@ -151,7 +151,7 @@ class AIHandler:
             self.active_threads[request.user_id].add_message(
                 LLMProvider.create_message(
                     content=[
-                        LLMProvider.create_text_content_item(
+                        await LLMProvider.create_text_content_item(
                             ASSISTANT_SYSTEM_PROMPT
                         )
                     ],
@@ -162,7 +162,7 @@ class AIHandler:
                 LLMProvider.create_message(
                     role="system",
                     content=[
-                        LLMProvider.create_text_content_item(
+                        await LLMProvider.create_text_content_item(
                             "Description of the client:\n" + user_description
                         )
                     ]
