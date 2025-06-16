@@ -15,10 +15,8 @@ from settings import openai_api_key, gemini_api_key
 from utils.prompts import SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT
 from utils.user_request_types import UserFile
 
-BASIC_MODEL = "gpt-4o-mini"
-ADVANCED_MODEL = "gpt-4.1"
-
-TRANSCRIPT_MODEL = "whisper-1"
+BASIC_MODEL = "gemini-2.0-flash-lite"
+ADVANCED_MODEL = "gemini-2.5-flash"
 
 TTS_MODEL = "gemini-2.5-flash-preview-tts"
 
