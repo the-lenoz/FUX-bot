@@ -16,7 +16,7 @@ from utils.documents import convert_to_pdf
 from utils.gpt_client import BASIC_MODEL, ADVANCED_MODEL, ModelChatThread, LLMProvider
 from utils.photo_recommendation import generate_blurred_image_with_text
 from utils.prompts import RECOMMENDATION_PROMPT, \
-    MENTAL_PROBLEM_SUMMARY_PROMPT, EXERCISE_PROMPT_FORMAT, DIALOG_CHECK_PROMPT, \
+    MENTAL_PROBLEM_SUMMARY_PROMPT, EXERCISE_PROMPT_FORMAT, DIALOG_LATEST_MESSAGE_CHECKER_PROMPT, \
     DEFAULT_ASSISTANT_SYSTEM_PROMPT, get_assistant_system_prompt
 from utils.subscription import check_is_subscribed
 from utils.text import split_long_message
@@ -45,7 +45,7 @@ class UserRequestHandler:
             await asyncio.sleep(2)
             if request.file is None:
                 if await LLMProvider.is_text_smalltalk(request.text) \
-                        or await self.AI_handler.check_is_dialog_psy_now(request):
+                        or await self.AI_handler.check_is_dialog_latest_message_psy(request):
                     await self.AI_handler.handle(request)
                 else:
                     await main_bot.send_message(
@@ -216,14 +216,14 @@ class AIHandler:
                 self.active_threads[user_id] = None
 
 
-    async def check_is_dialog_psy_now(self, request: UserRequest) -> bool:
+    async def check_is_dialog_latest_message_psy(self, request: UserRequest) -> bool:
         if not self.thread_locks.get(request.user_id):
             self.thread_locks[request.user_id] = Lock()
 
         async with self.thread_locks[request.user_id]:
             check_request = UserRequest(
                 user_id=request.user_id,
-                text=DIALOG_CHECK_PROMPT
+                text=DIALOG_LATEST_MESSAGE_CHECKER_PROMPT
             )
 
             message_id = await self.create_message(request)
@@ -236,6 +236,26 @@ class AIHandler:
 
             self.active_threads[request.user_id].delete_message(message_id)
             self.active_threads[request.user_id].delete_message(check_message_id)
+
+        return result
+
+    async def check_is_dialog_psy(self, user_id: int) -> bool:
+        if not self.thread_locks.get(user_id):
+            self.thread_locks[user_id] = Lock()
+
+        async with self.thread_locks[user_id]:
+            check_request = UserRequest(
+                user_id=user_id,
+                text=DIALOG_LATEST_MESSAGE_CHECKER_PROMPT
+            )
+            check_message_id = await self.create_message(check_request)
+
+            result = False
+            response = await self.run_thread(user_id, False)
+            logger.info(f"Checker response: {response}")
+            result = 'true' in response.lower()
+
+            self.active_threads[user_id].delete_message(check_message_id)
 
         return result
 
@@ -270,12 +290,9 @@ class PsyHandler(AIHandler):
         user = await users_repository.get_user_by_user_id(user_id)
         is_subscribed = await check_is_subscribed(user_id)
 
-        if self.thread_locks.get(user_id) and self.active_threads.get(user_id) and await self.check_is_dialog_psy_now(
-            UserRequest(
-                user_id=user_id,
-                text=" "
-            )
-        ):
+        if self.thread_locks.get(user_id) and self.active_threads.get(user_id) and await self.check_is_dialog_psy(
+            user_id=user_id
+        ) and self.active_threads.get(user_id): # doubled because await takes time
             async with self.thread_locks[user_id]:
                 recommendation_request = UserRequest(
                     user_id=user_id,
@@ -390,7 +407,7 @@ class PsyHandler(AIHandler):
 
     async def exit(self, user_id: int) -> int | None:
         if self.active_threads.get(user_id):
-            if await self.check_is_dialog_psy_now(UserRequest(user_id=user_id, text=" ")):
+            if await self.check_is_dialog_latest_message_psy(UserRequest(user_id=user_id, text=" ")):
                 problem_id = await self.summarize_dialog_problem(user_id)
             else:
                 problem_id = None
