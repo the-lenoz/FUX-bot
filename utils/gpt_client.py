@@ -1,14 +1,17 @@
+import mimetypes
 import os
-import tempfile
+from io import BytesIO
 from typing import Literal, Dict, List
 
 import httpx
 import openai
+import pydub
 from aiogram.types import BufferedInputFile
+from google.genai import types, Client
 from openai import AsyncOpenAI
 from pydantic import BaseModel
 
-from settings import openai_api_key
+from settings import openai_api_key, gemini_api_key
 from utils.prompts import SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT
 from utils.user_request_types import UserFile
 
@@ -17,7 +20,7 @@ ADVANCED_MODEL = "gpt-4.1"
 
 TRANSCRIPT_MODEL = "whisper-1"
 
-TTS_MODEL = "tts-1-hd"
+TTS_MODEL = "gemini-2.5-flash-preview-tts"
 
 mental_assistant_id = os.getenv("MENTAL_ASSISTANT_ID")
 standard_assistant_id = os.getenv("STANDARD_ASSISTANT_ID")
@@ -27,6 +30,8 @@ standard_assistant_id = os.getenv("STANDARD_ASSISTANT_ID")
 proxy_url = os.environ.get("OPENAI_PROXY_URL")
 openAI_client = AsyncOpenAI(api_key=openai_api_key) if proxy_url is None or proxy_url == "" else \
     AsyncOpenAI(http_client=httpx.AsyncClient(proxy=proxy_url), api_key=openai_api_key)
+
+google_genai_client = Client(api_key=gemini_api_key)
 
 
 class ModelChatMessage(BaseModel):
@@ -73,97 +78,93 @@ class ModelChatThread:
         return self.__str__()
 
 
-class LLMProvider:
+class LLMProvider: #TODO files api для файлов больше 20мб
     def __init__(self, model_name: str):
         self.model_name = model_name
 
     @staticmethod
     async def create_document_content_item(document: UserFile):
-        document_file = await openAI_client.files.create(
-            file=(document.filename, document.file_bytes),
-            purpose="user_data"
+        return types.Part.from_bytes(
+            data=document.file_bytes,
+            mime_type='application/pdf',
         )
-        return {
-            "type": "input_file",
-            "file_id": document_file.id,
-        }
 
     @staticmethod
     async def create_image_content_item(image: UserFile):
-        image_file = await openAI_client.files.create(
-            file=(image.filename, image.file_bytes),
-            purpose="vision"
+        return types.Part.from_bytes(
+            data=image.file_bytes,
+            mime_type=mimetypes.guess_type(image.filename)[0]
         )
-        return {
-            "type": "input_image",
-            "file_id": image_file.id,
-        }
 
     @staticmethod
     async def create_voice_content_item(voice: UserFile):
-        text = await LLMProvider.get_transcription(voice)
-        return {
-            "type": "input_text",
-            "text": text
-        }
+        return types.Part.from_bytes(
+            data=voice.file_bytes,
+            mime_type=mimetypes.guess_type(voice.filename)[0],
+        )
 
     @staticmethod
     def create_text_content_item(text: str):
-        return {
-            "type": "input_text",
-            "text": text
-        }
-
-    @staticmethod
-    async def get_transcription(voice: UserFile) -> str:
-        try:
-            transcript = await openAI_client.audio.transcriptions.create(
-                model=TRANSCRIPT_MODEL,
-                file=(voice.filename, voice.file_bytes),
-                language="ru"
-            )
-            return transcript.text
-
-        except openai.BadRequestError:
-            return ""
+        return types.Part.from_text(
+            text=text
+        )
 
     @staticmethod
     async def generate_speech(text: str) -> BufferedInputFile:
-        response = await openAI_client.audio.speech.create(
+        response = await google_genai_client.aio.models.generate_content(
             model=TTS_MODEL,
-            voice="alloy",  # Выберите один из голосов: alloy, echo, fable, onyx, nova, shimmer
-            input=text,
-            response_format="opus"  # mp3, opus, aac, flac, wav, pcm
+            contents=text,
+            config=types.GenerateContentConfig(
+                response_modalities=["AUDIO"],
+                speech_config=types.SpeechConfig(
+                    voice_config=types.VoiceConfig(
+                        prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                            voice_name='Kore',
+                        )
+                    )
+                ),
+            )
+        )
+        audio_segment = pydub.AudioSegment(
+            data=response.candidates[0].content.parts[0].inline_data.data,
+            sample_width=2,  # 16-bit PCM
+            frame_rate=24000,
+            channels=1
         )
 
+        opus_buffer = BytesIO()
+        audio_segment.export(opus_buffer, format="opus", codec="libopus", bitrate="64k")
+
+        # Seek to the beginning of the BytesIO object so it can be read from
+        opus_buffer.seek(0)
+
         return BufferedInputFile(
-            response.content,
+            opus_buffer.read(),
             "voice.ogg"
         )
 
     @staticmethod
     async def is_text_smalltalk(text: str):
         try:
-            response = await openAI_client.responses.create(
+            response = await google_genai_client.aio.models.generate_content(
                 model=BASIC_MODEL,
-                input=SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT.format(text=text),
-                max_output_tokens=32
+                contents=SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT.format(text=text)
             )
-            return response.output_text == 'true'
+            return response.text == 'true'
         except openai.BadRequestError:
             return False
 
     @staticmethod
     def create_message(content: str | List, role: str = "user"):
-        return ModelChatMessage(
-            content=content,
-            role=role
+        return types.Content(
+            parts=content,
+            role="model" if role == "model" else "user"
         )
 
     async def process_request(self, input: List | str):
-        response = await openAI_client.responses.create(
+        response = await google_genai_client.aio.models.generate_content(
             model=self.model_name,
-            input=input
+            contents=input
         )
 
         return response.output_text
