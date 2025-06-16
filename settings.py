@@ -18,6 +18,7 @@ token_design_level = getenv("MAIN_BOT_TOKEN")
 token_admin_bot = getenv("ADMIN_BOT_TOKEN")
 business_connection_id = getenv("BUSINESS_CONNECTION_ID")
 openai_api_key = getenv("GPT_TOKEN")
+gemini_api_key = getenv("GEMINI_API_KEY")
 
 fast_help_promt = """Сгенерируй ТОЛЬКО ОДИН вопрос о ментальном состоянии человека,
  при этом сосредоточившись на узкой, конкретной проблеме(Если ты видишь, что человек в диалоге выше написал про
