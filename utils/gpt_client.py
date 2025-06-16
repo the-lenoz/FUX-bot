@@ -173,7 +173,7 @@ class LLMProvider: #TODO files api для файлов больше 20мб
                 contents.append(message)
         response = await google_genai_client.aio.models.generate_content(
             model=self.model_name,
-            contents=input,
+            contents=contents,
             config=types.GenerateContentConfig(system_instruction=system_prompt),
         )
 
