@@ -17,7 +17,7 @@ from utils.gpt_client import BASIC_MODEL, ADVANCED_MODEL, ModelChatThread, LLMPr
 from utils.photo_recommendation import generate_blurred_image_with_text
 from utils.prompts import RECOMMENDATION_PROMPT, \
     MENTAL_PROBLEM_SUMMARY_PROMPT, EXERCISE_PROMPT_FORMAT, DIALOG_LATEST_MESSAGE_CHECKER_PROMPT, \
-    DEFAULT_ASSISTANT_SYSTEM_PROMPT, get_assistant_system_prompt
+    DEFAULT_ASSISTANT_SYSTEM_PROMPT, get_assistant_system_prompt, DIALOG_CHECKER_PROMPT
 from utils.subscription import check_is_subscribed
 from utils.text import split_long_message
 from utils.user_properties import get_user_description
@@ -246,7 +246,7 @@ class AIHandler:
         async with self.thread_locks[user_id]:
             check_request = UserRequest(
                 user_id=user_id,
-                text=DIALOG_LATEST_MESSAGE_CHECKER_PROMPT
+                text=DIALOG_CHECKER_PROMPT
             )
             check_message_id = await self.create_message(check_request)
 
@@ -407,7 +407,7 @@ class PsyHandler(AIHandler):
 
     async def exit(self, user_id: int) -> int | None:
         if self.active_threads.get(user_id):
-            if await self.check_is_dialog_latest_message_psy(UserRequest(user_id=user_id, text=" ")):
+            if await self.check_is_dialog_psy(user_id):
                 problem_id = await self.summarize_dialog_problem(user_id)
             else:
                 problem_id = None
