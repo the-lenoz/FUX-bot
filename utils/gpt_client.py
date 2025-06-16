@@ -165,6 +165,7 @@ class LLMProvider: #TODO files api для файлов больше 20мб
         )
 
     async def process_request(self, input: List | str):
+        types.Part.__str__ = lambda x: f" Part(text={x.text})"
         contents = []
         system_prompt = "You are an helpful assistant"
         for message in input:
