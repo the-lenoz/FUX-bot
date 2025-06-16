@@ -166,4 +166,4 @@ class LLMProvider: #TODO files api для файлов больше 20мб
             contents=input
         )
 
-        return response.output_text
+        return response.text
