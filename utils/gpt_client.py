@@ -173,10 +173,21 @@ class LLMProvider: #TODO files api для файлов больше 20мб
             elif message.role in ("model", "user", "assistant"):
                 contents.append(message)
 
+        for content in input:
+            for part in content.parts:
+                if part.text:
+                    print(part.text[:32] + '...')
+        print("=" * 40)
+        for content in contents:
+            for part in content.parts:
+                if part.text:
+                    print(part.text[:32] + '...')
+
         response = await google_genai_client.aio.models.generate_content(
             model=self.model_name,
             contents=contents,
             config=types.GenerateContentConfig(system_instruction=system_prompt),
         )
+
 
         return response.text
