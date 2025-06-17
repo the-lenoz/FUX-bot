@@ -79,29 +79,29 @@ class ModelChatThread:
         return self.__str__()
 
 
-class LLMProvider: #TODO files api для файлов больше 20мб
+class LLMProvider:
     def __init__(self, model_name: str):
         self.model_name = model_name
 
     @staticmethod
     async def create_document_content_item(document: UserFile):
-        return types.Part.from_bytes(
-            data=document.file_bytes,
-            mime_type='application/pdf',
+        return await google_genai_client.aio.files.upload(
+            file=BytesIO(document.file_bytes),
+            config=types.UploadFileConfig(mime_type="application/pdf")
         )
 
     @staticmethod
     async def create_image_content_item(image: UserFile):
-        return types.Part.from_bytes(
-            data=image.file_bytes,
-            mime_type=mimetypes.guess_type(image.filename)[0]
+        return await google_genai_client.aio.files.upload(
+            file=BytesIO(image.file_bytes),
+            config=types.UploadFileConfig(mime_type=mimetypes.guess_type(image.filename)[0])
         )
 
     @staticmethod
     async def create_voice_content_item(voice: UserFile):
-        return types.Part.from_bytes(
-            data=voice.file_bytes,
-            mime_type=mimetypes.guess_type(voice.filename)[0],
+        return await google_genai_client.aio.files.upload(
+            file=BytesIO(voice.file_bytes),
+            config=types.UploadFileConfig(mime_type=mimetypes.guess_type(voice.filename)[0])
         )
 
     @staticmethod
