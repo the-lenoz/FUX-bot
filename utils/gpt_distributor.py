@@ -364,9 +364,18 @@ class PsyHandler(AIHandler):
         await users_repository.used_exercises(user_id)
 
         exercise_text = await self.advanced_model_provider.process_request(
-                EXERCISE_PROMPT_FORMAT.format(
-                problem_summary=problem.problem_summary
-            )
+            [
+                LLMProvider.create_message(
+                    [
+                        await LLMProvider.create_text_content_item(
+                            EXERCISE_PROMPT_FORMAT.format(
+                                problem_summary=problem.problem_summary
+                            )
+                        )
+                    ],
+                    "user"
+                )
+            ]
         )
 
 
