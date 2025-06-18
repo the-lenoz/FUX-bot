@@ -58,13 +58,13 @@ async def enter_emoji_user(call: CallbackQuery, state: FSMContext):
     user_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id)
     for checkup in user_checkups:
         checkup_days = await days_checkups_repository.get_days_checkups_by_checkup_id(checkup.id)
-        checkup_sent_today = False
+        checkup_sent_in_call_checkup_day = False
         for checkup_day_data in checkup_days:
-            if checkup_day_data.creation_date.date() == datetime.now().date():
-                checkup_sent_today = True
+            if checkup_day_data.creation_date.date() == day_checkup.creation_date.date():
+                checkup_sent_in_call_checkup_day = True
                 if not checkup_day_data.date_end_day:
                     update_power_mode = False
-        if not checkup_sent_today:
+        if not checkup_sent_in_call_checkup_day:
             update_power_mode = False
 
 
