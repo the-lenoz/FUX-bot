@@ -1,7 +1,7 @@
 import io
 
 from aiogram import Router, F, Bot
-from aiogram.exceptions import TelegramRetryAfter
+from aiogram.exceptions import TelegramRetryAfter, TelegramBadRequest
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
@@ -52,7 +52,13 @@ async def standard_message_photo_handler(message: Message, bot: Bot):
     except TelegramRetryAfter:
         pass
     file_buffer = io.BytesIO()
-    await bot.download(message.photo[-1], destination=file_buffer)
+    try:
+        await bot.download(message.photo[-1], destination=file_buffer)
+    except TelegramBadRequest:
+        await message.answer(
+            "<b>Картинка</b> слишком большая - размер не должен превышать <i>20MB</i>"
+        )
+        return
     file_buffer.seek(0)
     data = file_buffer.read()
 
@@ -79,7 +85,13 @@ async def standard_message_voice_handler(message: Message, bot: Bot):
     except TelegramRetryAfter:
         pass
     file_buffer = io.BytesIO()
-    await bot.download(message.voice, destination=file_buffer)
+    try:
+        await bot.download(message.voice, destination=file_buffer)
+    except TelegramBadRequest:
+        await message.answer(
+            "<b>Голосовое сообщение</b> слишком большое - размер не должен превышать <i>20MB</i>"
+        )
+        return
     file_buffer.seek(0)
     data = file_buffer.read()
 
@@ -105,7 +117,13 @@ async def standard_message_document_handler(message: Message, bot: Bot):
     except TelegramRetryAfter:
         pass
     file_buffer = io.BytesIO()
-    await bot.download(message.document, destination=file_buffer)
+    try:
+        await bot.download(message.document, destination=file_buffer)
+    except TelegramBadRequest:
+        await message.answer(
+            "<b>Документ</b> слишком большой - размер не должен превышать <i>20MB</i>"
+        )
+        return
     file_buffer.seek(0)
     data = file_buffer.read()
 
