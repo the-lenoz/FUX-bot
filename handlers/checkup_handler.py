@@ -12,7 +12,7 @@ from data.keyboards import checkup_type_keyboard, buy_sub_keyboard, menu_keyboar
 from db.repository import users_repository, subscriptions_repository, checkup_repository, days_checkups_repository
 from settings import mechanic_checkup, InputMessage, is_valid_time, checkups_types_photo
 from utils.checkups_ended import sent_today
-from utils.сheckup_stat import send_weekly_checkup_report
+from utils.checkup_stat import send_weekly_checkup_report
 
 checkup_router = Router()
 

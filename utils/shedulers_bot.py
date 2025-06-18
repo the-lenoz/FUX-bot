@@ -13,7 +13,7 @@ from settings import payment_photo, how_are_you_photo, emoji_dict, \
     speed_dict
 from utils.gpt_distributor import user_request_handler
 from utils.messages_provider import send_subscription_end_message
-from utils.сheckup_stat import generate_emotion_chart, send_weekly_checkup_report
+from utils.checkup_stat import generate_emotion_chart, send_weekly_checkup_report
 
 
 async def edit_activation_sub(main_bot: Bot):
