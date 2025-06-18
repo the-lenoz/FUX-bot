@@ -12,6 +12,7 @@ from data.keyboards import checkup_type_keyboard, buy_sub_keyboard, menu_keyboar
 from db.repository import users_repository, subscriptions_repository, checkup_repository, days_checkups_repository
 from settings import mechanic_checkup, InputMessage, is_valid_time, checkups_types_photo
 from utils.checkups_ended import sent_today
+from utils.сheckup_stat import send_weekly_checkup_report
 
 checkup_router = Router()
 
@@ -71,8 +72,12 @@ async def enter_emoji_user(call: CallbackQuery, state: FSMContext):
 
     await call.message.answer("Спасибо за ответ!", reply_markup=menu_keyboard.as_markup()   )
     if update_power_mode:
+        if day_checkup.creation_date.weekday() == 6:
+            await send_weekly_checkup_report(user.user_id, day_checkup.creation_date)
+
         await users_repository.update_power_mode_days_by_user_id(user_id, user.power_mode_days + 1)
         await call.message.answer(f"{user.power_mode_days + 1} орех подряд!🌰 Продолжай с трекингом в том же духе")
+
 
     if type_checkup == "emotions":
         await users_repository.user_tracked_emotions(user_id)

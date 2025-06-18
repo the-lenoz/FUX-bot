@@ -13,7 +13,7 @@ from settings import payment_photo, how_are_you_photo, emoji_dict, \
     speed_dict
 from utils.gpt_distributor import user_request_handler
 from utils.messages_provider import send_subscription_end_message
-from utils.сheckup_stat import generate_emotion_chart
+from utils.сheckup_stat import generate_emotion_chart, send_weekly_checkup_report
 
 
 async def edit_activation_sub(main_bot: Bot):
@@ -117,38 +117,6 @@ async def notification_reminder(main_bot: Bot):
                 continue
 
 
-async def send_weekly_checkups_report(main_bot: Bot):
-    users = await users_repository.select_all_users()
-    for user in users:
-        for checkup_type in ("emotions", "productivity"):
-            try:
-                checkup_days = await days_checkups_repository.get_days_checkups_by_user_id(user_id=user.user_id)
-                checkups_report = []
-                now = datetime.datetime.now().date()
-                send = False
-                for weekday in range(7):
-                    day = now - datetime.timedelta(days=now.weekday() - weekday)
-                    day_checkup_data = None
-                    for checkup_day in checkup_days:
-                        if checkup_day.creation_date and checkup_day.creation_date.date() == day \
-                                and checkup_day.checkup_type == checkup_type:
-                            day_checkup_data = checkup_day.points
-                            send = True
-                    checkups_report.append(day_checkup_data)
-
-                if send:
-                    graphic = generate_emotion_chart(emotion_data=checkups_report,
-                                                     dates=["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"],
-                                                     checkup_type=checkup_type)
-                    await main_bot.send_photo(
-                        photo=BufferedInputFile(file=graphic.getvalue(), filename="graphic.png"),
-                        chat_id=user.user_id,
-                        caption=f"✅ Трекинг <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за неделю готов!"
-                    )
-            except Exception:
-                continue
-
-
 async def month_checkups(main_bot: Bot):
     users = await users_repository.select_all_users()
     for user in users:
@@ -186,7 +154,7 @@ async def month_checkups(main_bot: Bot):
             continue
 
 
-async def update_power_mode_days(main_bot: Bot):
+async def break_power_mode(main_bot: Bot):
     users = await users_repository.select_all_users()
     now_date = datetime.datetime.now()
     for user in users:
@@ -197,6 +165,8 @@ async def update_power_mode_days(main_bot: Bot):
                 for checkup in user_active_checkups:
                     if max_date is not None and ((now_date - checkup.last_date_send) > datetime.timedelta(hours=24)) \
                             and user.power_mode_days != 0:
+                        if checkup.last_date_send.weekday() == 6:
+                            await send_weekly_checkup_report(user.user_id, checkup.last_date_send)
                         await users_repository.update_power_mode_days_by_user_id(user_id=user.user_id, new_days=0)
                         await main_bot.send_message(chat_id=user.user_id,
                                                     text="Ох… твои орехи раскололись🌰, но "
