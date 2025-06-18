@@ -85,24 +85,27 @@ class LLMProvider:
 
     @staticmethod
     async def create_document_content_item(document: UserFile):
-        return await google_genai_client.aio.files.upload(
+        document_file = await google_genai_client.aio.files.upload(
             file=BytesIO(document.file_bytes),
             config=types.UploadFileConfig(mime_type="application/pdf")
         )
+        return types.Part.from_uri(file_uri=document_file.uri, mime_type=document_file.mime_type)
 
     @staticmethod
     async def create_image_content_item(image: UserFile):
-        return await google_genai_client.aio.files.upload(
+        image_file = await google_genai_client.aio.files.upload(
             file=BytesIO(image.file_bytes),
             config=types.UploadFileConfig(mime_type=mimetypes.guess_type(image.filename)[0])
         )
+        return types.Part.from_uri(file_uri=image_file.uri, mime_type=image_file.mime_type)
 
     @staticmethod
     async def create_voice_content_item(voice: UserFile):
-        return await google_genai_client.aio.files.upload(
+        voice_file = await google_genai_client.aio.files.upload(
             file=BytesIO(voice.file_bytes),
             config=types.UploadFileConfig(mime_type=mimetypes.guess_type(voice.filename)[0])
         )
+        return types.Part.from_uri(file_uri=voice_file.uri, mime_type=voice_file.mime_type)
 
     @staticmethod
     async def create_text_content_item(text: str):
