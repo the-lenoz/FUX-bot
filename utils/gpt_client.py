@@ -107,8 +107,15 @@ class LLMProvider:
 
         transcript = await self.process_request(
             [
-                "Provide a transcript of the speech",
-                voice_file
+                self.create_message(
+                    [
+                        await self.create_text_content_item("Provide a transcript of the speech"),
+                        types.Part.from_uri(
+                            file_uri=voice_file.uri,
+                            mime_type=voice_file.mime_type
+                        )
+                    ]
+                )
             ]
         )
 
