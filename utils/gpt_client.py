@@ -92,23 +92,32 @@ class LLMProvider:
         return types.Part.from_uri(file_uri=document_file.uri, mime_type=document_file.mime_type)
 
     @staticmethod
-    async def create_image_content_item(image: UserFile):
+    async def create_image_content_item(image: UserFile) -> types.Part:
         image_file = await google_genai_client.aio.files.upload(
             file=BytesIO(image.file_bytes),
             config=types.UploadFileConfig(mime_type=mimetypes.guess_type(image.filename)[0])
         )
         return types.Part.from_uri(file_uri=image_file.uri, mime_type=image_file.mime_type)
 
-    @staticmethod
-    async def create_voice_content_item(voice: UserFile):
+    async def create_voice_content_item(self, voice: UserFile) -> types.Part:
         voice_file = await google_genai_client.aio.files.upload(
             file=BytesIO(voice.file_bytes),
             config=types.UploadFileConfig(mime_type=mimetypes.guess_type(voice.filename)[0])
         )
-        return types.Part.from_uri(file_uri=voice_file.uri, mime_type=voice_file.mime_type)
+
+        transcript = await self.process_request(
+            [
+                "Provide a transcript of the speech",
+                voice_file
+            ]
+        )
+
+        return await self.create_text_content_item(
+            text=transcript
+        )
 
     @staticmethod
-    async def create_text_content_item(text: str):
+    async def create_text_content_item(text: str) -> types.Part:
         return types.Part.from_text(
             text=text
         )

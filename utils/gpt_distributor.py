@@ -187,7 +187,7 @@ class AIHandler:
                 )
             elif request.file.file_type == "voice":
                 content.append(
-                    await LLMProvider.create_voice_content_item(
+                    await self.basic_model_provider.create_voice_content_item(
                         request.file
                     )
                 )
