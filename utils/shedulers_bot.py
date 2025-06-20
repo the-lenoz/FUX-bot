@@ -121,6 +121,8 @@ async def month_checkups(main_bot: Bot):
     users = await users_repository.select_all_users()
     for user in users:
         # print(user.user_id)
+        pass
+        '''
         try:
             user_ended_checkups = await checkup_repository.get_ended_checkups_per_month_by_user_id(user_id=user.user_id)
             if user_ended_checkups is not None and len(user_ended_checkups) > 0:
@@ -152,7 +154,7 @@ async def month_checkups(main_bot: Bot):
         except:
             print(traceback.format_exc())
             continue
-
+        '''
 
 async def break_power_mode(main_bot: Bot):
     users = await users_repository.select_all_users()

@@ -5,10 +5,12 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
+from bots import main_bot
 from data.keyboards import menu_keyboard
 from db.repository import users_repository
 from settings import mechanic_dict, exercises_photo
 from utils.gpt_distributor import PsyHandler, user_request_handler
+from utils.subscription import check_is_subscribed
 
 exercises_router = Router()
 
@@ -37,14 +39,22 @@ async def exercises_by_recommendation(call: CallbackQuery, state: FSMContext, bo
 
 async def generate_feedback_for_user(call: CallbackQuery, bot: Bot, problem_id: int | None = None):
     user_id = call.from_user.id
-    delete_message = await call.message.answer(
-        "📙Генерирую <b>индивидуальное</b> задание для тебя!")
 
-    exercise = await user_request_handler.AI_handler.generate_exercise(user_id, problem_id)
-    if exercise:
-        await call.message.answer(exercise + "\n\n" + "Ответ на упражнение пиши в любое время",
-                                  reply_markup=menu_keyboard.as_markup())
+
+    user = await users_repository.get_user_by_user_id(user_id)
+    if user.used_exercises < 5 or await check_is_subscribed(user_id):
+        delete_message = await call.message.answer(
+            "📙Генерирую <b>индивидуальное</b> задание для тебя!")
+        exercise = await user_request_handler.AI_handler.generate_exercise(user_id, problem_id)
+        if exercise:
+            await call.message.answer(exercise + "\n\n" + "Ответ на упражнение пиши в любое время",
+                                      reply_markup=menu_keyboard.as_markup())
+        else:
+            await call.message.answer("Сначала разбери со мной проблему в чате!", reply_markup=menu_keyboard.as_markup())
+        await bot.delete_message(message_id=delete_message.message_id, chat_id=user_id)
     else:
-        await call.message.answer("Сначала разбери со мной проблему в чате!", reply_markup=menu_keyboard.as_markup())
-    await bot.delete_message(message_id=delete_message.message_id, chat_id=user_id)
+        await main_bot.send_message(
+            user_id,
+            "Чтобы получить ещё <i>упражнения</i>, нужна <b>подписка</b>!"
+        )
 

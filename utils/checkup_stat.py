@@ -10,6 +10,7 @@ from aiogram.types import BufferedInputFile
 
 from bots import main_bot
 from db.repository import days_checkups_repository, users_repository
+from utils.subscription import check_is_subscribed
 
 
 def generate_emotion_chart(emotion_data=None, dates=None, checkup_type: str | None = None):
@@ -186,30 +187,36 @@ def generate_emotion_chart(emotion_data=None, dates=None, checkup_type: str | No
 
 async def send_weekly_checkup_report(user_id: int, last_date = datetime.now()):
     user = await users_repository.get_user_by_user_id(user_id)
-    for checkup_type in ("emotions", "productivity"):
-        try:
-            checkup_days = await days_checkups_repository.get_days_checkups_by_user_id(user_id=user.user_id)
-            checkups_report = []
+    if (user.emotions_tracks_count + user.productivity_tracks_count) < 7 or await check_is_subscribed(user_id):
+        for checkup_type in ("emotions", "productivity"):
+            try:
+                checkup_days = await days_checkups_repository.get_days_checkups_by_user_id(user_id=user.user_id)
+                checkups_report = []
 
-            send = False
-            for weekday in range(7):
-                day = last_date - timedelta(days=last_date.weekday() - weekday)
-                day_checkup_data = None
-                for checkup_day in checkup_days:
-                    if checkup_day.creation_date and checkup_day.creation_date.date() == day \
-                            and checkup_day.checkup_type == checkup_type:
-                        day_checkup_data = checkup_day.points
-                        send = True
-                checkups_report.append(day_checkup_data)
+                send = False
+                for weekday in range(7):
+                    day = last_date - timedelta(days=last_date.weekday() - weekday)
+                    day_checkup_data = None
+                    for checkup_day in checkup_days:
+                        if checkup_day.creation_date and checkup_day.creation_date.date() == day \
+                                and checkup_day.checkup_type == checkup_type:
+                            day_checkup_data = checkup_day.points
+                            send = True
+                    checkups_report.append(day_checkup_data)
 
-            if send:
-                graphic = generate_emotion_chart(emotion_data=checkups_report,
-                                                 dates=["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"],
-                                                 checkup_type=checkup_type)
-                await main_bot.send_photo(
-                    photo=BufferedInputFile(file=graphic.getvalue(), filename="graphic.png"),
-                    chat_id=user.user_id,
-                    caption=f"✅ Трекинг <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за неделю готов!"
-                )
-        except Exception:
-            continue
+                if send:
+                    graphic = generate_emotion_chart(emotion_data=checkups_report,
+                                                     dates=["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"],
+                                                     checkup_type=checkup_type)
+                    await main_bot.send_photo(
+                        photo=BufferedInputFile(file=graphic.getvalue(), filename="graphic.png"),
+                        chat_id=user.user_id,
+                        caption=f"✅ Трекинг <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за неделю готов!"
+                    )
+            except Exception:
+                continue
+    else:
+        await main_bot.send_message(
+            user_id,
+            "Результаты <i>недельного трекинга</i> готовы, но для того, чтобы их увидеть нужна <b>подписка</b>!"
+        )
