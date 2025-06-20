@@ -117,7 +117,7 @@ class AIHandler:
             has_photo=request.file and request.file.file_type == 'image',
             has_audio=request.file and request.file.file_type == 'voice',
             has_files=request.file and request.file.file_type == 'document'
-            )
+        )
 
         await typing_message.delete()
 
