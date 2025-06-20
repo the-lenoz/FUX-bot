@@ -187,7 +187,7 @@ def generate_emotion_chart(emotion_data=None, dates=None, checkup_type: str | No
 
 async def send_weekly_checkup_report(user_id: int, last_date = datetime.now()):
     user = await users_repository.get_user_by_user_id(user_id)
-    if (user.emotions_tracks_count + user.productivity_tracks_count) < 7 or await check_is_subscribed(user_id):
+    if (user.emotions_tracks_count + user.productivity_tracks_count) <= 7 or await check_is_subscribed(user_id):
         for checkup_type in ("emotions", "productivity"):
             try:
                 checkup_days = await days_checkups_repository.get_days_checkups_by_user_id(user_id=user.user_id)
@@ -198,7 +198,7 @@ async def send_weekly_checkup_report(user_id: int, last_date = datetime.now()):
                     day = last_date - timedelta(days=last_date.weekday() - weekday)
                     day_checkup_data = None
                     for checkup_day in checkup_days:
-                        if checkup_day.creation_date and checkup_day.creation_date.date() == day \
+                        if checkup_day.creation_date and checkup_day.creation_date.date() == day.date() \
                                 and checkup_day.checkup_type == checkup_type:
                             day_checkup_data = checkup_day.points
                             send = True
@@ -213,7 +213,7 @@ async def send_weekly_checkup_report(user_id: int, last_date = datetime.now()):
                         chat_id=user.user_id,
                         caption=f"✅ Трекинг <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за неделю готов!"
                     )
-            except Exception:
+            except:
                 continue
     else:
         await main_bot.send_message(
