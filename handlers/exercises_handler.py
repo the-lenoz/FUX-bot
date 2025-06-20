@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
 from bots import main_bot
-from data.keyboards import menu_keyboard
+from data.keyboards import menu_keyboard, buy_sub_keyboard
 from db.repository import users_repository
 from settings import mechanic_dict, exercises_photo
 from utils.gpt_distributor import PsyHandler, user_request_handler
@@ -55,6 +55,7 @@ async def generate_feedback_for_user(call: CallbackQuery, bot: Bot, problem_id: 
     else:
         await main_bot.send_message(
             user_id,
-            "Чтобы получить ещё <i>упражнения</i>, нужна <b>подписка</b>!"
+            "Чтобы получить ещё <i>упражнения</i>, нужна <b>подписка</b>!",
+            reply_markup=buy_sub_keyboard.as_markup()
         )
 
