@@ -295,12 +295,11 @@ class PsyHandler(AIHandler):
         ) and self.active_threads.get(user_id): # doubled because await takes time
             async with self.thread_locks[user_id]:
                 if problem_id:
-                    await self.exit(user_id)
                     problem = await mental_problems_repository.get_problem_by_id(problem_id)
                     await self.create_message(
                         UserRequest(
                             user_id=user_id,
-                            text=problem.problem_summary
+                            text="У меня проблема:\n" + problem.problem_summary
                         )
                     )
                 recommendation_request = UserRequest(
