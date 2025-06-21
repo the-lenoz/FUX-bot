@@ -220,5 +220,5 @@ async def send_weekly_checkup_report(user_id: int, last_date = datetime.now()):
         await main_bot.send_message(
             user_id,
             "Результаты <i>недельного трекинга</i> готовы, но для того, чтобы их увидеть нужна <b>подписка</b>!",
-            reply_markup=get_rec_keyboard(f"tracking-{int(last_date.timestamp())}")
+            reply_markup=get_rec_keyboard(f"tracking-{int(last_date.timestamp())}").as_markup()
         )
