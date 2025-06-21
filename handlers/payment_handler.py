@@ -132,10 +132,9 @@ async def check_payment_callback(message: types.CallbackQuery, state: FSMContext
         )
         if mode_type.startswith("recommendation"):
             problem_id = int(mode_type.split('-')[1])
-            recommendation = user_request_handler.AI_handler.generate_exercise(user_id, problem_id)
-            await main_bot.send_message(
-                user_id,
-                recommendation
+            await user_request_handler.AI_handler.provide_recommendations(
+                user_id=user_id,
+                problem_id=problem_id
             )
         elif mode_type.startswith("tracking"):
             date = datetime.datetime.fromtimestamp(int(mode_type.split('-')[1]))
