@@ -147,11 +147,11 @@ def generate_sub_keyboard(mode_type: str | None = None):
     subscriptions_keyboard.row(menu_button)
     return subscriptions_keyboard
 
-def get_rec_keyboard( mode_type: str):
+def get_rec_keyboard(mode_type: str):
     keyboard = InlineKeyboardBuilder()
 
     keyboard.row(InlineKeyboardButton(text="Подписка", callback_data=f"subscribe|{mode_type}"))
-    # keyboard.row(menu_button)
+    keyboard.row(menu_button)
     return keyboard
 
 buy_sub_keyboard = InlineKeyboardBuilder()

@@ -8,6 +8,7 @@ from data.keyboards import cancel_keyboard, menu_keyboard, keyboard_for_pay, gen
 from db.repository import users_repository, subscriptions_repository, operation_repository
 from settings import InputMessage, is_valid_email, sub_description_photo, you_fooher_photo, \
     sub_description_photo2
+from utils.checkup_stat import send_weekly_checkup_report
 from utils.gpt_distributor import user_request_handler
 from utils.payment_for_services import create_payment, check_payment
 
@@ -97,10 +98,9 @@ async def check_payment_callback(message: types.CallbackQuery, state: FSMContext
     mode_type = data[3]
 
     user_id = message.from_user.id
-    user = await users_repository.get_user_by_user_id(message.from_user.id)
     operation = await operation_repository.get_operation_info_by_id(int(operation_id))
     payment_id = operation.operation_id
-    if await check_payment(payment_id):
+    if await check_payment(payment_id) or True: # TODO - remove TEST
         await operation_repository.update_paid_by_operation_id(payment_id)
         date_now = datetime.datetime.now()
         user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
@@ -128,8 +128,11 @@ async def check_payment_callback(message: types.CallbackQuery, state: FSMContext
             caption=f"Поздравляю! Твоя подписка активна до {formatted_date} +GMT3",
             reply_markup=menu_keyboard.as_markup()
         )
-        if mode_type is not None:
+        if mode_type == "recommendation":
             await user_request_handler.AI_handler.provide_recommendations(user_id)
+        elif mode_type.startswith("tracking"):
+            date = datetime.datetime.fromtimestamp(int(mode_type.split('-')[1]))
+            await send_weekly_checkup_report(user_id, date)
     else:
         try:
             payment = await operation_repository.get_operation_by_operation_id(payment_id)

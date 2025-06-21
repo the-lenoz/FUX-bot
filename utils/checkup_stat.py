@@ -9,7 +9,7 @@ from PIL import Image, ImageFont
 from aiogram.types import BufferedInputFile
 
 from bots import main_bot
-from data.keyboards import buy_sub_keyboard
+from data.keyboards import buy_sub_keyboard, get_rec_keyboard
 from db.repository import days_checkups_repository, users_repository
 from utils.subscription import check_is_subscribed
 
@@ -220,5 +220,5 @@ async def send_weekly_checkup_report(user_id: int, last_date = datetime.now()):
         await main_bot.send_message(
             user_id,
             "Результаты <i>недельного трекинга</i> готовы, но для того, чтобы их увидеть нужна <b>подписка</b>!",
-            reply_markup=buy_sub_keyboard.as_markup()
+            reply_markup=get_rec_keyboard(f"tracking-{int(last_date.timestamp())}")
         )

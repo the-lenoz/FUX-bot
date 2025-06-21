@@ -338,7 +338,7 @@ class PsyHandler(AIHandler):
                     caption=
                     f"🌰<i>Рекомендация</i> готова, но чтобы получить её, нужна <b>подписка</b>"
                     f"\n\n{'Ты всегда можешь получить рекомендацию с /recommendation' if from_notification else ''}",
-                    reply_markup=get_rec_keyboard(mode_type="fast_help").as_markup())
+                    reply_markup=get_rec_keyboard(mode_type="recommendation").as_markup())
 
         else:
             await main_bot.send_message(
