@@ -6,6 +6,7 @@ from .events import Events
 from .exercises_user import Exercise
 from .operations import Operations
 from .promo_activations import PromoActivations
+from .recommendations import Recommendation
 from .referral_system import ReferralSystem
 from .subscriptions import Subscriptions
 from .mental_problems import MentalProblem
@@ -24,5 +25,6 @@ __all__ = ['User',
            'CheckupDayData',
            'Exercise',
            'Events',
-           'MentalProblem'
+           'MentalProblem',
+           'Recommendation'
            ]

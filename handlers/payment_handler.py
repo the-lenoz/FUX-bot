@@ -6,7 +6,7 @@ from aiogram.fsm.state import any_state
 
 from bots import main_bot
 from data.keyboards import cancel_keyboard, menu_keyboard, keyboard_for_pay, generate_sub_keyboard
-from db.repository import users_repository, subscriptions_repository, operation_repository
+from db.repository import users_repository, subscriptions_repository, operation_repository, recommendations_repository
 from settings import InputMessage, is_valid_email, sub_description_photo, you_fooher_photo, \
     sub_description_photo2
 from utils.checkup_stat import send_weekly_checkup_report
@@ -131,10 +131,15 @@ async def check_payment_callback(message: types.CallbackQuery, state: FSMContext
             reply_markup=menu_keyboard.as_markup()
         )
         if mode_type.startswith("recommendation"):
-            problem_id = int(mode_type.split('-')[1])
-            await user_request_handler.AI_handler.provide_recommendations(
+            recommendation_id = int(mode_type.split('-')[1])
+            recommendation = await recommendations_repository.get_recommendation_by_recommendation_id(
+                recommendation_id=recommendation_id
+            )
+            await user_request_handler.AI_handler.send_recommendation(
                 user_id=user_id,
-                problem_id=problem_id
+                recommendation=recommendation.text,
+                problem_id=recommendation.problem_id,
+                from_notification=False
             )
         elif mode_type.startswith("tracking"):
             date = datetime.datetime.fromtimestamp(int(mode_type.split('-')[1]))

@@ -11,7 +11,7 @@ from aiogram.types import BufferedInputFile
 from bots import main_bot
 from data.keyboards import get_rec_keyboard, buy_sub_keyboard, create_practice_exercise_recommendation_keyboard
 from db.repository import users_repository, ai_requests_repository, mental_problems_repository, \
-    exercises_user_repository
+    exercises_user_repository, recommendations_repository
 from utils.documents import convert_to_pdf
 from utils.gpt_client import BASIC_MODEL, ADVANCED_MODEL, ModelChatThread, LLMProvider
 from utils.photo_recommendation import generate_blurred_image_with_text
@@ -275,7 +275,29 @@ class PsyHandler(AIHandler):
         else:
             await self.provide_recommendations(request.user_id)
 
-    async def provide_recommendations(self, user_id: int, from_notification: bool = False, problem_id = None):
+    @staticmethod
+    async def send_recommendation(user_id: int, recommendation, problem_id: int, from_notification: bool = False):
+        await main_bot.send_message(
+            user_id,
+            f"<b>{recommendation}</b>\n\n{'Ты всегда можешь получить рекомендацию с /recommendation' if from_notification else ''}"
+        )  # Дать рекомендации
+        await main_bot.send_chat_action(
+            user_id,
+            action="record_voice"
+        )
+        voice_file = await LLMProvider.generate_speech(recommendation)
+        await main_bot.send_chat_action(
+            user_id,
+            action="upload_voice"
+        )
+        logger.info("sending voice")
+        await main_bot.send_voice(
+            user_id,
+            voice_file,
+            reply_markup=create_practice_exercise_recommendation_keyboard(problem_id)
+        )
+
+    async def provide_recommendations(self, user_id: int, from_notification: bool = False):
         typing_message = await main_bot.send_message(
             user_id,
             "💬<i>Печатаю…</i>"
@@ -294,43 +316,27 @@ class PsyHandler(AIHandler):
             user_id=user_id
         ) and self.active_threads.get(user_id): # doubled because await takes time
             async with self.thread_locks[user_id]:
-                if problem_id:
-                    problem = await mental_problems_repository.get_problem_by_id(problem_id)
-                    await self.create_message(
-                        UserRequest(
-                            user_id=user_id,
-                            text="У меня проблема:\n" + problem.problem_summary
-                        )
-                    )
                 recommendation_request = UserRequest(
                     user_id=user_id,
                     text=RECOMMENDATION_PROMPT
                 )
                 await self.create_message(recommendation_request)
                 recommendation = await self.run_thread(user_id, save_answer=False)
+                logger.info("exiting thread...")
+                problem_id = await self.exit(user_id)
+                recommendation_object = await recommendations_repository.add_recommendation(
+                    user_id=user_id,
+                    text=recommendation,
+                    problem_id=problem_id
+                )
 
 
             if not user.used_free_recommendation or is_subscribed:
-                await main_bot.send_message(
-                    user_id,
-                    f"<b>{recommendation}</b>\n\n{'Ты всегда можешь получить рекомендацию с /recommendation' if from_notification else ''}"
-                ) # Дать рекомендации
-                await main_bot.send_chat_action(
-                    user_id,
-                    action="record_voice"
-                )
-                voice_file = await LLMProvider.generate_speech(recommendation)
-                await main_bot.send_chat_action(
-                    user_id,
-                    action="upload_voice"
-                )
-                logger.info("exiting thread...")
-                problem_id = await self.exit(user_id)
-                logger.info("sending voice")
-                await main_bot.send_voice(
-                    user_id,
-                    voice_file,
-                    reply_markup=create_practice_exercise_recommendation_keyboard(problem_id)
+                await self.send_recommendation(
+                    user_id=user_id,
+                    recommendation=recommendation,
+                    problem_id=problem_id,
+                    from_notification=from_notification
                 )
 
                 if not is_subscribed:
@@ -338,7 +344,6 @@ class PsyHandler(AIHandler):
 
             else:
                 photo_recommendation = generate_blurred_image_with_text(text=recommendation, enable_blur=True)
-                problem_id = await self.exit(user_id)
                 await main_bot.send_photo(
                     user_id,
                     has_spoiler=True,
@@ -346,7 +351,7 @@ class PsyHandler(AIHandler):
                     caption=
                     f"🌰<i>Рекомендация</i> готова, но чтобы получить её, нужна <b>подписка</b>"
                     f"\n\n{'Ты всегда можешь получить рекомендацию с /recommendation' if from_notification else ''}",
-                    reply_markup=get_rec_keyboard(mode_type=f"recommendation-{problem_id}").as_markup())
+                    reply_markup=get_rec_keyboard(mode_type=f"recommendation-{recommendation_object.id}").as_markup())
 
         else:
             await main_bot.send_message(

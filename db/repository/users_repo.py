@@ -262,6 +262,18 @@ class UserRepository:
                 await session.execute(sql)
                 await session.commit()
 
+    async def user_got_weekly_reports(self, user_id: int):
+        user = await self.get_user_by_user_id(user_id)
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(User).values({
+                    User.received_weekly_tracking_reports: user.received_weekly_tracking_reports + 1
+                }).where(or_(User.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
+
     async def get_user_creation_statistics(self) -> dict[str, int]:
         async with self.session_maker() as session:
             session: AsyncSession
