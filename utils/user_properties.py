@@ -1,4 +1,4 @@
-from db.repository import users_repository
+from db.repository import users_repository, mental_problems_repository, exercises_user_repository
 from utils.prompts import SENSITIVE_PROMPT, STRAIGHTFORWARD_PROMPT
 
 
@@ -14,12 +14,17 @@ async def get_user_description(user_id: int, is_psy: bool = False) -> str:
     if user.age:
         description.append(f"\nAge: {user.age}\n")
 
-    if user.ai_temperature == 0.6:
-        description.append(STRAIGHTFORWARD_PROMPT)
-    elif user.ai_temperature == 1.3:
-        description.append(SENSITIVE_PROMPT)
+    if is_psy:
+        user_problems = await mental_problems_repository.get_problems_by_user_id(user_id=user_id)
 
-    if user.mental_data and is_psy:
-        description.append(user.mental_data)
+        problems_data = "\n\n\nПроблемы пользователя:(\n\n\n" + "\n\n".join(
+            [problem.problem_summary + "\nПользователь прорабатывал проблему следующими упражнениями:[" +
+             "\n-\n".join([exercise.text
+                           for exercise in await exercises_user_repository.get_exercises_by_problem_id(problem.id)]) +
+             "]"
+             for problem in user_problems]
+        ) + ")"
+
+        description.append(problems_data)
 
     return "".join(description)

@@ -21,7 +21,7 @@ from handlers.sub_management_handler import sub_management_router
 from handlers.system_settings_handler import system_settings_router
 from handlers.user_handler import user_router
 from utils.shedulers_bot import edit_activation_sub, send_checkup, notification_reminder, \
-    update_power_mode_days, month_checkups, send_weekly_checkups_report
+    break_power_mode, month_checkups, send_recommendations
 from utils.user_middleware import EventLoggerMiddleware
 
 logging.basicConfig(
@@ -53,11 +53,14 @@ async def main():
     admin_bot_dispatcher.include_routers(admin_router)
 
     scheduler = AsyncIOScheduler(timezone="Europe/Moscow")
-    scheduler.add_job(func=edit_activation_sub, args=[main_bot], trigger="interval", minutes=60, max_instances=20, misfire_grace_time=120)
-    scheduler.add_job(func=update_power_mode_days, args=[main_bot], trigger="interval", minutes=30, max_instances=20,
+    scheduler.add_job(func=edit_activation_sub, args=[main_bot], trigger="interval",
+                      minutes=60, max_instances=20, misfire_grace_time=120)
+    scheduler.add_job(func=break_power_mode, args=[main_bot], trigger="interval", minutes=30, max_instances=20,
                       misfire_grace_time=120)
     scheduler.add_job(func=send_checkup, args=[main_bot], trigger="interval", minutes=1, max_instances=20,
                       misfire_grace_time=120)
+    scheduler.add_job(func=send_recommendations, args=[main_bot], trigger="interval",
+                      minutes=10, max_instances=20, misfire_grace_time=120)
     scheduler.add_job(notification_reminder, trigger='interval', hours=1, args=[main_bot])
     scheduler.add_job(
         month_checkups,
@@ -65,13 +68,6 @@ async def main():
         args=[main_bot],
         id="monthly_checkups_report",
         replace_existing=True,
-    )
-    scheduler.add_job(
-        send_weekly_checkups_report,
-        trigger=CronTrigger(day_of_week=6, hour=23, minute=55),
-        args=[main_bot],
-        id="send_weekly_checkups_report",
-        replace_existing=True
     )
 
     scheduler.start()

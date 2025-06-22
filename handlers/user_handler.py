@@ -22,6 +22,7 @@ from utils.promocode import user_entered_promo_code
 user_router = Router()
 
 
+@user_router.callback_query(F.data=="cancel", any_state)
 @user_router.callback_query(F.data == "start_menu", any_state)
 async def start_menu(call: CallbackQuery, state: FSMContext):
     await state.clear()
@@ -33,8 +34,7 @@ async def start_menu(call: CallbackQuery, state: FSMContext):
                                     caption=text,
                                     reply_markup=keyboard.as_markup())
     await call.message.delete()
-    await user_request_handler.general_handler.exit(user_id)
-    await user_request_handler.psy_handler.exit(user_id)
+    await user_request_handler.AI_handler.exit(user_id)
 
 
 @user_router.message(F.text == "/menu", any_state)
@@ -71,8 +71,7 @@ async def send_user_message(message: Message, state: FSMContext, bot: Bot):
                                    photo=menu_photo,
                                    reply_markup=keyboard.as_markup())
 
-    await user_request_handler.general_handler.exit(user_id)
-    await user_request_handler.psy_handler.exit(user_id)
+    await user_request_handler.AI_handler.exit(user_id)
 
 
 @user_router.callback_query(F.data == "confirm_politic")
@@ -152,9 +151,10 @@ async def user_enter_promo_code(message: Message, state: FSMContext, bot: Bot):
 
     await user_entered_promo_code(user_id, promo_code, from_referral)
 
-    if not from_referral:
+    if from_referral:
+        await state.clear()
+    else:
         await go_to_enter_initials(message, state, bot)
-
 
 @user_router.callback_query(F.data == "cancel", InputMessage.enter_initials)
 async def cancel_promo(call: CallbackQuery, state: FSMContext):

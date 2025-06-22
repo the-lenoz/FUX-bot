@@ -19,3 +19,6 @@ numpy~=2.2.5
 httpx~=0.28.1
 pydantic~=2.10.6
 openai~=1.78.1
+httpx[socks]
+google-genai
+Deprecated~=1.2.18

@@ -1,24 +1,18 @@
 import io
+import logging
 import os
 import random
 import secrets
-import warnings
-from datetime import timedelta, date
+from datetime import timedelta, date, datetime
 
 import matplotlib.pyplot as plt
 from PIL import Image, ImageFont
+from aiogram.types import BufferedInputFile
 
-warnings.filterwarnings("ignore", category=UserWarning)
-
-# Try to import Pilmoji if available
-try:
-    from pilmoji import Pilmoji
-
-    pilmoji_available = True
-except ImportError:
-    pilmoji_available = False
-    print("Pilmoji not installed. Emoji rendering may be limited.")
-    print("To install: pip install pilmoji")
+from bots import main_bot
+from data.keyboards import buy_sub_keyboard, get_rec_keyboard
+from db.repository import days_checkups_repository, users_repository
+from utils.subscription import check_is_subscribed
 
 
 def generate_emotion_chart(emotion_data=None, dates=None, checkup_type: str | None = None):
@@ -192,17 +186,41 @@ def generate_emotion_chart(emotion_data=None, dates=None, checkup_type: str | No
 
     return buffer
 
-#
-# if __name__ == "__main__":
-#     # Генерируем тестовые данные
-#     emotion_data = [1, 3, 2, 3, 4, 2, 5]  # Пример данных как на картинке
-#     dates = [(date.today() - timedelta(days=6 - i)).strftime("%m-%d") for i in range(7)]
-#
-#     # Генерируем график
-#     buffer = generate_emotion_chart(emotion_data, dates)
-#
-#     # Сохраняем для проверки
-#     with open("emotion_chart_final.png", "wb") as f:
-#         f.write(buffer.getvalue())
-#
-#     print("График сохранен в файл emotion_chart_final.png")
+
+async def send_weekly_checkup_report(user_id: int, last_date = datetime.now()):
+    user = await users_repository.get_user_by_user_id(user_id)
+    if not user.received_weekly_tracking_reports or await check_is_subscribed(user_id):
+        for checkup_type in ("emotions", "productivity"):
+            try:
+                checkup_days = await days_checkups_repository.get_days_checkups_by_user_id(user_id=user.user_id)
+                checkups_report = []
+
+                send = False
+                for weekday in range(7):
+                    day = last_date - timedelta(days=last_date.weekday() - weekday)
+                    day_checkup_data = None
+                    for checkup_day in checkup_days:
+                        if checkup_day.creation_date and checkup_day.creation_date.date() == day.date() \
+                                and checkup_day.checkup_type == checkup_type:
+                            day_checkup_data = checkup_day.points
+                            send = True
+                    checkups_report.append(day_checkup_data)
+
+                if send:
+                    await users_repository.user_got_weekly_reports(user_id=user_id)
+                    graphic = generate_emotion_chart(emotion_data=checkups_report,
+                                                     dates=["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"],
+                                                     checkup_type=checkup_type)
+                    await main_bot.send_photo(
+                        photo=BufferedInputFile(file=graphic.getvalue(), filename="graphic.png"),
+                        chat_id=user.user_id,
+                        caption=f"✅ Трекинг <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за неделю готов!"
+                    )
+            except Exception as e:
+                logging.error(e)
+    else:
+        await main_bot.send_message(
+            user_id,
+            "Результаты <i>недельного трекинга</i> готовы, но для того, чтобы их увидеть нужна <b>подписка</b>!",
+            reply_markup=get_rec_keyboard(f"tracking-{int(last_date.timestamp())}").as_markup()
+        )

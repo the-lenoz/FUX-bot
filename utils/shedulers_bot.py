@@ -11,8 +11,9 @@ from db.repository import subscriptions_repository, users_repository, checkup_re
     events_repository
 from settings import payment_photo, how_are_you_photo, emoji_dict, \
     speed_dict
+from utils.gpt_distributor import user_request_handler
 from utils.messages_provider import send_subscription_end_message
-from utils.сheckup_stat import generate_emotion_chart
+from utils.checkup_stat import generate_emotion_chart, send_weekly_checkup_report
 
 
 async def edit_activation_sub(main_bot: Bot):
@@ -48,6 +49,20 @@ async def send_checkup(main_bot: Bot):
             print(f"\n\nВОЗНИКЛА ОШИБКА ОТПРАВКИ ПОЛЬЗОВАТЕЛЮ {checkup.user_id}\n\n" + traceback.format_exc() + "\n\n")
             continue
 
+async def send_recommendations(main_bot: Bot):
+    users = await users_repository.select_all_users()
+    now = datetime.datetime.now()  # Можно использовать локальное время, если требуется
+
+    for user in users:
+        last_event = await events_repository.get_last_event_by_user_id(user_id=user.user_id)
+        if user_request_handler.AI_handler.active_threads.get(user.user_id) \
+                and now - last_event.creation_date >= datetime.timedelta(minutes=120):
+            if user.notified_with_recommendation < 3 \
+                    and user_request_handler.AI_handler.messages_count.get(user.user_id) >= 6:
+                await user_request_handler.AI_handler.provide_recommendations(user.user_id, from_notification=True)
+            else:
+                await user_request_handler.AI_handler.exit(user.user_id)
+
 
 async def notification_reminder(main_bot: Bot):
     users = await users_repository.select_all_users()
@@ -61,8 +76,8 @@ async def notification_reminder(main_bot: Bot):
 
         delta = now - last_event.creation_date
 
-        # Если не отправлялось уведомление о дневном пороге и прошло >= 1 день
-        if not last_event.day_notif_sent and delta >= datetime.timedelta(hours=24):
+        # Если не отправлялось уведомление о дневном пороге и прошло >= 2 дня
+        if not last_event.day_notif_sent and delta >= datetime.timedelta(hours=48):
             try:
                 await main_bot.send_photo(
                     photo=how_are_you_photo,
@@ -102,42 +117,12 @@ async def notification_reminder(main_bot: Bot):
                 continue
 
 
-async def send_weekly_checkups_report(main_bot: Bot):
-    users = await users_repository.select_all_users()
-    for user in users:
-        for checkup_type in ("emotions", "productivity"):
-            try:
-                checkup_days = await days_checkups_repository.get_days_checkups_by_user_id(user_id=user.user_id)
-                checkups_report = []
-                now = datetime.datetime.now().date()
-                send = False
-                for weekday in range(7):
-                    day = now - datetime.timedelta(days=now.weekday() - weekday)
-                    day_checkup_data = None
-                    for checkup_day in checkup_days:
-                        if checkup_day.creation_date and checkup_day.creation_date.date() == day \
-                                and checkup_day.checkup_type == checkup_type:
-                            day_checkup_data = checkup_day.points
-                            send = True
-                    checkups_report.append(day_checkup_data)
-
-                if send:
-                    graphic = generate_emotion_chart(emotion_data=checkups_report,
-                                                     dates=["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"],
-                                                     checkup_type=checkup_type)
-                    await main_bot.send_photo(
-                        photo=BufferedInputFile(file=graphic.getvalue(), filename="graphic.png"),
-                        chat_id=user.user_id,
-                        caption=f"✅ Трекинг <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за неделю готов!"
-                    )
-            except Exception:
-                continue
-
-
 async def month_checkups(main_bot: Bot):
     users = await users_repository.select_all_users()
     for user in users:
         # print(user.user_id)
+        pass
+        '''
         try:
             user_ended_checkups = await checkup_repository.get_ended_checkups_per_month_by_user_id(user_id=user.user_id)
             if user_ended_checkups is not None and len(user_ended_checkups) > 0:
@@ -169,9 +154,9 @@ async def month_checkups(main_bot: Bot):
         except:
             print(traceback.format_exc())
             continue
+        '''
 
-
-async def update_power_mode_days(main_bot: Bot):
+async def break_power_mode(main_bot: Bot):
     users = await users_repository.select_all_users()
     now_date = datetime.datetime.now()
     for user in users:
@@ -182,6 +167,8 @@ async def update_power_mode_days(main_bot: Bot):
                 for checkup in user_active_checkups:
                     if max_date is not None and ((now_date - checkup.last_date_send) > datetime.timedelta(hours=24)) \
                             and user.power_mode_days != 0:
+                        if checkup.last_date_send.weekday() == 6:
+                            await send_weekly_checkup_report(user.user_id, checkup.last_date_send)
                         await users_repository.update_power_mode_days_by_user_id(user_id=user.user_id, new_days=0)
                         await main_bot.send_message(chat_id=user.user_id,
                                                     text="Ох… твои орехи раскололись🌰, но "

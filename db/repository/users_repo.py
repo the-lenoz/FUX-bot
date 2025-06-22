@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Sequence
 
+import deprecated
 from sqlalchemy import select, or_, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -174,16 +175,6 @@ class UserRepository:
                 await session.execute(sql)
                 await session.commit()
 
-    async def update_mental_data_by_user_id(self, user_id: int, new_mental_data: str):
-        async with self.session_maker() as session:
-            session: AsyncSession
-            async with session.begin():
-                sql = update(User).values({
-                    User.mental_data: new_mental_data
-                }).where(or_(User.user_id == user_id))
-                await session.execute(sql)
-                await session.commit()
-
     async def used_free_recommendation(self, user_id: int):
         async with self.session_maker() as session:
             session: AsyncSession
@@ -201,6 +192,17 @@ class UserRepository:
             async with session.begin():
                 sql = update(User).values({
                     User.used_exercises: user.used_exercises + 1
+                }).where(or_(User.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
+    async def notified_with_recommendation(self, user_id: int):
+        user = await self.get_user_by_user_id(user_id)
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(User).values({
+                    User.notified_with_recommendation: user.notified_with_recommendation + 1
                 }).where(or_(User.user_id == user_id))
                 await session.execute(sql)
                 await session.commit()
@@ -248,6 +250,18 @@ class UserRepository:
                 }).where(or_(User.user_id == user_id))
                 await session.execute(sql)
                 await session.commit()
+
+    async def user_got_weekly_reports(self, user_id: int):
+        user = await self.get_user_by_user_id(user_id)
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(User).values({
+                    User.received_weekly_tracking_reports: user.received_weekly_tracking_reports + 1
+                }).where(or_(User.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
 
     async def get_user_creation_statistics(self) -> dict[str, int]:
         async with self.session_maker() as session:

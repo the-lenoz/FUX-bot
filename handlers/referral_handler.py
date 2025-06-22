@@ -1,6 +1,7 @@
-from aiogram import Router, F
+from aiogram import Router, F, Bot
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message
 
 from data.keyboards import referral_keyboard, menu_keyboard
 # from data.keyboards import choice_keyboard
@@ -18,6 +19,11 @@ async def referral_system_message(call: CallbackQuery):
     await call.message.delete()
 
 
+@referral_router.message(Command("referral"))
+async def referral_command_handler(message: Message, bot: Bot):
+    await message.answer(text=start_referral_text, reply_markup=referral_keyboard.as_markup())
+
+
 @referral_router.callback_query(F.data == "create_promo_code")
 async def create_system_message(call: CallbackQuery):
     user_id = call.from_user.id
@@ -26,13 +32,12 @@ async def create_system_message(call: CallbackQuery):
         await call.message.answer(f"🥜Ты уже <b>выпускал промокод</b>. По одному промокоду может прийти любое количество друзей!\n\n"
                                   f"Твой промокод: <code>{promo.promo_code}</code>",
                                   reply_markup=menu_keyboard.as_markup())
-        await call.message.delete()
-        return
-    promo_code = await generate_single_promo_code()
-    await referral_system_repository.add_promo(bring_user_id=user_id, promo_code=promo_code)
-    await call.message.answer(f"Отлично, ты выпустил новый промокод: <code>{promo_code}</code>. Твоим друзьям достаточно"
-                              f" ввести этот промокод, чтобы и ты, и они получили свои бонусы)",
-                              reply_markup=menu_keyboard.as_markup())
+    else:
+        promo_code = await generate_single_promo_code()
+        await referral_system_repository.add_promo(bring_user_id=user_id, promo_code=promo_code)
+        await call.message.answer(f"Отлично, ты выпустил новый промокод: <code>{promo_code}</code>. Твоим друзьям достаточно"
+                                  f" ввести этот промокод, чтобы и ты, и они получили свои бонусы)",
+                                  reply_markup=menu_keyboard.as_markup())
     await call.message.delete()
 
 

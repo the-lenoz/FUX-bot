@@ -147,11 +147,11 @@ def generate_sub_keyboard(mode_type: str | None = None):
     subscriptions_keyboard.row(menu_button)
     return subscriptions_keyboard
 
-def get_rec_keyboard( mode_type: str):
+def get_rec_keyboard(mode_type: str):
     keyboard = InlineKeyboardBuilder()
 
     keyboard.row(InlineKeyboardButton(text="Подписка", callback_data=f"subscribe|{mode_type}"))
-    # keyboard.row(menu_button)
+    keyboard.row(menu_button)
     return keyboard
 
 buy_sub_keyboard = InlineKeyboardBuilder()
@@ -246,6 +246,12 @@ def delete_checkups_keyboard(type_checkup: str, checkup_id: int):
     else:
         keyboard.row(InlineKeyboardButton(text="❌Приостановить трекинг", callback_data=f"delete_checkups|productivity|{checkup_id}"))
         keyboard.row(InlineKeyboardButton(text="🤩Трекинг эмоций", callback_data="checkups|emotions"))
+    keyboard.row(menu_button)
     return keyboard
 
 
+def create_practice_exercise_recommendation_keyboard(problem_id: int):
+    practice_exercise_recommendation_keyboard = InlineKeyboardBuilder()
+    practice_exercise_recommendation_keyboard.row(InlineKeyboardButton(text="📝Получить упражнение",
+                                                                       callback_data=f"recommendation_exercise|{problem_id}"))
+    return practice_exercise_recommendation_keyboard.as_markup()

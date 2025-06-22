@@ -5,8 +5,8 @@ from db.base import BaseModel, CleanModel
 from .user import User
 
 
-class Exercise(BaseModel, CleanModel):
-    __tablename__ = 'exercises'
+class Recommendation(BaseModel, CleanModel):
+    __tablename__ = 'recommendations'
 
     user_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=False)
     problem_id = Column(BigInteger, ForeignKey('mental_problems.id'), nullable=False)
