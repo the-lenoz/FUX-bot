@@ -322,13 +322,13 @@ class PsyHandler(AIHandler):
                 )
                 await self.create_message(recommendation_request)
                 recommendation = await self.run_thread(user_id, save_answer=False)
-                logger.info("exiting thread...")
-                problem_id = await self.exit(user_id)
-                recommendation_object = await recommendations_repository.add_recommendation(
-                    user_id=user_id,
-                    text=recommendation,
-                    problem_id=problem_id
-                )
+            logger.info("exiting thread...")
+            problem_id = await self.exit(user_id)
+            recommendation_object = await recommendations_repository.add_recommendation(
+                user_id=user_id,
+                text=recommendation,
+                problem_id=problem_id
+            )
 
 
             if not user.used_free_recommendation or is_subscribed:
