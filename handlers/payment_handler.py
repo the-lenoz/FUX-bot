@@ -102,7 +102,7 @@ async def check_payment_callback(message: types.CallbackQuery, state: FSMContext
     user_id = message.from_user.id
     operation = await operation_repository.get_operation_info_by_id(int(operation_id))
     payment_id = operation.operation_id
-    if await check_payment(payment_id) or True: # TODO - remove TEST
+    if await check_payment(payment_id):
         await operation_repository.update_paid_by_operation_id(payment_id)
         date_now = datetime.datetime.now()
         user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
