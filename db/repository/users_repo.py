@@ -175,17 +175,6 @@ class UserRepository:
                 await session.execute(sql)
                 await session.commit()
 
-    @deprecated.deprecated
-    async def update_mental_data_by_user_id(self, user_id: int, new_mental_data: str):
-        async with self.session_maker() as session:
-            session: AsyncSession
-            async with session.begin():
-                sql = update(User).values({
-                    User.mental_data: new_mental_data
-                }).where(or_(User.user_id == user_id))
-                await session.execute(sql)
-                await session.commit()
-
     async def used_free_recommendation(self, user_id: int):
         async with self.session_maker() as session:
             session: AsyncSession
