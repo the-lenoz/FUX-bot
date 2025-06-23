@@ -91,8 +91,8 @@ async def edit_checkup_time_call(call: CallbackQuery, state: FSMContext):
     checkup = await checkup_repository.get_checkup_by_checkup_id(checkup_id=checkup_id)
     await state.set_state(InputMessage.edit_time_checkup)
     await state.update_data(checkup_id=checkup_id)
-    await call.message.answer("Для того, чтобы продолжить, введи, пожалуйста время в которое, тебе отправлять чекАп"
-                              f"\n\nСейчас данный чекап отправляется в {checkup.time_checkup.strftime('%H:%M')}",
+    await call.message.answer("Для того, чтобы продолжить, введи, пожалуйста время в которое, тебе отправлять трекинг"
+                              f"\n\nСейчас данный трекинг отправляется в {checkup.time_checkup.strftime('%H:%M')}",
                               reply_markup=menu_keyboard.as_markup())
     await call.message.delete()
 
@@ -109,7 +109,7 @@ async def enter_new_checkup_time(message: Message, state: FSMContext):
     if result:
         await checkup_repository.update_time_checkup_by_checkup_id(checkup_id=checkup_id,
                                                                    time_checkup=message.text)
-        await message.answer(f"Отлично, теперь данный чекап будет отправляться в {message.text}",
+        await message.answer(f"Отлично, теперь данный трекинг будет отправляться в {message.text}",
                              reply_markup=menu_keyboard.as_markup())
         return
     await state.set_state(InputMessage.edit_time_checkup)
