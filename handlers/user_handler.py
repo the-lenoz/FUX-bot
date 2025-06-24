@@ -33,8 +33,9 @@ async def start_menu(call: CallbackQuery, state: FSMContext):
     await call.message.answer_photo(photo=menu_photo,
                                     caption=text,
                                     reply_markup=keyboard.as_markup())
-    await call.message.delete()
     await user_request_handler.AI_handler.exit(user_id)
+    await call.message.delete()
+
 
 
 @user_router.message(F.text == "/menu", any_state)

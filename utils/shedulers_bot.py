@@ -1,19 +1,15 @@
-import asyncio
 import datetime
 import traceback
 
 from aiogram import Bot
-from aiogram.types import BufferedInputFile
 
 import utils.checkups
-from data.keyboards import buy_sub_keyboard, notification_keyboard
-from db.repository import subscriptions_repository, users_repository, checkup_repository, days_checkups_repository, \
-    events_repository
-from settings import payment_photo, how_are_you_photo, emoji_dict, \
-    speed_dict
+from data.keyboards import buy_sub_keyboard, notification_keyboard, main_keyboard
+from db.repository import subscriptions_repository, users_repository, checkup_repository, events_repository
+from settings import payment_photo, how_are_you_photo, menu_photo
+from utils.checkup_stat import send_weekly_checkup_report
 from utils.gpt_distributor import user_request_handler
 from utils.messages_provider import send_subscription_end_message
-from utils.checkup_stat import generate_emotion_chart, send_weekly_checkup_report
 
 
 async def edit_activation_sub(main_bot: Bot):
@@ -38,7 +34,7 @@ async def edit_activation_sub(main_bot: Bot):
             except Exception as e:
                 print(f"\n\nВОЗНИКЛА ОШИБКА ОТПРАВКИ ПОЛЬЗОВАТЕЛЮ {sub.user_id}" + traceback.format_exc() + "\n\n")
 
-async def send_checkup(main_bot: Bot):
+async def send_checkup():
     checkups = await checkup_repository.select_all_active_checkups()
     now_date = datetime.datetime.now()
     for checkup in checkups:
@@ -58,9 +54,16 @@ async def send_recommendations(main_bot: Bot):
         if user_request_handler.AI_handler.active_threads.get(user.user_id) \
                 and now - last_event.creation_date >= datetime.timedelta(minutes=120):
             if user.notified_with_recommendation < 3 \
-                    and user_request_handler.AI_handler.messages_count.get(user.user_id) >= 6:
+                    and user_request_handler.AI_handler.messages_count.get(user.user_id) >= 6 \
+                    and user_request_handler.AI_handler.check_is_dialog_psy(user.user_id):
                 await user_request_handler.AI_handler.provide_recommendations(user.user_id, from_notification=True)
             else:
+                text = "✍️Для общения - просто пиши, ничего выбирать не надо"
+                keyboard = await main_keyboard(user_id=user.user_id)
+                await main_bot.send_photo(chat_id=user.user_id,
+                                          photo=menu_photo,
+                                          caption=text,
+                                          reply_markup=keyboard.as_markup())
                 await user_request_handler.AI_handler.exit(user.user_id)
 
 

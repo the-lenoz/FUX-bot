@@ -57,7 +57,7 @@ async def main():
                       minutes=60, max_instances=20, misfire_grace_time=120)
     scheduler.add_job(func=break_power_mode, args=[main_bot], trigger="interval", minutes=30, max_instances=20,
                       misfire_grace_time=120)
-    scheduler.add_job(func=send_checkup, args=[main_bot], trigger="interval", minutes=1, max_instances=20,
+    scheduler.add_job(func=send_checkup, trigger="interval", minutes=1, max_instances=20,
                       misfire_grace_time=120)
     scheduler.add_job(func=send_recommendations, args=[main_bot], trigger="interval",
                       minutes=10, max_instances=20, misfire_grace_time=120)
