@@ -12,6 +12,7 @@ admin_kb = [
         [KeyboardButton(text='Выгрузка таблиц')],
         [KeyboardButton(text="Сделать рассылку")],
         [KeyboardButton(text="Добавить / удалить админа")],
+        [KeyboardButton(text="Управление подписками")],
         [KeyboardButton(text="Сгенерировать промокод")]
     ]
 admin_keyboard = ReplyKeyboardMarkup(keyboard=admin_kb, resize_keyboard=True)

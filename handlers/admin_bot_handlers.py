@@ -64,6 +64,36 @@ async def get_statistics(message: types.Message, state: FSMContext, bot: Bot):
                          reply_markup=statistics_keyboard.as_markup())
 
 
+@admin_router.message(F.text=="Управление подписками")
+@is_main_admin
+async def manage_subscriptions(message: types.Message, state: FSMContext, bot: Bot):
+    await state.clear()
+    users = await users_repository.select_all_users()
+    subscriptions = await subscriptions_repository.select_all_subscriptions()
+    active_subscriber_ids = {subscription.user_id for subscription in subscriptions if subscription.active}
+    keyboard = InlineKeyboardBuilder()
+    for user in users:
+        if user.user_id in active_subscriber_ids:
+            keyboard.row(
+                InlineKeyboardButton(text=f"{user.username}", callback_data=f"delete_subscriber|{user.user_id}")
+            )
+
+    keyboard.row(InlineKeyboardButton(text="Отмена", callback_data="cancel"))
+
+    await message.answer(text="Отлично, теперь выбери из представленных пользователей, которого хочешь лишить подписки",
+                                 reply_markup=keyboard.as_markup())
+
+
+@admin_router.callback_query(F.data.startswith("delete_subscriber|"))
+@is_main_admin
+async def delete_subscriber(call: types.CallbackQuery, state: FSMContext, bot: Bot):
+    subscriber_id = int(call.data.split("|")[1])
+    subscription = await subscriptions_repository.get_active_subscription_by_user_id(subscriber_id)
+    await subscriptions_repository.deactivate_subscription(subscription.id)
+    await call.message.answer(text="Пользователь лишён подписки."
+                                 f" выберите свои дальнейшие действия!", reply_markup=admin_keyboard)
+    await call.message.delete()
+
 @admin_router.callback_query(F.data.startswith("statistics"), any_state)
 @is_main_admin
 async def enter_type_users_for_mailing(call: types.CallbackQuery, state: FSMContext, bot: Bot):
