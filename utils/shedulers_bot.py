@@ -58,7 +58,7 @@ async def send_recommendations(main_bot: Bot):
                     and user_request_handler.AI_handler.check_is_dialog_psy(user.user_id):
                 await user_request_handler.AI_handler.provide_recommendations(user.user_id, from_notification=True)
             else:
-                text = "✍️Для общения - просто пиши, ничего выбирать не надо"
+                text = "✍️<i>Для общения - просто </i><b>пиши</b><i>, ничего выбирать не надо</i>"
                 keyboard = await main_keyboard(user_id=user.user_id)
                 await main_bot.send_photo(chat_id=user.user_id,
                                           photo=menu_photo,
