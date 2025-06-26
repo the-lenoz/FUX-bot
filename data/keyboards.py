@@ -106,12 +106,12 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
                                       and not await sent_today(checkup.id)):
             finish_checkup_day = False
             break
-    if finish_checkup_day is False:
+    if not finish_checkup_day:
         keyboard.row(InlineKeyboardButton(text="Пройти трекинг", callback_data="go_checkup"))
-    # keyboard.row(InlineKeyboardButton(text="⭐Режимы общения", callback_data="mental_helper"))
+
     keyboard.row(InlineKeyboardButton(text="📝Упражнения", callback_data="exercises_by_problem"))
-    keyboard.add(InlineKeyboardButton(text="🗓️Трекинг состояния", callback_data="checkups"))
-    keyboard.row(InlineKeyboardButton(text="📜Механика сервиса", callback_data="all_mechanics"))
+    keyboard.add(InlineKeyboardButton(text="📉️Трекинги", callback_data="checkups"))
+    keyboard.row(InlineKeyboardButton(text="📜О сервисе", callback_data="all_mechanics"))
     keyboard.add(InlineKeyboardButton(text="⚙️Настройки", callback_data="system_settings"))
     keyboard.row(InlineKeyboardButton(text="🎁 Реферальная система", callback_data="referral_system"))
     user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
@@ -120,7 +120,7 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
     else:
         end_date = user_sub.creation_date + timedelta(days=user_sub.time_limit_subscription)
         sub_button_text = (f"Моя подписка (до"
-                f" {end_date.strftime('%d.%m.%y, %H:%M')} +GMT3)")
+                f" {end_date.strftime('%d.%m.%y')})")
     keyboard.row(InlineKeyboardButton(text=sub_button_text, callback_data="sub_management"))
     return keyboard
 
