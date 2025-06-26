@@ -110,7 +110,7 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
         keyboard.row(InlineKeyboardButton(text="Пройти трекинг", callback_data="go_checkup"))
 
     keyboard.row(InlineKeyboardButton(text="📝Упражнения", callback_data="exercises_by_problem"))
-    keyboard.add(InlineKeyboardButton(text="📉️Трекинг", callback_data="checkups"))
+    keyboard.add(InlineKeyboardButton(text="📉️Трекинги", callback_data="checkups"))
     keyboard.row(InlineKeyboardButton(text="📜О сервисе", callback_data="all_mechanics"))
     keyboard.add(InlineKeyboardButton(text="⚙️Настройки", callback_data="system_settings"))
     keyboard.row(InlineKeyboardButton(text="🎁 Реферальная система", callback_data="referral_system"))
