@@ -90,8 +90,9 @@ async def delete_subscriber(call: types.CallbackQuery, state: FSMContext, bot: B
     subscriber_id = int(call.data.split("|")[1])
     subscription = await subscriptions_repository.get_active_subscription_by_user_id(subscriber_id)
     await subscriptions_repository.deactivate_subscription(subscription.id)
-    await call.message.edit_text(text="Пользователь лишён подписки."
+    await call.message.answer(text="Пользователь лишён подписки."
                                  f" выберите свои дальнейшие действия!", reply_markup=admin_keyboard)
+    await call.message.delete()
 
 @admin_router.callback_query(F.data.startswith("statistics"), any_state)
 @is_main_admin
