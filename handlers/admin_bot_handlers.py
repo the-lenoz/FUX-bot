@@ -99,11 +99,20 @@ async def delete_subscriber(call: types.CallbackQuery, state: FSMContext, bot: B
 @admin_router.message(Command("unsubscribe"))
 @is_main_admin
 async def delete_subscriber_command(message: types.Message, state: FSMContext, bot: Bot):
-    subscriber_id = int(message.text.split()[-1])
+    try:
+        subscriber_id = int(message.text.split()[-1])
+    except ValueError:
+        await message.answer("Использование: /unsubscribe <user_id>")
+        return
     subscription = await subscriptions_repository.get_active_subscription_by_user_id(subscriber_id)
-    await subscriptions_repository.deactivate_subscription(subscription.id)
-    await message.answer(text="Пользователь лишён подписки."
-                                   f" выберите свои дальнейшие действия!", reply_markup=admin_keyboard)
+    if subscription:
+        await subscriptions_repository.deactivate_subscription(subscription.id)
+        await message.answer(text="Пользователь лишён подписки."
+                                       f" выберите свои дальнейшие действия!", reply_markup=admin_keyboard)
+    else:
+        await message.answer(
+            f"Пользователь с id {subscriber_id} не найден среди подписчиков."
+        )
 
 
 @admin_router.callback_query(F.data.startswith("statistics"), any_state)
