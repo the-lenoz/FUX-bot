@@ -195,12 +195,12 @@ class LLMProvider:
         for content in input:
             for part in content.parts:
                 if part.text:
-                    print(part.text[:32] + '...')
-        print("=" * 40)
+                    logger.info(part.text[:32] + '...')
+        logger.info("=" * 40)
         for content in contents:
             for part in content.parts:
                 if part.text:
-                    print(part.text[:32] + '...')
+                    logger.info(part.text[:32] + '...')
 
         response = await google_genai_client.aio.models.generate_content(
             model=self.model_name,

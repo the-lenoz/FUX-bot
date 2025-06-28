@@ -54,6 +54,7 @@ async def send_recommendations(main_bot: Bot):
         if user_request_handler.AI_handler.active_threads.get(user.user_id) \
                 and now - last_event.creation_date >= datetime.timedelta(minutes=120):
             if user.notified_with_recommendation < 3 \
+                    and user_request_handler.AI_handler.messages_count.get(user.user_id) \
                     and user_request_handler.AI_handler.messages_count.get(user.user_id) >= 6 \
                     and user_request_handler.AI_handler.check_is_dialog_psy(user.user_id):
                 await user_request_handler.AI_handler.provide_recommendations(user.user_id, from_notification=True)
