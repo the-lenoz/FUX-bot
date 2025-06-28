@@ -18,7 +18,7 @@ standard_router = Router()
 async def start_problem_conversation(call: CallbackQuery, state: FSMContext, bot: Bot):
     request = UserRequest(
         user_id=call.from_user.id,
-        text="Привет, мне нужен психолог."
+        text="Привет"
     )
     await call.message.delete()
     await user_request_handler.handle(request)
