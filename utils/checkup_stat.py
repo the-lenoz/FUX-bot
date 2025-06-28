@@ -5,6 +5,7 @@ import os
 import random
 import secrets
 from datetime import timedelta, date, datetime
+from io import BytesIO
 from statistics import fmean
 from typing import Literal, List
 
@@ -196,7 +197,7 @@ def generate_emotion_chart(emotion_data=None, dates=None, checkup_type: Literal[
     return buffer.getvalue()
 
 
-def fill_calendar_on_template(year: int, month: int, checkup_type: Literal["emotions", "productivity"], data: List[int]) -> Image.Image:
+def generate_tracking_calendar(year: int, month: int, checkup_type: Literal["emotions", "productivity"], data: List[int]) -> bytes:
     """
     Дорисовывает на готовом шаблоне календарь на указанный месяц и год,
     используя шрифт Roboto и фиксированные координаты.
@@ -204,11 +205,14 @@ def fill_calendar_on_template(year: int, month: int, checkup_type: Literal["emot
     Предполагаемый размер шаблона: 1080x1080 пикселей.
 
     Args:
-        year: Год (например, 2025)
-        month: Месяц (1-12).
+        :param year: Год (например, 2025)
+        :param month: Месяц (1-12).
+        :param data:
+        :param checkup_type:
 
     Returns:
         bytes - буфер, содержащий изображение календаря
+
     """
     # Создаем копию, чтобы не изменять оригинальное изображение
     img = calendar_template_photo.copy()
@@ -296,8 +300,11 @@ def fill_calendar_on_template(year: int, month: int, checkup_type: Literal["emot
                        y + CELL_SIZE / 2), week_avg_str, font=font_week_avg,
                       fill=BLACK_COLOR)
 
-    return img
+    buffer = io.BytesIO()
+    img.convert('RGB').save(buffer, format='PNG')
+    buffer.seek(0)
 
+    return buffer.getvalue()
 
 async def send_weekly_checkup_report(user_id: int, last_date = datetime.now()):
     user = await users_repository.get_user_by_user_id(user_id)
@@ -334,5 +341,43 @@ async def send_weekly_checkup_report(user_id: int, last_date = datetime.now()):
         await main_bot.send_message(
             user_id,
             "Результаты <i>недельного трекинга</i> готовы, но для того, чтобы их увидеть нужна <b>подписка</b>!",
+            reply_markup=get_rec_keyboard(f"tracking-{int(last_date.timestamp())}").as_markup()
+        )
+
+async def send_monthly_checkup_report(user_id: int, last_date = datetime.now()):
+    if await check_is_subscribed(user_id):
+        checkup_type: Literal["emotions", "productivity"]
+        for checkup_type in ("emotions", "productivity"):
+            try:
+                checkup_days = await days_checkups_repository.get_days_checkups_by_user_id(user_id=user_id)
+                checkups_report = []
+
+                send = False
+                for monthday in range(calendar.monthrange(last_date.year, last_date.month)[1]):
+                    day = datetime(year=last_date.year, month=last_date.month, day=monthday)
+                    day_checkup_data = None
+                    for checkup_day in checkup_days:
+                        if checkup_day.creation_date and checkup_day.creation_date.date() == day.date() \
+                                and checkup_day.checkup_type == checkup_type:
+                            day_checkup_data = checkup_day.points
+                            send = True
+                    checkups_report.append(day_checkup_data)
+
+                if send:
+                    await users_repository.user_got_weekly_reports(user_id=user_id)
+                    graphic = generate_tracking_calendar(year=last_date.year, month=last_date.month,
+                                                         data=checkups_report,
+                                                        checkup_type=checkup_type)
+                    await main_bot.send_photo(
+                        photo=BufferedInputFile(file=graphic, filename="graphic.png"),
+                        chat_id=user_id,
+                        caption=f"✅ Трекинг <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за месяц готов!"
+                    )
+            except Exception as e:
+                logging.error(e)
+    else:
+        await main_bot.send_message(
+            user_id,
+            "Результаты <i>месячного трекинга</i> готовы, но для того, чтобы их увидеть нужна <b>подписка</b>!",
             reply_markup=get_rec_keyboard(f"tracking-{int(last_date.timestamp())}").as_markup()
         )
