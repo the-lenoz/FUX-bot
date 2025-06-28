@@ -142,8 +142,8 @@ async def standard_message_document_handler(message: Message, bot: Bot):
     await user_request_handler.handle(request)
 
 
-@standard_router.message(F.video)
-async def standard_message_video_handler(message: Message, bot: Bot):
+@standard_router.message(F.video_note)
+async def standard_message_video_note_handler(message: Message, bot: Bot):
     await message.answer(
         "К сожалению, я пока не умею смотреть <b>видеосообщения</b>"
     )

@@ -25,6 +25,7 @@ GRAY_COLOR = (50, 50, 50)
 BLACK_COLOR = (13, 20, 13)
 DAY_BOX_BG = (255, 255, 255)
 DAY_BOX_BORDER = ORANGE_COLOR
+DAY_BOX_DONE_BG = (255, 239, 203)
 CROSS_COLOR = (200, 200, 200)
 
 # Отступы и координаты (рассчитаны для холста 1080x1080)
@@ -44,6 +45,8 @@ CELL_RADIUS = 20
 CELL_INTERIOR_PADDING = 30
 
 DAY_NUMBER_TEXT_NEGATIVE_PADDING = 14
+
+trophy_image = Image.open("assets/trophy.png").resize((40, 40))
 
 
 # Шрифты Roboto
@@ -238,6 +241,9 @@ def generate_tracking_calendar(year: int, month: int, checkup_type: Literal["emo
     # Ячейки с днями
     # Шаблон уже содержит "ПН, ВТ, ...", мы рисуем сетку под ними
     cal = calendar.monthcalendar(year, month)
+    top_value = 0
+    top_y = 0
+
     for week_idx, week in enumerate(cal):
         y = DAYS_GRID_Y_START + week_idx * (CELL_SIZE + CELL_SPACING_VERTICAL)
         last_week_day = 0
@@ -249,10 +255,8 @@ def generate_tracking_calendar(year: int, month: int, checkup_type: Literal["emo
 
                 x = GRID_START_X + day_idx * (CELL_SIZE + CELL_SPACING_HORIZONTAL)
 
-                # Рисуем ячейку
-                draw.rounded_rectangle([(x, y), (x + CELL_SIZE, y + CELL_SIZE)], radius=CELL_RADIUS,
-                                       fill=ORANGE_COLOR if day_idx == 6 else DAY_BOX_BG,
-                                       outline=DAY_BOX_BORDER)
+
+
 
                 # Рисуем номер дня
                 day_str = str(day)
@@ -265,6 +269,11 @@ def generate_tracking_calendar(year: int, month: int, checkup_type: Literal["emo
                 day_data = data[day - 1] if day <= len(data) else None
 
                 if day_data is None:
+                    # Рисуем ячейку
+                    draw.rounded_rectangle([(x, y), (x + CELL_SIZE, y + CELL_SIZE)], radius=CELL_RADIUS,
+                                           fill=ORANGE_COLOR if day_idx == 6 else DAY_BOX_BG,
+                                           outline=DAY_BOX_BORDER)
+
                     # Рисуем крестик
                     draw.line([(x + CELL_INTERIOR_PADDING, y + CELL_INTERIOR_PADDING),
                                (x + CELL_SIZE - CELL_INTERIOR_PADDING, y + CELL_SIZE - CELL_INTERIOR_PADDING)],
@@ -273,6 +282,10 @@ def generate_tracking_calendar(year: int, month: int, checkup_type: Literal["emo
                                (x + CELL_INTERIOR_PADDING, y + CELL_SIZE - CELL_INTERIOR_PADDING)],
                               fill=CROSS_COLOR, width=5)
                 else:
+                    # Рисуем ячейку
+                    draw.rounded_rectangle([(x, y), (x + CELL_SIZE, y + CELL_SIZE)], radius=CELL_RADIUS,
+                                           fill=ORANGE_COLOR if day_idx == 6 else DAY_BOX_DONE_BG,
+                                           outline=DAY_BOX_BORDER)
                     if checkup_type == "emotions":
                         emoji_levels = {
                             1: "assets/confounded.png",
@@ -298,11 +311,18 @@ def generate_tracking_calendar(year: int, month: int, checkup_type: Literal["emo
         week_data = [d for d in data[max(last_week_day - last_week_length, 0) : last_week_day] if d is not None]
         if week_data:
             week_avg = round(fmean(week_data) * 2)
-            week_avg_str = str(week_avg) + ("/10" if week_avg >= 7 else "/10") # TODO кубок
+            if week_avg > top_value:
+                top_value = week_avg
+                top_y = y
+            week_avg_str = str(week_avg) + "/10"
             week_avg_bbox = draw.textbbox((0, 0), week_avg_str, font=font_week_avg)
-            draw.text((1340 - week_avg_bbox[2] - 50,
-                       y + CELL_SIZE / 2), week_avg_str, font=font_week_avg,
+            draw.text((1340 - week_avg_bbox[2] - 55,
+                       y + CELL_SIZE / 2 - week_avg_bbox[3] / 2), week_avg_str, font=font_week_avg,
                       fill=BLACK_COLOR)
+
+    img.paste(trophy_image, (round(1340 - 45), round(top_y + CELL_SIZE / 2 - 16)), trophy_image)
+
+
 
     buffer = io.BytesIO()
     img.convert('RGB').save(buffer, format='PNG')
@@ -375,7 +395,7 @@ async def send_monthly_checkup_report(user_id: int, last_date = datetime.now()):
                     await main_bot.send_photo(
                         photo=BufferedInputFile(file=graphic, filename="graphic.png"),
                         chat_id=user_id,
-                        caption=f"✅ Трекинг <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за месяц готов!"
+                        caption=f"✅ Трекинг <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за <i>месяц</i> готов!"
                     )
             except Exception as e:
                 logging.error(e)
