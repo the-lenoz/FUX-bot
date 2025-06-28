@@ -53,7 +53,7 @@ try:
     font_subtitle = ImageFont.truetype(FONT_PATH_BOLD, 72)
     font_month_header = ImageFont.truetype(FONT_PATH_BOLD, 56)
     font_day_num = ImageFont.truetype(FONT_PATH_REGULAR, 22)
-    font_week_avg = ImageFont.truetype(FONT_PATH_BOLD, 24)
+    font_week_avg = ImageFont.truetype(FONT_PATH_BOLD, 32)
 except IOError:
     print("Шрифты Roboto-Bold.ttf и Roboto-Regular.ttf не найдены. Используются шрифты по умолчанию.")
     font_subtitle = ImageFont.load_default()
@@ -250,14 +250,16 @@ def generate_tracking_calendar(year: int, month: int, checkup_type: Literal["emo
                 x = GRID_START_X + day_idx * (CELL_SIZE + CELL_SPACING_HORIZONTAL)
 
                 # Рисуем ячейку
-                draw.rounded_rectangle([(x, y), (x + CELL_SIZE, y + CELL_SIZE)], radius=CELL_RADIUS, fill=DAY_BOX_BG,
+                draw.rounded_rectangle([(x, y), (x + CELL_SIZE, y + CELL_SIZE)], radius=CELL_RADIUS,
+                                       fill=ORANGE_COLOR if day_idx == 6 else DAY_BOX_BG,
                                        outline=DAY_BOX_BORDER)
 
                 # Рисуем номер дня
                 day_str = str(day)
                 day_num_bbox = draw.textbbox((0, 0), day_str, font=font_day_num)
                 draw.text((x + (CELL_SIZE - day_num_bbox[2]) / 2,
-                           y + CELL_SIZE + day_num_bbox[3] - DAY_NUMBER_TEXT_NEGATIVE_PADDING), day_str, font=font_day_num,
+                           y + CELL_SIZE + day_num_bbox[3] - DAY_NUMBER_TEXT_NEGATIVE_PADDING), day_str,
+                          font=font_day_num,
                           fill=GRAY_COLOR)
 
                 day_data = data[day - 1] if day <= len(data) else None
@@ -265,9 +267,11 @@ def generate_tracking_calendar(year: int, month: int, checkup_type: Literal["emo
                 if day_data is None:
                     # Рисуем крестик
                     draw.line([(x + CELL_INTERIOR_PADDING, y + CELL_INTERIOR_PADDING),
-                               (x + CELL_SIZE - CELL_INTERIOR_PADDING, y + CELL_SIZE - CELL_INTERIOR_PADDING)], fill=CROSS_COLOR, width=3)
+                               (x + CELL_SIZE - CELL_INTERIOR_PADDING, y + CELL_SIZE - CELL_INTERIOR_PADDING)],
+                              fill=CROSS_COLOR, width=5)
                     draw.line([(x + CELL_SIZE - CELL_INTERIOR_PADDING, y + CELL_INTERIOR_PADDING),
-                               (x + CELL_INTERIOR_PADDING, y + CELL_SIZE - CELL_INTERIOR_PADDING)], fill=CROSS_COLOR, width=3)
+                               (x + CELL_INTERIOR_PADDING, y + CELL_SIZE - CELL_INTERIOR_PADDING)],
+                              fill=CROSS_COLOR, width=5)
                 else:
                     if checkup_type == "emotions":
                         emoji_levels = {
