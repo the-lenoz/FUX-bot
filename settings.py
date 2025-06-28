@@ -3,6 +3,7 @@ import re
 from datetime import datetime, date, timedelta
 from os import getenv
 
+from PIL import Image
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import FSInputFile
@@ -245,6 +246,10 @@ mental_problems_function = {
         "strict": True
     }
 }
+
+calendar_template_photo = Image.open(
+    "assets/calendar_template.png"
+).resize((1340, 1340))
 
 mental_helper_photo = FSInputFile("assets/mental_helper_photo.jpg")
 

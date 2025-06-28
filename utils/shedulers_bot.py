@@ -120,46 +120,6 @@ async def notification_reminder(main_bot: Bot):
             except:
                 continue
 
-
-async def month_checkups(main_bot: Bot):
-    users = await users_repository.select_all_users()
-    for user in users:
-        # print(user.user_id)
-        pass
-        '''
-        try:
-            user_ended_checkups = await checkup_repository.get_ended_checkups_per_month_by_user_id(user_id=user.user_id)
-            if user_ended_checkups is not None and len(user_ended_checkups) > 0:
-                await main_bot.send_message(chat_id=user.user_id, text="📙Высылаю тебе итоги твоих трекингов за месяц")
-                for checkup in user_ended_checkups:
-                    try:
-                        checkup_days = await days_checkups_repository.get_days_checkups_by_checkup_id(checkup_id=checkup.id)
-                        points = [day.points for day in checkup_days]
-                        checkup_type = checkup.type_checkup
-                        graphic = generate_emotion_chart(emotion_data=points, dates=[day.date_end_day.strftime("%d-%m") for day in checkup_days],
-                                                         checkup_type=checkup_type)
-                        # graphic = generate_emotion_chart(checkup_type=type_checkup)
-                        graphic_bytes = graphic.getvalue()
-                        # Отправка голосового сообщения
-                        if checkup_type == "emotions":
-                            text = f"Cредний показатель твоего эмоционального состояния - {emoji_dict.get(round(sum(points) / len(points)))}"
-                        else:
-                            text = f"Cредний показатель твоей продуктивности - {speed_dict.get(round(sum(points) / len(points)))}"
-                        await main_bot.send_photo(
-                            photo=BufferedInputFile(file=graphic_bytes, filename="graphic.png"),
-                            chat_id=user.user_id,
-                            caption=f"📙Итоговый результат пройденного тобой трекинга.\n\n{text}"
-                        )
-                        await asyncio.sleep(1)
-                    except:
-                        print(f"\n\nВОЗНИКЛА ОШИБКА ОТПРАВКИ ПОЛЬЗОВАТЕЛЮ {user.user_id}\n\n" + traceback.format_exc() + "\n\n")
-                        continue
-
-        except:
-            print(traceback.format_exc())
-            continue
-        '''
-
 async def break_power_mode(main_bot: Bot):
     users = await users_repository.select_all_users()
     now_date = datetime.datetime.now()

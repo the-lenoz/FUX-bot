@@ -1,24 +1,77 @@
+import calendar
 import io
 import logging
 import os
 import random
 import secrets
 from datetime import timedelta, date, datetime
+from statistics import fmean
+from typing import Literal, List
 
 import matplotlib.pyplot as plt
-from PIL import Image, ImageFont
+from PIL import Image, ImageFont, ImageDraw
 from aiogram.types import BufferedInputFile
 
 from bots import main_bot
 from data.keyboards import buy_sub_keyboard, get_rec_keyboard
 from db.repository import days_checkups_repository, users_repository
+from settings import calendar_template_photo
 from utils.subscription import check_is_subscribed
 
+# Цвета
+ORANGE_COLOR = (254, 110, 0)
+GRAY_COLOR = (50, 50, 50)
+BLACK_COLOR = (13, 20, 13)
+DAY_BOX_BG = (255, 255, 255)
+DAY_BOX_BORDER = ORANGE_COLOR
+CROSS_COLOR = (200, 200, 200)
 
-def generate_emotion_chart(emotion_data=None, dates=None, checkup_type: str | None = None):
+# Отступы и координаты (рассчитаны для холста 1080x1080)
+PADDING = 60
+SUBTITLE_Y = 150
+ORANGE_BAR_Y = 330
+ORANGE_BAR_HEIGHT = 80
+DAYS_GRID_Y_START = 480  # Y-координата для начала отрисовки ячеек дней
+
+# Размеры сетки
+CELL_SIZE = 90
+CELL_SPACING_HORIZONTAL = 49
+CELL_SPACING_VERTICAL = 45
+GRID_WIDTH = 7 * CELL_SIZE + 6 * CELL_SPACING_HORIZONTAL
+GRID_START_X = (1330 - GRID_WIDTH) / 2
+CELL_RADIUS = 20
+CELL_INTERIOR_PADDING = 30
+
+DAY_NUMBER_TEXT_NEGATIVE_PADDING = 14
+
+
+# Шрифты Roboto
+try:
+    FONT_PATH_BOLD = "assets/fonts/Roboto-Bold.ttf"
+    FONT_PATH_REGULAR = "assets/fonts/Roboto-Regular.ttf"
+    font_subtitle = ImageFont.truetype(FONT_PATH_BOLD, 72)
+    font_month_header = ImageFont.truetype(FONT_PATH_BOLD, 56)
+    font_day_num = ImageFont.truetype(FONT_PATH_REGULAR, 22)
+    font_week_avg = ImageFont.truetype(FONT_PATH_BOLD, 24)
+except IOError:
+    print("Шрифты Roboto-Bold.ttf и Roboto-Regular.ttf не найдены. Используются шрифты по умолчанию.")
+    font_subtitle = ImageFont.load_default()
+    font_month_header = ImageFont.load_default()
+    font_day_num = ImageFont.load_default()
+    font_week_avg = ImageFont.load_default()
+
+# Локализация
+MONTH_NAMES_RU = {
+    1: "Январь", 2: "Февраль", 3: "Март", 4: "Апрель", 5: "Май", 6: "Июнь",
+    7: "Июль", 8: "Август", 9: "Сентябрь", 10: "Октябрь", 11: "Ноябрь", 12: "Декабрь"
+}
+MONTH_NAMES_RU_CAPS = {k: v.upper() for k, v in MONTH_NAMES_RU.items()}
+
+
+def generate_emotion_chart(emotion_data=None, dates=None, checkup_type: Literal["emotions", "productivity"] | None = None):
     """
     Принимает список эмоций (от 1 до 5) длиной 7 элементов.
-    Возвращает график в виде io.BytesIO (для отправки через Telegram-бота).
+    Возвращает график в виде bytes (для отправки через Telegram-бота).
     """
     # Для тестирования, если данные не переданы
     if emotion_data is None:
@@ -88,10 +141,6 @@ def generate_emotion_chart(emotion_data=None, dates=None, checkup_type: str | No
     for spine in ax.spines.values():
         spine.set_visible(False)
 
-    # Исправляем размещение "НЕДЕЛЬНЫЙ ОТЧЁТ ГОТОВ!" внизу справа
-    # ax.text(0.85, -0.07, 'НЕДЕЛЬНЫЙ ОТЧЁТ ГОТОВ!', ha='right', va='center', transform=ax.transAxes,
-    #         fontsize=10, color='orangered', weight='bold')
-
     # Сохраняем график во временный файл
     temp_filename = f'temp_chart_{secrets.token_hex(32)}.png'
     plt.tight_layout()
@@ -135,46 +184,6 @@ def generate_emotion_chart(emotion_data=None, dates=None, checkup_type: str | No
         # Вставляем эмодзи на основное изображение с сохранением прозрачности
         img.paste(scaled_emoji, (x_pos, y_pos), scaled_emoji)
 
-    # Добавляем иконку записной книжки в верхний правый угол
-    # try:
-    #     # Создаем иконку записной книжки
-    #     notebook_overlay = Image.new('RGBA', img.size, (0, 0, 0, 0))
-    #     notebook_draw = ImageDraw.Draw(notebook_overlay)
-    #
-    #     # Позиция для иконки (верхний правый угол)
-    #     notebook_x, notebook_y = width * 0.85, height * 0.3
-    #
-    #     # Рисуем оранжевую рамку блокнота
-    #     notebook_width, notebook_height = 50, 70
-    #     notebook_draw.rectangle(
-    #         [(notebook_x - notebook_width / 2, notebook_y - notebook_height / 2),
-    #          (notebook_x + notebook_width / 2, notebook_y + notebook_height / 2)],
-    #         outline='orangered', fill=(255, 255, 255, 200), width=3
-    #     )
-    #
-    #     # Добавляем линии на блокноте
-    #     line_spacing = 10
-    #     for i in range(4):
-    #         y = notebook_y - notebook_height / 3 + i * line_spacing
-    #         notebook_draw.line(
-    #             [(notebook_x - notebook_width / 3, y), (notebook_x + notebook_width / 3, y)],
-    #             fill='purple', width=2
-    #         )
-    #
-    #     # Добавляем "скрепку" вверху
-    #     clip_color = 'purple'
-    #     notebook_draw.rectangle(
-    #         [(notebook_x - 5, notebook_y - notebook_height / 2 - 5),
-    #          (notebook_x + 5, notebook_y - notebook_height / 2)],
-    #         fill=clip_color, outline=None
-    #     )
-    #
-    #     # Объединяем с основным изображением
-    #     img = Image.alpha_composite(img, notebook_overlay)
-
-    # except Exception as e:
-    #     print(f"Ошибка при создании иконки блокнота: {e}")
-
     # Сохраняем в буфер
     buffer = io.BytesIO()
     img.convert('RGB').save(buffer, format='PNG')
@@ -184,7 +193,110 @@ def generate_emotion_chart(emotion_data=None, dates=None, checkup_type: str | No
     if os.path.exists(temp_filename):
         os.remove(temp_filename)
 
-    return buffer
+    return buffer.getvalue()
+
+
+def fill_calendar_on_template(year: int, month: int, checkup_type: Literal["emotions", "productivity"], data: List[int]) -> Image.Image:
+    """
+    Дорисовывает на готовом шаблоне календарь на указанный месяц и год,
+    используя шрифт Roboto и фиксированные координаты.
+
+    Предполагаемый размер шаблона: 1080x1080 пикселей.
+
+    Args:
+        year: Год (например, 2025)
+        month: Месяц (1-12).
+
+    Returns:
+        bytes - буфер, содержащий изображение календаря
+    """
+    # Создаем копию, чтобы не изменять оригинальное изображение
+    img = calendar_template_photo.copy()
+    draw = ImageDraw.Draw(img)
+
+    # --- 2. Отрисовка недостающих элементов ---
+
+    # Подзаголовок (название месяца и год)
+    # Шаблон уже содержит "ТВОЙ ОТЧЁТ ЗА МЕСЯЦ", мы добавляем дату под ним
+    subtitle_text = f"{MONTH_NAMES_RU[month]}, {year} г."
+    subtitle_bbox = draw.textbbox((0, 0), subtitle_text, font=font_subtitle)
+    subtitle_x = (1340 - subtitle_bbox[2]) / 2  # Выравнивание по центру
+    draw.text((subtitle_x, SUBTITLE_Y), subtitle_text, font=font_subtitle, fill=ORANGE_COLOR)
+
+    # Название месяца в оранжевой плашке
+    month_header_text = MONTH_NAMES_RU_CAPS[month]
+    month_header_bbox = draw.textbbox((0, 0), month_header_text, font=font_month_header)
+    draw.text(
+        ((1340 - month_header_bbox[2]) / 2, ORANGE_BAR_Y + (ORANGE_BAR_HEIGHT - month_header_bbox[3]) / 2),
+        month_header_text, font=font_month_header, fill=DAY_BOX_BG
+    )
+
+    # Ячейки с днями
+    # Шаблон уже содержит "ПН, ВТ, ...", мы рисуем сетку под ними
+    cal = calendar.monthcalendar(year, month)
+    for week_idx, week in enumerate(cal):
+        y = DAYS_GRID_Y_START + week_idx * (CELL_SIZE + CELL_SPACING_VERTICAL)
+        last_week_day = 0
+        last_week_length = 0
+        for day_idx, day in enumerate(week):
+            if day != 0:
+                last_week_day = day
+                last_week_length += 1
+
+                x = GRID_START_X + day_idx * (CELL_SIZE + CELL_SPACING_HORIZONTAL)
+
+                # Рисуем ячейку
+                draw.rounded_rectangle([(x, y), (x + CELL_SIZE, y + CELL_SIZE)], radius=CELL_RADIUS, fill=DAY_BOX_BG,
+                                       outline=DAY_BOX_BORDER)
+
+                # Рисуем номер дня
+                day_str = str(day)
+                day_num_bbox = draw.textbbox((0, 0), day_str, font=font_day_num)
+                draw.text((x + (CELL_SIZE - day_num_bbox[2]) / 2,
+                           y + CELL_SIZE + day_num_bbox[3] - DAY_NUMBER_TEXT_NEGATIVE_PADDING), day_str, font=font_day_num,
+                          fill=GRAY_COLOR)
+
+                day_data = data[day - 1] if day <= len(data) else None
+
+                if day_data is None:
+                    # Рисуем крестик
+                    draw.line([(x + CELL_INTERIOR_PADDING, y + CELL_INTERIOR_PADDING),
+                               (x + CELL_SIZE - CELL_INTERIOR_PADDING, y + CELL_SIZE - CELL_INTERIOR_PADDING)], fill=CROSS_COLOR, width=3)
+                    draw.line([(x + CELL_SIZE - CELL_INTERIOR_PADDING, y + CELL_INTERIOR_PADDING),
+                               (x + CELL_INTERIOR_PADDING, y + CELL_SIZE - CELL_INTERIOR_PADDING)], fill=CROSS_COLOR, width=3)
+                else:
+                    if checkup_type == "emotions":
+                        emoji_levels = {
+                            1: "assets/confounded.png",
+                            2: "assets/unamused.png",
+                            3: "assets/neutral_face.png",
+                            4: "assets/relieved.png",
+                            5: "assets/star-struck.png"
+                        }
+                    else:
+                        emoji_levels = {
+                            1: "assets/wood.png",  # полено — вообще не движется
+                            2: "assets/snail.png",  # улитка — очень медленно
+                            3: "assets/bicycle.png",  # велосипед — средне
+                            4: "assets/car.png",  # машина — быстро
+                            5: "assets/rocket.png"  # ракета — очень быстро
+                        }
+
+                    emoji_img = Image.open(emoji_levels[day_data])
+                    scaled_emoji = emoji_img.resize((70, 70), Image.Resampling.LANCZOS)
+                    # Вставляем эмодзи на основное изображение с сохранением прозрачности
+                    img.paste(scaled_emoji, (round(x + CELL_INTERIOR_PADDING - 20), round(y + CELL_INTERIOR_PADDING - 20)), scaled_emoji)
+
+        week_data = [d for d in data[max(last_week_day - last_week_length, 0) : last_week_day] if d is not None]
+        if week_data:
+            week_avg = round(fmean(week_data) * 2)
+            week_avg_str = str(week_avg) + ("/10" if week_avg >= 7 else "/10") # TODO кубок
+            week_avg_bbox = draw.textbbox((0, 0), week_avg_str, font=font_week_avg)
+            draw.text((1340 - week_avg_bbox[2] - 20,
+                       y + CELL_SIZE / 2), week_avg_str, font=font_week_avg,
+                      fill=BLACK_COLOR)
+
+    return img
 
 
 async def send_weekly_checkup_report(user_id: int, last_date = datetime.now()):
@@ -212,7 +324,7 @@ async def send_weekly_checkup_report(user_id: int, last_date = datetime.now()):
                                                      dates=["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"],
                                                      checkup_type=checkup_type)
                     await main_bot.send_photo(
-                        photo=BufferedInputFile(file=graphic.getvalue(), filename="graphic.png"),
+                        photo=BufferedInputFile(file=graphic, filename="graphic.png"),
                         chat_id=user.user_id,
                         caption=f"✅ Трекинг <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за неделю готов!"
                     )
