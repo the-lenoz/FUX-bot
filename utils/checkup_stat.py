@@ -395,7 +395,7 @@ async def send_monthly_checkup_report(user_id: int, last_date = datetime.now()):
                     await main_bot.send_photo(
                         photo=BufferedInputFile(file=graphic, filename="graphic.png"),
                         chat_id=user_id,
-                        caption=f"✅ Трекинг <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за <i>месяц</i> готов!"
+                        caption=f"✅ Трекинг <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за <u>месяц</u> готов!"
                     )
             except Exception as e:
                 logging.error(e)
