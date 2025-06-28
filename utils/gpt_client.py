@@ -100,7 +100,7 @@ class LLMProvider:
         return types.Part.from_uri(file_uri=image_file.uri, mime_type=image_file.mime_type)
 
     async def create_voice_content_item(self, voice: UserFile) -> types.Part:
-        voice_file = await google_genai_client.aio.files.upload(
+        """voice_file = await google_genai_client.aio.files.upload(
             file=BytesIO(voice.file_bytes),
             config=types.UploadFileConfig(mime_type=mimetypes.guess_type(voice.filename)[0])
         )
@@ -117,11 +117,24 @@ class LLMProvider:
                     ]
                 )
             ]
-        )
+        )"""
 
-        return await self.create_text_content_item(
-            text=transcript
-        )
+        try:
+            transcript = await openAI_client.audio.transcriptions.create(
+                model="whisper-1",
+                file=(voice.filename, voice.file_bytes),
+                language="ru"
+            )
+            return await self.create_text_content_item(
+                text=transcript.text
+            )
+
+        except openai.BadRequestError:
+            return await self.create_text_content_item(
+                text=" "
+            )
+
+
 
     @staticmethod
     async def create_text_content_item(text: str) -> types.Part:
@@ -195,12 +208,12 @@ class LLMProvider:
         for content in input:
             for part in content.parts:
                 if part.text:
-                    print(part.text[:32] + '...')
-        print("=" * 40)
+                    logger.info(part.text[:32] + '...')
+        logger.info("=" * 40)
         for content in contents:
             for part in content.parts:
                 if part.text:
-                    print(part.text[:32] + '...')
+                    logger.info(part.text[:32] + '...')
 
         response = await google_genai_client.aio.models.generate_content(
             model=self.model_name,

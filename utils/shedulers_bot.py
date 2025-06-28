@@ -7,7 +7,7 @@ import utils.checkups
 from data.keyboards import buy_sub_keyboard, notification_keyboard, main_keyboard
 from db.repository import subscriptions_repository, users_repository, checkup_repository, events_repository
 from settings import payment_photo, how_are_you_photo, menu_photo
-from utils.checkup_stat import send_weekly_checkup_report
+from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report
 from utils.gpt_distributor import user_request_handler
 from utils.messages_provider import send_subscription_end_message
 
@@ -54,6 +54,7 @@ async def send_recommendations(main_bot: Bot):
         if user_request_handler.AI_handler.active_threads.get(user.user_id) \
                 and now - last_event.creation_date >= datetime.timedelta(minutes=120):
             if user.notified_with_recommendation < 3 \
+                    and user_request_handler.AI_handler.messages_count.get(user.user_id) \
                     and user_request_handler.AI_handler.messages_count.get(user.user_id) >= 6 \
                     and user_request_handler.AI_handler.check_is_dialog_psy(user.user_id):
                 await user_request_handler.AI_handler.provide_recommendations(user.user_id, from_notification=True)
@@ -119,46 +120,6 @@ async def notification_reminder(main_bot: Bot):
             except:
                 continue
 
-
-async def month_checkups(main_bot: Bot):
-    users = await users_repository.select_all_users()
-    for user in users:
-        # print(user.user_id)
-        pass
-        '''
-        try:
-            user_ended_checkups = await checkup_repository.get_ended_checkups_per_month_by_user_id(user_id=user.user_id)
-            if user_ended_checkups is not None and len(user_ended_checkups) > 0:
-                await main_bot.send_message(chat_id=user.user_id, text="📙Высылаю тебе итоги твоих трекингов за месяц")
-                for checkup in user_ended_checkups:
-                    try:
-                        checkup_days = await days_checkups_repository.get_days_checkups_by_checkup_id(checkup_id=checkup.id)
-                        points = [day.points for day in checkup_days]
-                        checkup_type = checkup.type_checkup
-                        graphic = generate_emotion_chart(emotion_data=points, dates=[day.date_end_day.strftime("%d-%m") for day in checkup_days],
-                                                         checkup_type=checkup_type)
-                        # graphic = generate_emotion_chart(checkup_type=type_checkup)
-                        graphic_bytes = graphic.getvalue()
-                        # Отправка голосового сообщения
-                        if checkup_type == "emotions":
-                            text = f"Cредний показатель твоего эмоционального состояния - {emoji_dict.get(round(sum(points) / len(points)))}"
-                        else:
-                            text = f"Cредний показатель твоей продуктивности - {speed_dict.get(round(sum(points) / len(points)))}"
-                        await main_bot.send_photo(
-                            photo=BufferedInputFile(file=graphic_bytes, filename="graphic.png"),
-                            chat_id=user.user_id,
-                            caption=f"📙Итоговый результат пройденного тобой трекинга.\n\n{text}"
-                        )
-                        await asyncio.sleep(1)
-                    except:
-                        print(f"\n\nВОЗНИКЛА ОШИБКА ОТПРАВКИ ПОЛЬЗОВАТЕЛЮ {user.user_id}\n\n" + traceback.format_exc() + "\n\n")
-                        continue
-
-        except:
-            print(traceback.format_exc())
-            continue
-        '''
-
 async def break_power_mode(main_bot: Bot):
     users = await users_repository.select_all_users()
     now_date = datetime.datetime.now()
@@ -172,6 +133,8 @@ async def break_power_mode(main_bot: Bot):
                             and user.power_mode_days != 0:
                         if checkup.last_date_send.weekday() == 6:
                             await send_weekly_checkup_report(user.user_id, checkup.last_date_send)
+                        if (checkup.last_date_send + datetime.timedelta(days=1)).month != checkup.last_date_send.month:
+                            await send_monthly_checkup_report(user.user_id, checkup.last_date_send)
                         await users_repository.update_power_mode_days_by_user_id(user_id=user.user_id, new_days=0)
                         await main_bot.send_message(chat_id=user.user_id,
                                                     text="Ох… твои орехи раскололись🌰, но "

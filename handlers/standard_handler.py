@@ -18,7 +18,7 @@ standard_router = Router()
 async def start_problem_conversation(call: CallbackQuery, state: FSMContext, bot: Bot):
     request = UserRequest(
         user_id=call.from_user.id,
-        text="Привет, мне нужен психолог."
+        text="Привет"
     )
     await call.message.delete()
     await user_request_handler.handle(request)
@@ -141,3 +141,9 @@ async def standard_message_document_handler(message: Message, bot: Bot):
 
     await user_request_handler.handle(request)
 
+
+@standard_router.message(F.video_note)
+async def standard_message_video_note_handler(message: Message, bot: Bot):
+    await message.answer(
+        "К сожалению, я пока не умею смотреть <b>видеосообщения</b>"
+    )

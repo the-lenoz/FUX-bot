@@ -1,4 +1,5 @@
 from aiogram import Router, types, Bot, F
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import any_state
 from aiogram.types import InlineKeyboardButton, BufferedInputFile
@@ -93,6 +94,26 @@ async def delete_subscriber(call: types.CallbackQuery, state: FSMContext, bot: B
     await call.message.answer(text="Пользователь лишён подписки."
                                  f" выберите свои дальнейшие действия!", reply_markup=admin_keyboard)
     await call.message.delete()
+
+
+@admin_router.message(Command("unsubscribe"))
+@is_main_admin
+async def delete_subscriber_command(message: types.Message, state: FSMContext, bot: Bot):
+    try:
+        subscriber_id = int(message.text.split()[-1])
+    except ValueError:
+        await message.answer("Использование: /unsubscribe <user_id>")
+        return
+    subscription = await subscriptions_repository.get_active_subscription_by_user_id(subscriber_id)
+    if subscription:
+        await subscriptions_repository.deactivate_subscription(subscription.id)
+        await message.answer(text="Пользователь лишён подписки."
+                                       f" выберите свои дальнейшие действия!", reply_markup=admin_keyboard)
+    else:
+        await message.answer(
+            f"Пользователь с id {subscriber_id} не найден среди подписчиков."
+        )
+
 
 @admin_router.callback_query(F.data.startswith("statistics"), any_state)
 @is_main_admin

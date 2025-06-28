@@ -21,7 +21,7 @@ from handlers.sub_management_handler import sub_management_router
 from handlers.system_settings_handler import system_settings_router
 from handlers.user_handler import user_router
 from utils.shedulers_bot import edit_activation_sub, send_checkup, notification_reminder, \
-    break_power_mode, month_checkups, send_recommendations
+    break_power_mode, send_recommendations
 from utils.user_middleware import EventLoggerMiddleware
 
 logging.basicConfig(
@@ -62,13 +62,6 @@ async def main():
     scheduler.add_job(func=send_recommendations, args=[main_bot], trigger="interval",
                       minutes=10, max_instances=20, misfire_grace_time=120)
     scheduler.add_job(notification_reminder, trigger='interval', hours=1, args=[main_bot])
-    scheduler.add_job(
-        month_checkups,
-        trigger=CronTrigger(day="last", hour=12, minute=0),
-        args=[main_bot],
-        id="monthly_checkups_report",
-        replace_existing=True,
-    )
 
     scheduler.start()
     main_bot_task = asyncio.create_task(main_bot_dispatcher.start_polling(main_bot, polling_timeout=3))

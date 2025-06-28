@@ -9,7 +9,7 @@ from data.keyboards import cancel_keyboard, menu_keyboard, keyboard_for_pay, gen
 from db.repository import users_repository, subscriptions_repository, operation_repository, recommendations_repository
 from settings import InputMessage, is_valid_email, sub_description_photo, you_fooher_photo, \
     sub_description_photo2
-from utils.checkup_stat import send_weekly_checkup_report
+from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report
 from utils.gpt_client import LLMProvider
 from utils.gpt_distributor import user_request_handler
 from utils.payment_for_services import create_payment, check_payment
@@ -141,7 +141,12 @@ async def check_payment_callback(message: types.CallbackQuery, state: FSMContext
             )
         elif mode_type.startswith("tracking"):
             date = datetime.datetime.fromtimestamp(int(mode_type.split('-')[1]))
-            await send_weekly_checkup_report(user_id, date)
+
+            if date.weekday() == 6:
+                await send_weekly_checkup_report(user_id, date)
+            if (date + datetime.timedelta(days=1)).month != date.month:
+                await send_monthly_checkup_report(user_id, date)
+
     else:
         try:
             payment = await operation_repository.get_operation_by_operation_id(payment_id)
