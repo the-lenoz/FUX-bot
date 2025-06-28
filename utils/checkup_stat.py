@@ -53,7 +53,7 @@ try:
     font_subtitle = ImageFont.truetype(FONT_PATH_BOLD, 72)
     font_month_header = ImageFont.truetype(FONT_PATH_BOLD, 56)
     font_day_num = ImageFont.truetype(FONT_PATH_REGULAR, 22)
-    font_week_avg = ImageFont.truetype(FONT_PATH_BOLD, 32)
+    font_week_avg = ImageFont.truetype(FONT_PATH_BOLD, 40)
 except IOError:
     print("Шрифты Roboto-Bold.ttf и Roboto-Regular.ttf не найдены. Используются шрифты по умолчанию.")
     font_subtitle = ImageFont.load_default()
@@ -300,7 +300,7 @@ def generate_tracking_calendar(year: int, month: int, checkup_type: Literal["emo
             week_avg = round(fmean(week_data) * 2)
             week_avg_str = str(week_avg) + ("/10" if week_avg >= 7 else "/10") # TODO кубок
             week_avg_bbox = draw.textbbox((0, 0), week_avg_str, font=font_week_avg)
-            draw.text((1340 - week_avg_bbox[2] - 20,
+            draw.text((1340 - week_avg_bbox[2] - 50,
                        y + CELL_SIZE / 2), week_avg_str, font=font_week_avg,
                       fill=BLACK_COLOR)
 
