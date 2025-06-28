@@ -7,7 +7,7 @@ import utils.checkups
 from data.keyboards import buy_sub_keyboard, notification_keyboard, main_keyboard
 from db.repository import subscriptions_repository, users_repository, checkup_repository, events_repository
 from settings import payment_photo, how_are_you_photo, menu_photo
-from utils.checkup_stat import send_weekly_checkup_report
+from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report
 from utils.gpt_distributor import user_request_handler
 from utils.messages_provider import send_subscription_end_message
 
@@ -133,6 +133,8 @@ async def break_power_mode(main_bot: Bot):
                             and user.power_mode_days != 0:
                         if checkup.last_date_send.weekday() == 6:
                             await send_weekly_checkup_report(user.user_id, checkup.last_date_send)
+                        if (checkup.last_date_send + datetime.timedelta(days=1)).month != checkup.last_date_send.month:
+                            await send_monthly_checkup_report(user.user_id, checkup.last_date_send)
                         await users_repository.update_power_mode_days_by_user_id(user_id=user.user_id, new_days=0)
                         await main_bot.send_message(chat_id=user.user_id,
                                                     text="Ох… твои орехи раскололись🌰, но "

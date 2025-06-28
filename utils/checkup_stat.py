@@ -353,7 +353,7 @@ async def send_monthly_checkup_report(user_id: int, last_date = datetime.now()):
                 checkups_report = []
 
                 send = False
-                for monthday in range(calendar.monthrange(last_date.year, last_date.month)[1]):
+                for monthday in range(1, calendar.monthrange(last_date.year, last_date.month)[1] + 1):
                     day = datetime(year=last_date.year, month=last_date.month, day=monthday)
                     day_checkup_data = None
                     for checkup_day in checkup_days:
