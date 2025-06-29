@@ -1,3 +1,4 @@
+from asyncio import Lock
 from datetime import datetime, timedelta
 
 from aiogram import Router, F
@@ -15,6 +16,9 @@ from utils.checkups_ended import sent_today
 from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report
 
 checkup_router = Router()
+
+
+user_checkup_locks = {}
 
 
 @checkup_router.callback_query(F.data == "go_checkup")
@@ -48,45 +52,47 @@ async def get_checkup_question(call: CallbackQuery, state: FSMContext):
 @checkup_router.callback_query(F.data.startswith("enter_emoji|"), any_state)
 async def enter_emoji_user(call: CallbackQuery, state: FSMContext):
     user_id = call.from_user.id
-    update_power_mode = True
-    user = await users_repository.get_user_by_user_id(user_id=user_id)
-    call_data = call.data.split("|")[1:]
-    emoji, checkup_id, day_checkup_id, type_checkup = (int(call_data[0]), int(call_data[1]),
-                                                       int(call_data[2]), call_data[3])
-    day_checkup = await days_checkups_repository.get_day_checkup_by_day_checkup_id(day_checkup_id=day_checkup_id)
-    await days_checkups_repository.update_data_by_day_checkup_id(day_checkup_id=day_checkup_id,
-                                                                 points=emoji)
-    user_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id)
-    for checkup in user_checkups:
-        checkup_days = await days_checkups_repository.get_days_checkups_by_checkup_id(checkup.id)
-        checkup_sent_in_call_checkup_day = False
-        for checkup_day_data in checkup_days:
-            if checkup_day_data.creation_date.date() == day_checkup.creation_date.date():
-                checkup_sent_in_call_checkup_day = True
-                if not checkup_day_data.date_end_day:
-                    update_power_mode = False
-        if not checkup_sent_in_call_checkup_day:
-            update_power_mode = False
+    if not user_checkup_locks.get(user_id):
+        user_checkup_locks[user_id] = Lock()
+    async with user_checkup_locks[user_id]:
+        update_power_mode = True
+        user = await users_repository.get_user_by_user_id(user_id=user_id)
+        call_data = call.data.split("|")[1:]
+        emoji, checkup_id, day_checkup_id, type_checkup = (int(call_data[0]), int(call_data[1]),
+                                                           int(call_data[2]), call_data[3])
+        day_checkup = await days_checkups_repository.get_day_checkup_by_day_checkup_id(day_checkup_id=day_checkup_id)
+        await days_checkups_repository.update_data_by_day_checkup_id(day_checkup_id=day_checkup_id,
+                                                                     points=emoji)
+        user_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id)
+        for checkup in user_checkups:
+            checkup_days = await days_checkups_repository.get_days_checkups_by_checkup_id(checkup.id)
+            checkup_sent_in_call_checkup_day = False
+            for checkup_day_data in checkup_days:
+                if checkup_day_data.creation_date.date() == day_checkup.creation_date.date():
+                    checkup_sent_in_call_checkup_day = True
+                    if not checkup_day_data.date_end_day:
+                        update_power_mode = False
+            if not checkup_sent_in_call_checkup_day:
+                update_power_mode = False
 
 
+        await call.message.answer("Спасибо за ответ!", reply_markup=menu_keyboard.as_markup()   )
+        if update_power_mode:
+            if day_checkup.creation_date.weekday() == 6:
+                await send_weekly_checkup_report(user.user_id, day_checkup.creation_date)
+            if (day_checkup.creation_date + timedelta(days=1)).month != day_checkup.creation_date.month:
+                    await send_monthly_checkup_report(user.user_id, day_checkup.creation_date)
 
-    await call.message.answer("Спасибо за ответ!", reply_markup=menu_keyboard.as_markup()   )
-    if update_power_mode:
-        if day_checkup.creation_date.weekday() == 6:
-            await send_weekly_checkup_report(user.user_id, day_checkup.creation_date)
-        if (day_checkup.creation_date + timedelta(days=1)).month != day_checkup.creation_date.month:
-                await send_monthly_checkup_report(user.user_id, day_checkup.creation_date)
-
-        await users_repository.update_power_mode_days_by_user_id(user_id, user.power_mode_days + 1)
-        await call.message.answer(f"{user.power_mode_days + 1} орех подряд!🌰 Продолжай с трекингом в том же духе")
+            await users_repository.update_power_mode_days_by_user_id(user_id, user.power_mode_days + 1)
+            await call.message.answer(f"{user.power_mode_days + 1} орех подряд!🌰 Продолжай с трекингом в том же духе")
 
 
-    if type_checkup == "emotions":
-        await users_repository.user_tracked_emotions(user_id)
-    elif type_checkup == "productivity":
-        await users_repository.user_tracked_productivity(user_id)
+        if type_checkup == "emotions":
+            await users_repository.user_tracked_emotions(user_id)
+        elif type_checkup == "productivity":
+            await users_repository.user_tracked_productivity(user_id)
 
-    await call.message.delete()
+        await call.message.delete()
 
 
 @checkup_router.callback_query(F.data == "checkups", any_state)
