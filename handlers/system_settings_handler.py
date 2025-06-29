@@ -32,6 +32,7 @@ async def send_system_settings(user_id: int):
     if user_checkups:
         keyboard.row(InlineKeyboardButton(text="Настройка трекингов", callback_data="settings|checkups"))
     keyboard.row(InlineKeyboardButton(text="Формат общения", callback_data="settings|temperature"))
+    keyboard.row(InlineKeyboardButton(text="Настройки аккаунта", callback_data="settings|account"))
     keyboard.row(menu_button)
     await main_bot.send_message(chat_id=user_id,
                                 text="Я также умею <b>говорить прямо</b> — без сюсюканья и лишней мягкости.🎯\n\n"
@@ -42,22 +43,28 @@ async def send_system_settings(user_id: int):
                                 "🌰доступно только в платной версии.",
                                 reply_markup=keyboard.as_markup())
 
-@system_settings_router.callback_query(F.data.startswith("settings"), any_state)
-async def set_system_settings(call: CallbackQuery, state: FSMContext):
+
+@system_settings_router.callback_query(F.data.startswith("settings|account"), any_state)
+async def account_settings(call: CallbackQuery, state: FSMContext):
+    pass
+
+@system_settings_router.callback_query(F.data.startswith("settings|checkups"), any_state)
+async def set_system_settings_checkups(call: CallbackQuery, state: FSMContext):
     user_id = call.from_user.id
     await user_request_handler.AI_handler.exit(user_id)
-    type_setting = call.data.split("|")[1]
-    if type_setting == "checkups":
-        user_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id=user_id)
-        keyboard = InlineKeyboardBuilder()
-        for checkup in user_checkups:
-            text = "🤩Трекинг эмоций" if checkup.type_checkup == "emotions" else "🚀Трекинг продуктивности"
-            keyboard.row(InlineKeyboardButton(text=text, callback_data=f"edit_checkup|{checkup.id}"))
-        keyboard.row(menu_button)
-        await call.message.answer("Выбери трекинг, время которого, ты хочешь изменить⚙️",
-                                  reply_markup=keyboard.as_markup())
-        await call.message.delete()
-        return
+    user_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id=user_id)
+    keyboard = InlineKeyboardBuilder()
+    for checkup in user_checkups:
+        text = "🤩Трекинг эмоций" if checkup.type_checkup == "emotions" else "🚀Трекинг продуктивности"
+        keyboard.row(InlineKeyboardButton(text=text, callback_data=f"edit_checkup|{checkup.id}"))
+    keyboard.row(menu_button)
+    await call.message.answer("Выбери трекинг, время которого, ты хочешь изменить⚙️",
+                              reply_markup=keyboard.as_markup())
+    await call.message.delete()
+
+@system_settings_router.callback_query(F.data.startswith("settings|temperature"), any_state)
+async def set_system_settings_temperature(call: CallbackQuery, state: FSMContext):
+    user_id = call.from_user.id
     user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
     if user_sub:
         await call.message.answer_photo(photo=temperature_ai_photo,
