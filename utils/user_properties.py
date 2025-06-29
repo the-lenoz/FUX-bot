@@ -39,6 +39,7 @@ async def delete_user(user_id: int):
         await checkup_repository.delete_checkup_by_checkup_id(checkup.id)
 
     subscription = await subscriptions_repository.get_active_subscription_by_user_id(user_id)
-    await subscriptions_repository.deactivate_subscription(subscription.id)
+    if subscription:
+        await subscriptions_repository.deactivate_subscription(subscription.id)
 
-    await users_repository.delete_user_by_id(user_id)
+    await users_repository.delete_user_by_id(user_id) # DO NOT USE

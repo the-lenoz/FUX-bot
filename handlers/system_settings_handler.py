@@ -66,9 +66,9 @@ async def account_settings(call: CallbackQuery, state: FSMContext):
         InlineKeyboardButton(text=f"Пол: {'Мужской' if user.gender == 'male' else ('Женский' if user.gender == 'female' else 'НЕ УСТАНОВЛЕН')}",
                              callback_data="settings|edit|gender")
     )
-    keyboard.row(
-        InlineKeyboardButton(text="Удалить аккаунт", callback_data="account|delete|0")
-    )
+    #keyboard.row(
+    #    InlineKeyboardButton(text="Удалить аккаунт", callback_data="account|delete|0")
+    #)
     await call.message.answer(
         text="Здесь можно менять свои данные",
         reply_markup=keyboard.as_markup()
@@ -211,7 +211,8 @@ async def enter_new_checkup_time(message: Message, state: FSMContext):
                          reply_markup=menu_keyboard.as_markup())
 
 
-@system_settings_router.callback_query(F.data.startswith("account|delete"), any_state)
+
+@system_settings_router.callback_query(F.data.startswith("account|delete"), any_state) # DO NOT USE
 async def delete_account(call: CallbackQuery, state: FSMContext):
     confirm = int(call.data.split('|')[-1])
     if confirm:
