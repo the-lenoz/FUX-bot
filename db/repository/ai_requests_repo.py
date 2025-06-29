@@ -1,7 +1,7 @@
 from datetime import timedelta, datetime
 from typing import Sequence, Optional
 
-from sqlalchemy import select, or_, func, case
+from sqlalchemy import select, or_, func, case, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.engine import DatabaseEngine
@@ -80,6 +80,14 @@ class AiRequestsRepository:
                 sql = select(AiRequests).where(or_(AiRequests.user_id == user_id))
                 query = await session.execute(sql)
                 return query.scalars().all()
+
+    async def delete_requests_by_user_id(self, user_id: int):
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = delete(AiRequests).where(or_(AiRequests.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
 
     async def get_ai_requests_statistics(self) -> dict[str, dict[str, int]]:
         """

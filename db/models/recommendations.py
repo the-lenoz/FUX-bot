@@ -8,7 +8,7 @@ from .user import User
 class Recommendation(BaseModel, CleanModel):
     __tablename__ = 'recommendations'
 
-    user_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=False)
+    user_id = Column(BigInteger, nullable=False)
     problem_id = Column(BigInteger, ForeignKey('mental_problems.id'), nullable=False)
 
     text = Column(String)

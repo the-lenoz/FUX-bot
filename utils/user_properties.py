@@ -1,5 +1,7 @@
+from aiogram.loggers import event
+
 from db.repository import users_repository, mental_problems_repository, exercises_user_repository, admin_repository, \
-    ai_requests_repository, checkup_repository, days_checkups_repository, subscriptions_repository
+    ai_requests_repository, checkup_repository, days_checkups_repository, subscriptions_repository, events_repository
 from utils.prompts import SENSITIVE_PROMPT, STRAIGHTFORWARD_PROMPT
 
 
@@ -36,7 +38,16 @@ async def delete_user(user_id: int):
 
     checkups = await checkup_repository.get_checkups_by_user_id(user_id)
     for checkup in checkups:
+        await days_checkups_repository.delete_checkup_days_by_checkup_id(checkup.id)
         await checkup_repository.delete_checkup_by_checkup_id(checkup.id)
+
+    await ai_requests_repository.delete_requests_by_user_id(user_id)
+
+    await events_repository.delete_events_by_user_id(user_id)
+
+    await exercises_user_repository.delete_exercises_by_user_id(user_id)
+
+    await mental_problems_repository.delete_problems_by_user_id(user_id)
 
     subscription = await subscriptions_repository.get_active_subscription_by_user_id(user_id)
     await subscriptions_repository.deactivate_subscription(subscription.id)

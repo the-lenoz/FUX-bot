@@ -9,7 +9,7 @@ class RecommendationsUser(BaseModel, CleanModel):
     """Таблица запросов к gpt"""
     __tablename__ = 'recommendations_user'
 
-    user_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=False)
+    user_id = Column(BigInteger, nullable=False)
     user: Mapped[User] = relationship("User", backref=__tablename__, cascade='all', lazy='subquery')
     recommendation = Column(String, nullable=False)
     shipped = Column(Boolean, nullable=False, default=False)
