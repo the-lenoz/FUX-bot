@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from typing import Sequence
 
 import deprecated
-from sqlalchemy import select, or_, update, func
+from sqlalchemy import select, or_, update, func, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.engine import DatabaseEngine
@@ -259,6 +259,14 @@ class UserRepository:
                 sql = update(User).values({
                     User.received_weekly_tracking_reports: user.received_weekly_tracking_reports + 1
                 }).where(or_(User.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
+    async def delete_user_by_id(self, user_id: int):
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = delete(User).where(or_(User.user_id == user_id))
                 await session.execute(sql)
                 await session.commit()
 

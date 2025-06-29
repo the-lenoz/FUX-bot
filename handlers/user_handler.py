@@ -166,7 +166,6 @@ async def cancel_promo(call: CallbackQuery, state: FSMContext):
     await call.message.answer("В каком роде мне к тебе обращаться?🧡",
                               reply_markup=choice_gender_keyboard.as_markup())
     await call.message.delete()
-    await users_repository.update_initials_id_by_user_id(user_id=call.from_user.id, first_name="NoName")
 
 
 @user_router.message(F.text, InputMessage.enter_initials)
@@ -201,10 +200,14 @@ async def user_enter_gender(call: CallbackQuery, state: FSMContext):
 async def user_choice_age(call: CallbackQuery, state: FSMContext):
     age = call.data.split("|")[1]
     user_id = call.from_user.id
-    paginator = MechanicsPaginator(page_now=1)
-    keyboard = paginator.generate_now_page()
-    await call.message.answer_photo(photo=photos_pages.get(paginator.page_now),
-                                    reply_markup=keyboard)
-    await call.message.delete()
+    user = await users_repository.get_user_by_user_id(user_id)
+    if not user.full_registration:
+        paginator = MechanicsPaginator(page_now=1)
+        keyboard = paginator.generate_now_page()
+        await call.message.answer_photo(photo=photos_pages.get(paginator.page_now),
+                                        reply_markup=keyboard)
+        await call.message.delete()
+    else:
+        await start_menu(call, state)
     await users_repository.update_age_by_user_id(user_id=user_id, age=age)
     await users_repository.update_full_reg_by_user_id(user_id=user_id)

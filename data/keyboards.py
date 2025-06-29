@@ -223,6 +223,10 @@ type_users_mailing_keyboard.row(InlineKeyboardButton(text='Без подписк
 type_users_mailing_keyboard.row(InlineKeyboardButton(text="Отмена", callback_data="cancel"))
 
 
+account_keyboard = InlineKeyboardBuilder()
+account_keyboard.row(InlineKeyboardButton(text="Настройки аккаунта", callback_data="settings|account"))
+account_keyboard.row(InlineKeyboardButton(text="В меню", callback_data="start_menu"))
+
 statistics_keyboard = InlineKeyboardBuilder()
 statistics_keyboard.row(InlineKeyboardButton(text="Количество новых пользователей", callback_data="statistics|users"))
 statistics_keyboard.row(InlineKeyboardButton(text="Количество пользователей с активной подпиской", callback_data="statistics|active_subs"))
