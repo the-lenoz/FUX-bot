@@ -1,6 +1,6 @@
 from typing import Optional, Sequence
 
-from sqlalchemy import select, and_, or_, update, desc, delete
+from sqlalchemy import select, and_, or_, update, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.engine import DatabaseEngine
@@ -70,13 +70,5 @@ class MentalProblemsRepository:
                 sql = update(MentalProblem).values({
                     MentalProblem.worked_out: problem.worked_out + 1
                 }).where(or_(MentalProblem.id == problem_id))
-                await session.execute(sql)
-                await session.commit()
-
-    async def delete_problems_by_user_id(self, user_id: int):
-        async with self.session_maker() as session:
-            session: AsyncSession
-            async with session.begin():
-                sql = delete(MentalProblem).where(or_(MentalProblem.user_id == user_id))
                 await session.execute(sql)
                 await session.commit()

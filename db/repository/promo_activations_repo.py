@@ -25,6 +25,13 @@ class PromoActivationsRepository:
                     return False
                 return True
 
+    # async def get_promo_info_by_user_id(self, user_id: int) -> Optional[PromoActivations]:
+    #     async with self.session_maker() as session:
+    #         session: AsyncSession
+    #         async with session.begin():
+    #             sql = select(PromoActivations).where(or_(PromoActivations.bring_user_id == user_id))
+    #             query = await session.execute(sql)
+    #             return query.scalars().one_or_none()
 
     async def select_all_activations(self) -> Sequence[PromoActivations]:
         async with self.session_maker() as session:
@@ -41,3 +48,15 @@ class PromoActivationsRepository:
                 sql = select(PromoActivations).where(or_(PromoActivations.promo_id == promo_id))
                 query = await session.execute(sql)
                 return query.scalars().all()
+
+    # async def update_activation_by_promo_id(self, promo_id: int):
+    #     async with self.session_maker() as session:
+    #         session: AsyncSession
+    #         async with session.begin():
+    #             sql = update(PromoActivations).values({
+    #                 PromoActivations.activated: True,
+    #             }).where(or_(PromoActivations.id == promo_id))
+    #             await session.execute(sql)
+    #             await session.commit()
+
+
