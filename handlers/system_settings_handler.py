@@ -69,6 +69,9 @@ async def account_settings(call: CallbackQuery, state: FSMContext):
     #keyboard.row(
     #    InlineKeyboardButton(text="Удалить аккаунт", callback_data="account|delete|0")
     #)
+    keyboard.row(
+        InlineKeyboardButton(text="В меню", callback_data="start_menu")
+    )
     await call.message.answer(
         text="Здесь можно менять свои данные",
         reply_markup=keyboard.as_markup()
