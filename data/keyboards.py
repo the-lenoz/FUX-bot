@@ -3,7 +3,7 @@ from datetime import timedelta, datetime
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from db.repository import checkup_repository, days_checkups_repository, subscriptions_repository
+from db.repository import checkup_repository, days_checkups_repository, subscriptions_repository, users_repository
 from settings import emoji_dict, speed_dict, table_names
 from utils.checkups_ended import sent_today
 
@@ -100,6 +100,7 @@ exercises_keyboard.row(menu_button)
 async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
     keyboard = InlineKeyboardBuilder()
     user_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id=user_id)
+    user = await users_repository.get_user_by_user_id(user_id)
     finish_checkup_day = True
     for checkup in user_checkups:
         active_day = await days_checkups_repository.get_active_day_checkup_by_checkup_id(checkup_id=checkup.id)
@@ -123,7 +124,8 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
         sub_button_text = (f"Моя подписка (до"
                 f" {end_date.strftime('%d.%m.%y')})")
     keyboard.row(InlineKeyboardButton(text=sub_button_text, callback_data="sub_management"))
-    keyboard.row(InlineKeyboardButton(text="НАЧАТЬ ДИАЛОГ👉", callback_data="start_problem_conversation"))
+    if user.messages_count == 0:
+        keyboard.row(InlineKeyboardButton(text="👉НАЧАТЬ ОБЩЕНИЕ", callback_data="start_problem_conversation"))
     return keyboard
 
 
