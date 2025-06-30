@@ -11,7 +11,8 @@ import utils.checkups
 from data.keyboards import checkup_type_keyboard, buy_sub_keyboard, menu_keyboard, menu_button, \
     delete_checkups_keyboard
 from db.repository import users_repository, subscriptions_repository, checkup_repository, days_checkups_repository
-from settings import mechanic_checkup, InputMessage, is_valid_time, checkups_types_photo
+from settings import mechanic_checkup, InputMessage, is_valid_time, checkups_types_photo, checkup_emotions_photo, \
+    checkup_productivity_photo
 from utils.checkups_ended import sent_today
 from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report
 
@@ -118,8 +119,9 @@ async def start_checkups(call: CallbackQuery, state: FSMContext):
                                                                                        type_checkup=type_checkup)
     user = await users_repository.get_user_by_user_id(user_id=user_id)
     if user_checkup is None:
-        await call.message.answer("Для того, чтобы продолжить, введи, пожалуйста время в которое, тебе отправлять"
-                                  " трекинг. Пример: 14:45",
+        await call.message.answer_photo(photo=checkup_emotions_photo if type_checkup == "emotions" else checkup_productivity_photo,
+                                        caption="Для того, чтобы продолжить, введи, пожалуйста время в которое, тебе отправлять"
+                                  " трекинг. Пример: 21:00",
                                   reply_markup=menu_keyboard.as_markup())
         await state.set_state(InputMessage.enter_time_checkup)
         await state.update_data(type_checkup=type_checkup)
