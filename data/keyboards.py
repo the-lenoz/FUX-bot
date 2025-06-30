@@ -115,7 +115,6 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
     keyboard.row(InlineKeyboardButton(text="📜О сервисе", callback_data="all_mechanics"))
     keyboard.add(InlineKeyboardButton(text="⚙️Настройки", callback_data="system_settings"))
     keyboard.row(InlineKeyboardButton(text="🎁 Реферальная система", callback_data="referral_system"))
-    keyboard.row(InlineKeyboardButton(text="НАЧАТЬ ДИАЛОГ👉", callback_data="start_problem_conversation"))
     user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
     if user_sub is None:
         sub_button_text = "💸 Купить подписку"
@@ -124,6 +123,7 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
         sub_button_text = (f"Моя подписка (до"
                 f" {end_date.strftime('%d.%m.%y')})")
     keyboard.row(InlineKeyboardButton(text=sub_button_text, callback_data="sub_management"))
+    keyboard.row(InlineKeyboardButton(text="НАЧАТЬ ДИАЛОГ👉", callback_data="start_problem_conversation"))
     return keyboard
 
 
