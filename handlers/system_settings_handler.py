@@ -188,7 +188,7 @@ async def edit_checkup_time_call(call: CallbackQuery, state: FSMContext):
     await state.set_state(InputMessage.edit_time_checkup)
     await state.update_data(checkup_id=checkup_id)
     await call.message.answer_photo(photo=checkup_emotions_photo if checkup.type_checkup == "emotions" else checkup_productivity_photo,
-                                        caption="Для того, чтобы продолжить, введи, пожалуйста время в которое, тебе отправлять трекинг " + ("эмоций" if checkup.type_checkup == "emotions" else "продуктивности") +
+                                        caption="Для того, чтобы продолжить, введи, пожалуйста время в которое, тебе отправлять <u>трекинг</u> " + ("<b>эмоций</b>" if checkup.type_checkup == "emotions" else "<b>продуктивности</b>") +
                               f"\n\nСейчас данный трекинг отправляется в {checkup.time_checkup.strftime('%H:%M')}",
                               reply_markup=menu_keyboard.as_markup())
     await call.message.delete()
