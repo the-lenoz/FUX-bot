@@ -121,7 +121,7 @@ async def start_checkups(call: CallbackQuery, state: FSMContext):
     if user_checkup is None:
         await call.message.answer_photo(photo=checkup_emotions_photo if type_checkup == "emotions" else checkup_productivity_photo,
                                         caption="Для того, чтобы продолжить, введи, пожалуйста время в которое, тебе отправлять"
-                                  " трекинг. Пример: 21:00",
+                                  " трекинг" + ("эмоций" if type_checkup == "emotions" else "продуктивности") + ". Пример: 21:00",
                                   reply_markup=menu_keyboard.as_markup())
         await state.set_state(InputMessage.enter_time_checkup)
         await state.update_data(type_checkup=type_checkup)
