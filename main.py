@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 async def main():
     db_engine = DatabaseEngine()
     await db_engine.proceed_schemas()
-    print(await main_bot.get_me())
+    logger.info(await main_bot.get_me())
     await main_bot.delete_webhook(drop_pending_updates=True)
 
     main_bot_dispatcher.update.middleware(EventLoggerMiddleware())
@@ -46,7 +46,7 @@ async def main():
                        payment_router, checkup_router,information_router, system_settings_router, exercises_router,
                        paginator_router, standard_router)
 
-    print(await admin_bot.get_me())
+    logger.info(await admin_bot.get_me())
     await admin_bot.delete_webhook(drop_pending_updates=True)
 
     admin_bot_dispatcher.include_routers(admin_router)
