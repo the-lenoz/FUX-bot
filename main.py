@@ -37,7 +37,6 @@ logger = logging.getLogger(__name__)
 
 async def main():
     db_engine = DatabaseEngine()
-    # try:
     await db_engine.proceed_schemas()
     print(await main_bot.get_me())
     await main_bot.delete_webhook(drop_pending_updates=True)
