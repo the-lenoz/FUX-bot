@@ -6,10 +6,13 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from bots import main_bot
-from data.keyboards import menu_keyboard, menu_button, ai_temperature_keyboard
+from data.keyboards import menu_keyboard, menu_button, ai_temperature_keyboard, age_keyboard, choice_gender_keyboard, \
+    account_keyboard, cancel_keyboard
 from db.repository import users_repository, checkup_repository, subscriptions_repository
-from settings import InputMessage, ai_temperature_text, is_valid_time, temperature_ai_photo
+from settings import InputMessage, ai_temperature_text, is_valid_time, temperature_ai_photo, AccountSettingsStates, \
+    is_valid_email, checkup_emotions_photo, checkup_productivity_photo
 from utils.gpt_distributor import user_request_handler
+from utils.user_properties import delete_user
 
 system_settings_router = Router()
 
@@ -32,6 +35,7 @@ async def send_system_settings(user_id: int):
     if user_checkups:
         keyboard.row(InlineKeyboardButton(text="Настройка трекингов", callback_data="settings|checkups"))
     keyboard.row(InlineKeyboardButton(text="Формат общения", callback_data="settings|temperature"))
+    keyboard.row(InlineKeyboardButton(text="Настройки аккаунта", callback_data="settings|account"))
     keyboard.row(menu_button)
     await main_bot.send_message(chat_id=user_id,
                                 text="Я также умею <b>говорить прямо</b> — без сюсюканья и лишней мягкости.🎯\n\n"
@@ -42,22 +46,114 @@ async def send_system_settings(user_id: int):
                                 "🌰доступно только в платной версии.",
                                 reply_markup=keyboard.as_markup())
 
-@system_settings_router.callback_query(F.data.startswith("settings"), any_state)
-async def set_system_settings(call: CallbackQuery, state: FSMContext):
+@system_settings_router.callback_query(F.data.startswith("settings|account"), any_state)
+async def account_settings(call: CallbackQuery, state: FSMContext):
+    await state.clear()
+    user = await users_repository.get_user_by_user_id(call.from_user.id)
+
+    keyboard = InlineKeyboardBuilder()
+    if user.email:
+        keyboard.row(InlineKeyboardButton(text=f"Email: {user.email}", callback_data="settings|edit|email"))
+    keyboard.row(
+        InlineKeyboardButton(text=f"Имя: {user.name if user.name else 'НЕ УСТАНОВЛЕНО'}",
+                             callback_data="settings|edit|name")
+    )
+    keyboard.row(
+        InlineKeyboardButton(text=f"Возраст: {user.age if user.age else 'НЕ УСТАНОВЛЕН'}",
+                             callback_data="settings|edit|age")
+    )
+    keyboard.row(
+        InlineKeyboardButton(text=f"Пол: {'Мужской' if user.gender == 'male' else ('Женский' if user.gender == 'female' else 'НЕ УСТАНОВЛЕН')}",
+                             callback_data="settings|edit|gender")
+    )
+    #keyboard.row(
+    #    InlineKeyboardButton(text="Удалить аккаунт", callback_data="account|delete|0")
+    #)
+    keyboard.row(
+        InlineKeyboardButton(text="В меню", callback_data="start_menu")
+    )
+    await call.message.answer(
+        text="Здесь можно менять свои данные",
+        reply_markup=keyboard.as_markup()
+    )
+
+    await call.message.delete()
+
+@system_settings_router.callback_query(F.data.startswith("settings|edit"), any_state)
+async def edit_profile(call: CallbackQuery, state: FSMContext):
+    edit_type = call.data.split('|')[-1]
+    if edit_type == 'name':
+        await call.message.answer(
+            "Введи своё имя:",
+            reply_markup=cancel_keyboard.as_markup()
+        )
+        await state.set_state(AccountSettingsStates.edit_name)
+    elif edit_type == 'email':
+        await call.message.answer(
+            "Введи новый email:",
+            reply_markup=cancel_keyboard.as_markup()
+        )
+        await state.set_state(AccountSettingsStates.edit_email)
+    elif edit_type == 'age':
+        await call.message.answer("Какой возрастной диапазон тебе ближе?",
+                                  reply_markup=age_keyboard.as_markup())
+        await state.set_state(AccountSettingsStates.edit_age)
+    elif edit_type == 'gender':
+        await call.message.answer("В каком роде мне к тебе обращаться?🧡",
+                             reply_markup=choice_gender_keyboard.as_markup())
+        await state.set_state(AccountSettingsStates.edit_gender)
+    await call.message.delete()
+
+@system_settings_router.message(F.text, AccountSettingsStates.edit_name)
+async def edit_account_name(message: Message, state: FSMContext, bot: Bot):
+    name = message.text.strip()
+    await users_repository.update_initials_id_by_user_id(
+        user_id=message.from_user.id,
+        first_name=name
+    )
+    await state.clear()
+
+    await message.answer(
+        "Имя сохранено!",
+        reply_markup=account_keyboard.as_markup()
+    )
+
+@system_settings_router.message(F.text, AccountSettingsStates.edit_email)
+async def edit_account_email(message: Message, state: FSMContext, bot: Bot):
+    email = message.text.strip()
+    if await is_valid_email(email):
+        await users_repository.update_email_by_user_id(
+            user_id=message.from_user.id,
+            email=email
+        )
+        await state.clear()
+
+        await message.answer(
+            "Новый email сохранён!",
+            reply_markup=account_keyboard.as_markup()
+        )
+    else:
+        await message.answer(
+            "Email некорректен, попробуй ещё раз:"
+        )
+
+@system_settings_router.callback_query(F.data.startswith("settings|checkups"), any_state)
+async def set_system_settings_checkups(call: CallbackQuery, state: FSMContext):
     user_id = call.from_user.id
     await user_request_handler.AI_handler.exit(user_id)
-    type_setting = call.data.split("|")[1]
-    if type_setting == "checkups":
-        user_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id=user_id)
-        keyboard = InlineKeyboardBuilder()
-        for checkup in user_checkups:
-            text = "🤩Трекинг эмоций" if checkup.type_checkup == "emotions" else "🚀Трекинг продуктивности"
-            keyboard.row(InlineKeyboardButton(text=text, callback_data=f"edit_checkup|{checkup.id}"))
-        keyboard.row(menu_button)
-        await call.message.answer("Выбери трекинг, время которого, ты хочешь изменить⚙️",
-                                  reply_markup=keyboard.as_markup())
-        await call.message.delete()
-        return
+    user_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id=user_id)
+    keyboard = InlineKeyboardBuilder()
+    for checkup in user_checkups:
+        text = "🤩Трекинг эмоций" if checkup.type_checkup == "emotions" else "🚀Трекинг продуктивности"
+        keyboard.row(InlineKeyboardButton(text=text, callback_data=f"edit_checkup|{checkup.id}"))
+    keyboard.row(menu_button)
+    await call.message.answer("Выбери трекинг, время которого, ты хочешь изменить⚙️",
+                              reply_markup=keyboard.as_markup())
+    await call.message.delete()
+
+@system_settings_router.callback_query(F.data.startswith("settings|temperature"), any_state)
+async def set_system_settings_temperature(call: CallbackQuery, state: FSMContext):
+    user_id = call.from_user.id
     user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
     if user_sub:
         await call.message.answer_photo(photo=temperature_ai_photo,
@@ -91,7 +187,8 @@ async def edit_checkup_time_call(call: CallbackQuery, state: FSMContext):
     checkup = await checkup_repository.get_checkup_by_checkup_id(checkup_id=checkup_id)
     await state.set_state(InputMessage.edit_time_checkup)
     await state.update_data(checkup_id=checkup_id)
-    await call.message.answer("Для того, чтобы продолжить, введи, пожалуйста время в которое, тебе отправлять трекинг"
+    await call.message.answer_photo(photo=checkup_emotions_photo if checkup.type_checkup == "emotions" else checkup_productivity_photo,
+                                        caption="Для того, чтобы продолжить, введи, пожалуйста время в которое, тебе отправлять <u>трекинг</u> " + ("<b>эмоций</b>" if checkup.type_checkup == "emotions" else "<b>продуктивности</b>") +
                               f"\n\nСейчас данный трекинг отправляется в {checkup.time_checkup.strftime('%H:%M')}",
                               reply_markup=menu_keyboard.as_markup())
     await call.message.delete()
@@ -117,3 +214,19 @@ async def enter_new_checkup_time(message: Message, state: FSMContext):
     await message.answer("Введенное тобой время имеет неправильный формат. Пример - 13:45. Попробуй еще раз",
                          reply_markup=menu_keyboard.as_markup())
 
+
+
+@system_settings_router.callback_query(F.data.startswith("account|delete"), any_state) # DO NOT USE
+async def delete_account(call: CallbackQuery, state: FSMContext):
+    confirm = int(call.data.split('|')[-1])
+    if confirm:
+        await delete_user(call.from_user.id)
+        await call.message.answer("Аккаунт успешно удалён!\nЧтобы начать общение, нажми /start")
+    else:
+        keyboard = InlineKeyboardBuilder()
+        keyboard.row(InlineKeyboardButton(text="Отмена", callback_data="settings|account"))
+        keyboard.row(InlineKeyboardButton(text="Да, удалить", callback_data="account|delete|1"))
+        await call.message.answer(
+            "Ты точно хочешь удалить аккаунт?",
+            reply_markup=keyboard.as_markup()
+        )

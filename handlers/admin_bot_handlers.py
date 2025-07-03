@@ -76,7 +76,8 @@ async def manage_subscriptions(message: types.Message, state: FSMContext, bot: B
     for user in users:
         if user.user_id in active_subscriber_ids:
             keyboard.row(
-                InlineKeyboardButton(text=f"{user.username}", callback_data=f"delete_subscriber|{user.user_id}")
+                InlineKeyboardButton(text=f"@{user.username if user.username else '--БЕЗ НИКНЕЙМА--'}",
+                                     callback_data=f"delete_subscriber|{user.user_id}")
             )
 
     keyboard.row(InlineKeyboardButton(text="Отмена", callback_data="cancel"))

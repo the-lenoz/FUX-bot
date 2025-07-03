@@ -25,7 +25,5 @@ def is_main_admin(func):
                                              f" добавления: {message.from_user.id}")
         except Exception:
             print(traceback.format_exc())
-        # finally:
-        #     # print("========================= " + func.__name__ + " ============================")
 
     return wrapper

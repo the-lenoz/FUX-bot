@@ -21,7 +21,7 @@ from handlers.sub_management_handler import sub_management_router
 from handlers.system_settings_handler import system_settings_router
 from handlers.user_handler import user_router
 from utils.shedulers_bot import edit_activation_sub, send_checkup, notification_reminder, \
-    break_power_mode, send_recommendations
+    break_power_mode, send_recommendations, send_user_statistics
 from utils.user_middleware import EventLoggerMiddleware
 
 logging.basicConfig(
@@ -37,9 +37,8 @@ logger = logging.getLogger(__name__)
 
 async def main():
     db_engine = DatabaseEngine()
-    # try:
     await db_engine.proceed_schemas()
-    print(await main_bot.get_me())
+    logger.info(await main_bot.get_me())
     await main_bot.delete_webhook(drop_pending_updates=True)
 
     main_bot_dispatcher.update.middleware(EventLoggerMiddleware())
@@ -47,7 +46,7 @@ async def main():
                        payment_router, checkup_router,information_router, system_settings_router, exercises_router,
                        paginator_router, standard_router)
 
-    print(await admin_bot.get_me())
+    logger.info(await admin_bot.get_me())
     await admin_bot.delete_webhook(drop_pending_updates=True)
 
     admin_bot_dispatcher.include_routers(admin_router)
@@ -62,6 +61,11 @@ async def main():
     scheduler.add_job(func=send_recommendations, args=[main_bot], trigger="interval",
                       minutes=10, max_instances=20, misfire_grace_time=120)
     scheduler.add_job(notification_reminder, trigger='interval', hours=1, args=[main_bot])
+    scheduler.add_job(
+        send_user_statistics,
+        trigger=CronTrigger(hour=22),
+        args=[admin_bot]
+    )
 
     scheduler.start()
     main_bot_task = asyncio.create_task(main_bot_dispatcher.start_polling(main_bot, polling_timeout=3))

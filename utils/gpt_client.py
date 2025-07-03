@@ -2,7 +2,6 @@ import logging
 import mimetypes
 import os
 from io import BytesIO
-from pprint import pprint
 from typing import Literal, Dict, List
 
 import httpx
