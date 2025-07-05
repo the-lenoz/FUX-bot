@@ -1,6 +1,7 @@
 import logging
 import mimetypes
 import os
+import secrets
 from io import BytesIO
 from typing import Literal, Dict, List
 
@@ -8,7 +9,8 @@ import httpx
 import openai
 import pydub
 from aiogram.types import BufferedInputFile
-from google.cloud import texttospeech
+from google.cloud import texttospeech, storage
+from google.cloud.storage import transfer_manager
 from google.cloud.texttospeech import SynthesisInput, VoiceSelectionParams, SsmlVoiceGender, AudioConfig, \
     AudioEncoding, ListVoicesRequest
 from google.genai import types, Client
@@ -40,6 +42,8 @@ openAI_client = AsyncOpenAI(api_key=openai_api_key) if proxy_url is None or prox
 google_genai_client = Client(http_options=HttpOptions(api_version="v1"))
 
 tts_client = texttospeech.TextToSpeechClient() # TODO - async
+
+storage_client = storage.Client()
 
 class ModelChatMessage(BaseModel):
     role: Literal["user", "assistant", "developer", "system"]
@@ -91,11 +95,17 @@ class LLMProvider:
 
     @staticmethod
     async def create_document_content_item(document: UserFile):
-        document_file = await google_genai_client.aio.files.upload(
-            file=BytesIO(document.file_bytes),
-            config=types.UploadFileConfig(mime_type="application/pdf")
+
+        bucket = storage_client.bucket("fuxfiles")
+        name = secrets.token_hex(16) + document.filename
+        blob = bucket.blob(name)
+
+        blob.upload_from_string(
+            data=document.file_bytes,
+            content_type="application/pdf"
         )
-        return types.Part.from_uri(file_uri=document_file.uri, mime_type=document_file.mime_type)
+
+        return types.Part.from_uri(file_uri=f"gs://fuxfiles/{name}", mime_type="application/pdf")
 
     @staticmethod
     async def create_image_content_item(image: UserFile) -> types.Part:
