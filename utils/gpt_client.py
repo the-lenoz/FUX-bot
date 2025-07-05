@@ -8,6 +8,9 @@ import httpx
 import openai
 import pydub
 from aiogram.types import BufferedInputFile
+from google.cloud import texttospeech
+from google.cloud.texttospeech_v1 import SynthesisInput, VoiceSelectionParams, SsmlVoiceGender, AudioConfig, \
+    AudioEncoding, ListVoicesRequest
 from google.genai import types, Client
 from google.genai.types import HttpOptions
 from openai import AsyncOpenAI
@@ -16,6 +19,7 @@ from pydantic import BaseModel
 from settings import openai_api_key, gemini_api_key
 from utils.prompts import SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT
 from utils.user_request_types import UserFile
+
 
 BASIC_MODEL = "gemini-2.5-flash-lite-preview-06-17"
 ADVANCED_MODEL = "gemini-2.5-flash"
@@ -34,6 +38,8 @@ openAI_client = AsyncOpenAI(api_key=openai_api_key) if proxy_url is None or prox
     AsyncOpenAI(http_client=httpx.AsyncClient(proxy=proxy_url), api_key=openai_api_key)
 
 google_genai_client = Client(http_options=HttpOptions(api_version="v1"))
+
+tts_client = texttospeech.TextToSpeechAsyncClient()
 
 class ModelChatMessage(BaseModel):
     role: Literal["user", "assistant", "developer", "system"]
@@ -144,35 +150,19 @@ class LLMProvider:
 
     @staticmethod
     async def generate_speech(text: str) -> BufferedInputFile:
-        response = await google_genai_client.aio.models.generate_content(
-            model=TTS_MODEL,
-            contents=text,
-            config=types.GenerateContentConfig(
-                response_modalities=["AUDIO"],
-                speech_config=types.SpeechConfig(
-                    voice_config=types.VoiceConfig(
-                        prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                            voice_name='Puck',
-                        )
-                    )
-                ),
-            )
+        synthesis_input = SynthesisInput(text=text)
+        voice = VoiceSelectionParams(
+            language_code="ru-RU", name="ru-RU-Wavenet-D"
         )
-        audio_segment = pydub.AudioSegment(
-            data=response.candidates[0].content.parts[0].inline_data.data,
-            sample_width=2,  # 16-bit PCM
-            frame_rate=24000,
-            channels=1
+        audio_config = AudioConfig(
+            audio_encoding=AudioEncoding.MP3
         )
-
-        opus_buffer = BytesIO()
-        audio_segment.export(opus_buffer, format="opus", codec="libopus", bitrate="64k")
-
-        # Seek to the beginning of the BytesIO object so it can be read from
-        opus_buffer.seek(0)
+        response = await tts_client.synthesize_speech(
+            input=synthesis_input, voice=voice, audio_config=audio_config
+        )
 
         return BufferedInputFile(
-            opus_buffer.read(),
+            response.audio_content,
             "voice.ogg"
         )
 
