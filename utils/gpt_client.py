@@ -9,7 +9,7 @@ import openai
 import pydub
 from aiogram.types import BufferedInputFile
 from google.cloud import texttospeech
-from google.cloud.texttospeech_v1 import SynthesisInput, VoiceSelectionParams, SsmlVoiceGender, AudioConfig, \
+from google.cloud.texttospeech import SynthesisInput, VoiceSelectionParams, SsmlVoiceGender, AudioConfig, \
     AudioEncoding, ListVoicesRequest
 from google.genai import types, Client
 from google.genai.types import HttpOptions
@@ -152,7 +152,7 @@ class LLMProvider:
     async def generate_speech(text: str) -> BufferedInputFile:
         synthesis_input = SynthesisInput(text=text)
         voice = VoiceSelectionParams(
-            language_code="ru-RU", name="ru-RU-Wavenet-D"
+            language_code="ru-RU", name="ru-RU-Chirp3-HD-Charon"
         )
         audio_config = AudioConfig(
             audio_encoding=AudioEncoding.OGG_OPUS

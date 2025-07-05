@@ -24,5 +24,4 @@ google-genai
 pydub~=0.25.1
 Deprecated~=1.2.18
 protobuf~=6.31.1
-google-cloud-aiplatform
-langchain-google-community[texttospeech]
+google-cloud-texttospeech
