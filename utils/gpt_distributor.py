@@ -285,7 +285,8 @@ class PsyHandler(AIHandler):
             user_id,
             action="record_voice"
         )
-        voice_file = await LLMProvider.generate_speech(recommendation)
+        user = await users_repository.get_user_by_user_id(user_id)
+        voice_file = await LLMProvider.generate_speech(recommendation, user_ai_temperature=user.ai_temperature)
         await main_bot.send_chat_action(
             user_id,
             action="upload_voice"
@@ -312,9 +313,10 @@ class PsyHandler(AIHandler):
         user = await users_repository.get_user_by_user_id(user_id)
         is_subscribed = await check_is_subscribed(user_id)
 
-        if self.thread_locks.get(user_id) and self.active_threads.get(user_id) and await self.check_is_dialog_psy(
-            user_id=user_id
-        ) and self.active_threads.get(user_id): # doubled because await takes time
+        problem_id = await self.summarize_dialog_problem(user_id)
+
+        if (self.thread_locks.get(user_id) and self.active_threads.get(user_id)
+                and problem_id and self.thread_locks.get(user_id)): # doubled because await takes time
             async with self.thread_locks[user_id]:
                 recommendation_request = UserRequest(
                     user_id=user_id,
@@ -323,14 +325,14 @@ class PsyHandler(AIHandler):
                 await self.create_message(recommendation_request)
                 recommendation = await self.run_thread(user_id, save_answer=False)
             logger.info("exiting thread...")
-            problem_id = await self.exit(user_id)
+
             recommendation_object = await recommendations_repository.add_recommendation(
                 user_id=user_id,
                 text=recommendation,
                 problem_id=problem_id
             )
 
-
+            await self.exit(user_id, save=False)
             if not user.used_free_recommendation or is_subscribed:
                 await self.send_recommendation(
                     user_id=user_id,
@@ -427,9 +429,9 @@ class PsyHandler(AIHandler):
 
         return None
 
-    async def exit(self, user_id: int) -> int | None:
+    async def exit(self, user_id: int, save: bool = True) -> int | None:
         if self.active_threads.get(user_id):
-            if await self.check_is_dialog_psy(user_id):
+            if save and await self.check_is_dialog_psy(user_id):
                 problem_id = await self.summarize_dialog_problem(user_id)
             else:
                 problem_id = None

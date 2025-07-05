@@ -1,6 +1,7 @@
 import logging
 import mimetypes
 import os
+import secrets
 from io import BytesIO
 from typing import Literal, Dict, List
 
@@ -8,6 +9,10 @@ import httpx
 import openai
 import pydub
 from aiogram.types import BufferedInputFile
+from google.cloud import texttospeech, storage
+from google.cloud.storage import transfer_manager
+from google.cloud.texttospeech import SynthesisInput, VoiceSelectionParams, SsmlVoiceGender, AudioConfig, \
+    AudioEncoding, ListVoicesRequest
 from google.genai import types, Client
 from google.genai.types import HttpOptions
 from openai import AsyncOpenAI
@@ -17,10 +22,11 @@ from settings import openai_api_key, gemini_api_key
 from utils.prompts import SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT
 from utils.user_request_types import UserFile
 
+
 BASIC_MODEL = "gemini-2.5-flash-lite-preview-06-17"
 ADVANCED_MODEL = "gemini-2.5-flash"
 
-TTS_MODEL = "gemini-2.5-flash-preview-tts"
+TTS_MODEL = "gemini-2.5-flash"
 
 mental_assistant_id = os.getenv("MENTAL_ASSISTANT_ID")
 standard_assistant_id = os.getenv("STANDARD_ASSISTANT_ID")
@@ -34,6 +40,10 @@ openAI_client = AsyncOpenAI(api_key=openai_api_key) if proxy_url is None or prox
     AsyncOpenAI(http_client=httpx.AsyncClient(proxy=proxy_url), api_key=openai_api_key)
 
 google_genai_client = Client(http_options=HttpOptions(api_version="v1"))
+
+tts_client = texttospeech.TextToSpeechClient() # TODO - async
+
+storage_client = storage.Client()
 
 class ModelChatMessage(BaseModel):
     role: Literal["user", "assistant", "developer", "system"]
@@ -85,19 +95,30 @@ class LLMProvider:
 
     @staticmethod
     async def create_document_content_item(document: UserFile):
-        document_file = await google_genai_client.aio.files.upload(
-            file=BytesIO(document.file_bytes),
-            config=types.UploadFileConfig(mime_type="application/pdf")
+
+        bucket = storage_client.bucket("fuxfiles")
+        name = secrets.token_hex(16) + document.filename
+        blob = bucket.blob(name)
+
+        blob.upload_from_string(
+            data=document.file_bytes,
+            content_type="application/pdf"
         )
-        return types.Part.from_uri(file_uri=document_file.uri, mime_type=document_file.mime_type)
+
+        return types.Part.from_uri(file_uri=f"gs://fuxfiles/{name}", mime_type="application/pdf")
 
     @staticmethod
     async def create_image_content_item(image: UserFile) -> types.Part:
-        image_file = await google_genai_client.aio.files.upload(
-            file=BytesIO(image.file_bytes),
-            config=types.UploadFileConfig(mime_type=mimetypes.guess_type(image.filename)[0])
+        bucket = storage_client.bucket("fuxfiles")
+        name = secrets.token_hex(16) + image.filename
+        blob = bucket.blob(name)
+
+        blob.upload_from_string(
+            data=image.file_bytes,
+            content_type=mimetypes.guess_type(image.filename)[0]
         )
-        return types.Part.from_uri(file_uri=image_file.uri, mime_type=image_file.mime_type)
+
+        return types.Part.from_uri(file_uri=f"gs://fuxfiles/{name}", mime_type=mimetypes.guess_type(image.filename)[0])
 
     async def create_voice_content_item(self, voice: UserFile) -> types.Part:
         """voice_file = await google_genai_client.aio.files.upload(
@@ -143,36 +164,21 @@ class LLMProvider:
         )
 
     @staticmethod
-    async def generate_speech(text: str) -> BufferedInputFile:
-        response = await google_genai_client.aio.models.generate_content(
-            model=TTS_MODEL,
-            contents=text,
-            config=types.GenerateContentConfig(
-                response_modalities=["AUDIO"],
-                speech_config=types.SpeechConfig(
-                    voice_config=types.VoiceConfig(
-                        prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                            voice_name='Puck',
-                        )
-                    )
-                ),
-            )
+    async def generate_speech(text: str, user_ai_temperature: float = 1) -> BufferedInputFile:
+        synthesis_input = SynthesisInput(text=text)
+        voice = VoiceSelectionParams(
+            language_code="ru-RU", name=("ru-RU-Chirp3-HD-Charon" if user_ai_temperature == 1.3
+                                         else ("ru-RU-Chirp3-HD-Puck" if user_ai_temperature == 1 else "ru-RU-Chirp3-HD-Fenrir"))
         )
-        audio_segment = pydub.AudioSegment(
-            data=response.candidates[0].content.parts[0].inline_data.data,
-            sample_width=2,  # 16-bit PCM
-            frame_rate=24000,
-            channels=1
+        audio_config = AudioConfig(
+            audio_encoding=AudioEncoding.OGG_OPUS
         )
-
-        opus_buffer = BytesIO()
-        audio_segment.export(opus_buffer, format="opus", codec="libopus", bitrate="64k")
-
-        # Seek to the beginning of the BytesIO object so it can be read from
-        opus_buffer.seek(0)
+        response = tts_client.synthesize_speech(
+            input=synthesis_input, voice=voice, audio_config=audio_config
+        )
 
         return BufferedInputFile(
-            opus_buffer.read(),
+            response.audio_content,
             "voice.ogg"
         )
 
