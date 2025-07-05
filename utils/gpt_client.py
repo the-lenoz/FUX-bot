@@ -39,7 +39,7 @@ openAI_client = AsyncOpenAI(api_key=openai_api_key) if proxy_url is None or prox
 
 google_genai_client = Client(http_options=HttpOptions(api_version="v1"))
 
-tts_client = texttospeech.TextToSpeechAsyncClient()
+tts_client = texttospeech.TextToSpeechClient() # TODO - async
 
 class ModelChatMessage(BaseModel):
     role: Literal["user", "assistant", "developer", "system"]
@@ -155,9 +155,9 @@ class LLMProvider:
             language_code="ru-RU", name="ru-RU-Wavenet-D"
         )
         audio_config = AudioConfig(
-            audio_encoding=AudioEncoding.MP3
+            audio_encoding=AudioEncoding.OGG_OPUS
         )
-        response = await tts_client.synthesize_speech(
+        response = tts_client.synthesize_speech(
             input=synthesis_input, voice=voice, audio_config=audio_config
         )
 
