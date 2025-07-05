@@ -1,6 +1,5 @@
 from db.repository import users_repository, mental_problems_repository, exercises_user_repository, admin_repository, \
-    ai_requests_repository, checkup_repository, days_checkups_repository, subscriptions_repository
-from utils.prompts import SENSITIVE_PROMPT, STRAIGHTFORWARD_PROMPT
+    checkup_repository, subscriptions_repository
 
 
 async def get_user_description(user_id: int, is_psy: bool = False) -> str:

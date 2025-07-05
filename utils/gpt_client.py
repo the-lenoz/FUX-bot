@@ -9,6 +9,7 @@ import openai
 import pydub
 from aiogram.types import BufferedInputFile
 from google.genai import types, Client
+from google.genai.types import HttpOptions
 from openai import AsyncOpenAI
 from pydantic import BaseModel
 
@@ -16,8 +17,8 @@ from settings import openai_api_key, gemini_api_key
 from utils.prompts import SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT
 from utils.user_request_types import UserFile
 
-BASIC_MODEL = "gemini-2.0-flash-lite"
-ADVANCED_MODEL = "gemini-2.5-flash-preview-05-20"
+BASIC_MODEL = "gemini-2.5-flash-lite-preview-06-17"
+ADVANCED_MODEL = "gemini-2.5-flash"
 
 TTS_MODEL = "gemini-2.5-flash-preview-tts"
 
@@ -32,7 +33,7 @@ proxy_url = os.environ.get("OPENAI_PROXY_URL")
 openAI_client = AsyncOpenAI(api_key=openai_api_key) if proxy_url is None or proxy_url == "" else \
     AsyncOpenAI(http_client=httpx.AsyncClient(proxy=proxy_url), api_key=openai_api_key)
 
-google_genai_client = Client(api_key=gemini_api_key)
+google_genai_client = Client(http_options=HttpOptions(api_version="v1"))
 
 class ModelChatMessage(BaseModel):
     role: Literal["user", "assistant", "developer", "system"]
@@ -151,7 +152,7 @@ class LLMProvider:
                 speech_config=types.SpeechConfig(
                     voice_config=types.VoiceConfig(
                         prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                            voice_name='Kore',
+                            voice_name='Puck',
                         )
                     )
                 ),
@@ -217,7 +218,15 @@ class LLMProvider:
         response = await google_genai_client.aio.models.generate_content(
             model=self.model_name,
             contents=contents,
-            config=types.GenerateContentConfig(system_instruction=system_prompt),
+            config=types.GenerateContentConfig(
+                system_instruction=[system_prompt],
+                safety_settings=[
+                    types.SafetySetting(
+                        category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                        threshold=types.HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+                    ),
+                ]
+            ),
         )
 
 

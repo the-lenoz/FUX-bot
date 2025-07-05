@@ -83,9 +83,6 @@ cancel_keyboard.row(InlineKeyboardButton(text="Отмена", callback_data="can
 miss_keyboard = InlineKeyboardBuilder()
 miss_keyboard.row(InlineKeyboardButton(text="Пропустить", callback_data="cancel"))
 
-back_to_bots_keyboard = InlineKeyboardBuilder()
-back_to_bots_keyboard.row(InlineKeyboardButton(text="Назад к выбору ботов", callback_data="back_to_bots"))
-
 choice_gender_keyboard = InlineKeyboardBuilder()
 choice_gender_keyboard.row(InlineKeyboardButton(text="В женском роде♀️", callback_data="gender|female"))
 choice_gender_keyboard.row(InlineKeyboardButton(text="В мужском роде♂️", callback_data="gender|male"))
@@ -129,20 +126,6 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
     return keyboard
 
 
-fast_help_keyboard = InlineKeyboardBuilder()
-fast_help_keyboard.row(InlineKeyboardButton(text="Скорая помощь", callback_data="fast_help_only"))
-fast_help_keyboard.row(menu_button)
-
-go_deeper_keyboard = InlineKeyboardBuilder()
-go_deeper_keyboard.row(InlineKeyboardButton(text="Уйти вглубь", callback_data="go_deeper"))
-go_deeper_keyboard.row(menu_button)
-
-mental_helper_keyboard = InlineKeyboardBuilder()
-mental_helper_keyboard.row(InlineKeyboardButton(text="Скорая помощь", callback_data="fast_help"))
-mental_helper_keyboard.row(InlineKeyboardButton(text="Уйти вглубь", callback_data="go_deeper"))
-mental_helper_keyboard.row(menu_button)
-
-
 def generate_sub_keyboard(mode_type: str | None = None):
     subscriptions_keyboard = InlineKeyboardBuilder()
     subscriptions_keyboard.row(InlineKeyboardButton(text="390р/неделя", callback_data=f"choice_sub|7|390.00|{mode_type}"))
@@ -175,10 +158,6 @@ def get_go_deeper_rec_keyboard(go_deeper_id: int):
     keyboard = InlineKeyboardBuilder()
     keyboard.row(InlineKeyboardButton(text="Получить рекомендации", callback_data=f"get_go_deeper_rec|{go_deeper_id}"))
     return keyboard
-
-end_fast_help_keyboard = InlineKeyboardBuilder()
-end_fast_help_keyboard.row(InlineKeyboardButton(text="Уйти в глубь", callback_data="go_deeper"))
-end_fast_help_keyboard.row(menu_button)
 
 
 checkup_type_keyboard = InlineKeyboardBuilder()

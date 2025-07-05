@@ -11,7 +11,7 @@ from typing import Literal, List
 
 import matplotlib.pyplot as plt
 from PIL import Image, ImageFont, ImageDraw
-from aiogram.types import BufferedInputFile
+from aiogram.types import BufferedInputFile, FSInputFile
 
 from bots import main_bot
 from data.keyboards import buy_sub_keyboard, get_rec_keyboard
@@ -333,6 +333,7 @@ def generate_tracking_calendar(year: int, month: int, checkup_type: Literal["emo
 async def send_weekly_checkup_report(user_id: int, last_date = datetime.now()):
     user = await users_repository.get_user_by_user_id(user_id)
     if not user.received_weekly_tracking_reports or await check_is_subscribed(user_id):
+        checkup_type: Literal["emotions", "productivity"]
         for checkup_type in ("emotions", "productivity"):
             try:
                 checkup_days = await days_checkups_repository.get_days_checkups_by_user_id(user_id=user.user_id)
@@ -362,9 +363,11 @@ async def send_weekly_checkup_report(user_id: int, last_date = datetime.now()):
             except Exception as e:
                 logging.error(e)
     else:
-        await main_bot.send_message(
+        await main_bot.send_photo(
             user_id,
-            "Результаты <i>недельного трекинга</i> готовы, но для того, чтобы их увидеть нужна <b>подписка</b>!",
+            FSInputFile("assets/tracking_report_blured.jpg"),
+            caption="Результаты <i>недельного трекинга</i> готовы, но для того, чтобы их увидеть нужна <b>подписка</b>!",
+            has_spoiler=True,
             reply_markup=get_rec_keyboard(f"tracking-{int(last_date.timestamp())}").as_markup()
         )
 
@@ -400,8 +403,10 @@ async def send_monthly_checkup_report(user_id: int, last_date = datetime.now()):
             except Exception as e:
                 logging.error(e)
     else:
-        await main_bot.send_message(
+        await main_bot.send_photo(
             user_id,
-            "Результаты <i>месячного трекинга</i> готовы, но для того, чтобы их увидеть нужна <b>подписка</b>!",
+            FSInputFile("assets/tracking_report_blured.jpg"), #TODO заменить на месячный блюр
+            has_spoiler=True,
+            caption="Результаты <i>месячного трекинга</i> готовы, но для того, чтобы их увидеть нужна <b>подписка</b>!",
             reply_markup=get_rec_keyboard(f"tracking-{int(last_date.timestamp())}").as_markup()
         )
