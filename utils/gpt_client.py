@@ -217,7 +217,15 @@ class LLMProvider:
         response = await google_genai_client.aio.models.generate_content(
             model=self.model_name,
             contents=contents,
-            config=types.GenerateContentConfig(system_instruction=system_prompt),
+            config=types.GenerateContentConfig(
+                system_instruction=system_prompt,
+                safety_settings=[
+                    types.SafetySetting(
+                        category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                        threshold=types.HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+                    ),
+                ]
+            ),
         )
 
 
