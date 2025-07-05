@@ -314,44 +314,51 @@ class PsyHandler(AIHandler):
 
         if self.thread_locks.get(user_id) and self.active_threads.get(user_id) and await self.check_is_dialog_psy(
             user_id=user_id
-        ) and self.active_threads.get(user_id): # doubled because await takes time
-            async with self.thread_locks[user_id]:
-                recommendation_request = UserRequest(
-                    user_id=user_id,
-                    text=RECOMMENDATION_PROMPT
-                )
-                await self.create_message(recommendation_request)
-                recommendation = await self.run_thread(user_id, save_answer=False)
-            logger.info("exiting thread...")
+        ):
             problem_id = await self.exit(user_id)
-            recommendation_object = await recommendations_repository.add_recommendation(
-                user_id=user_id,
-                text=recommendation,
-                problem_id=problem_id
-            )
+            if problem_id and  self.active_threads.get(user_id): # doubled because await takes time
+                async with self.thread_locks[user_id]:
+                    recommendation_request = UserRequest(
+                        user_id=user_id,
+                        text=RECOMMENDATION_PROMPT
+                    )
+                    await self.create_message(recommendation_request)
+                    recommendation = await self.run_thread(user_id, save_answer=False)
+                logger.info("exiting thread...")
 
-
-            if not user.used_free_recommendation or is_subscribed:
-                await self.send_recommendation(
+                recommendation_object = await recommendations_repository.add_recommendation(
                     user_id=user_id,
-                    recommendation=recommendation,
-                    problem_id=problem_id,
-                    from_notification=from_notification
+                    text=recommendation,
+                    problem_id=problem_id
                 )
 
-                if not is_subscribed:
-                    await users_repository.used_free_recommendation(user_id)
 
+                if not user.used_free_recommendation or is_subscribed:
+                    await self.send_recommendation(
+                        user_id=user_id,
+                        recommendation=recommendation,
+                        problem_id=problem_id,
+                        from_notification=from_notification
+                    )
+
+                    if not is_subscribed:
+                        await users_repository.used_free_recommendation(user_id)
+
+                else:
+                    photo_recommendation = generate_blurred_image_with_text(text=recommendation, enable_blur=True)
+                    await main_bot.send_photo(
+                        user_id,
+                        has_spoiler=True,
+                        photo=BufferedInputFile(file=photo_recommendation, filename=f"recommendation.png"),
+                        caption=
+                        f"🌰<i>Рекомендация</i> готова, но чтобы получить её, нужна <b>подписка</b>"
+                        f"\n\n{'Ты всегда можешь получить рекомендацию с /recommendation' if from_notification else ''}",
+                        reply_markup=get_rec_keyboard(mode_type=f"recommendation-{recommendation_object.id}").as_markup())
             else:
-                photo_recommendation = generate_blurred_image_with_text(text=recommendation, enable_blur=True)
-                await main_bot.send_photo(
+                await main_bot.send_message(
                     user_id,
-                    has_spoiler=True,
-                    photo=BufferedInputFile(file=photo_recommendation, filename=f"recommendation.png"),
-                    caption=
-                    f"🌰<i>Рекомендация</i> готова, но чтобы получить её, нужна <b>подписка</b>"
-                    f"\n\n{'Ты всегда можешь получить рекомендацию с /recommendation' if from_notification else ''}",
-                    reply_markup=get_rec_keyboard(mode_type=f"recommendation-{recommendation_object.id}").as_markup())
+                    "Для того, чтобы получить рекомендацию, обсуди проблему"
+                )
 
         else:
             await main_bot.send_message(
