@@ -164,10 +164,11 @@ class LLMProvider:
         )
 
     @staticmethod
-    async def generate_speech(text: str) -> BufferedInputFile:
+    async def generate_speech(text: str, user_ai_temperature: float = 1) -> BufferedInputFile:
         synthesis_input = SynthesisInput(text=text)
         voice = VoiceSelectionParams(
-            language_code="ru-RU", name="ru-RU-Chirp3-HD-Charon"
+            language_code="ru-RU", name=("ru-RU-Chirp3-HD-Charon" if user_ai_temperature == 1.3
+                                         else ("ru-RU-Chirp3-HD-Puck" if user_ai_temperature == 1 else "ru-RU-Chirp3-HD-Fenrir"))
         )
         audio_config = AudioConfig(
             audio_encoding=AudioEncoding.OGG_OPUS

@@ -285,7 +285,8 @@ class PsyHandler(AIHandler):
             user_id,
             action="record_voice"
         )
-        voice_file = await LLMProvider.generate_speech(recommendation)
+        user = await users_repository.get_user_by_user_id(user_id)
+        voice_file = await LLMProvider.generate_speech(recommendation, user_ai_temperature=user.ai_temperature)
         await main_bot.send_chat_action(
             user_id,
             action="upload_voice"
