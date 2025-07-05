@@ -109,11 +109,16 @@ class LLMProvider:
 
     @staticmethod
     async def create_image_content_item(image: UserFile) -> types.Part:
-        image_file = await google_genai_client.aio.files.upload(
-            file=BytesIO(image.file_bytes),
-            config=types.UploadFileConfig(mime_type=mimetypes.guess_type(image.filename)[0])
+        bucket = storage_client.bucket("fuxfiles")
+        name = secrets.token_hex(16) + image.filename
+        blob = bucket.blob(name)
+
+        blob.upload_from_string(
+            data=image.file_bytes,
+            content_type=mimetypes.guess_type(image.filename)[0]
         )
-        return types.Part.from_uri(file_uri=image_file.uri, mime_type=image_file.mime_type)
+
+        return types.Part.from_uri(file_uri=f"gs://fuxfiles/{name}", mime_type=mimetypes.guess_type(image.filename)[0])
 
     async def create_voice_content_item(self, voice: UserFile) -> types.Part:
         """voice_file = await google_genai_client.aio.files.upload(
