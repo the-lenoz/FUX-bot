@@ -17,7 +17,7 @@ from utils.gpt_client import BASIC_MODEL, ADVANCED_MODEL, ModelChatThread, LLMPr
 from utils.photo_recommendation import generate_blurred_image_with_text
 from utils.prompts import RECOMMENDATION_PROMPT, \
     MENTAL_PROBLEM_SUMMARY_PROMPT, EXERCISE_PROMPT_FORMAT, DIALOG_LATEST_MESSAGE_CHECKER_PROMPT, \
-    DEFAULT_ASSISTANT_SYSTEM_PROMPT, get_assistant_system_prompt, DIALOG_CHECKER_PROMPT
+    DEFAULT_ASSISTANT_PROMPT_ADDON, get_assistant_system_prompt, DIALOG_CHECKER_PROMPT
 from utils.subscription import check_is_subscribed
 from utils.text import split_long_message
 from utils.user_properties import get_user_description
@@ -147,7 +147,7 @@ class AIHandler:
             system_prompt = await get_assistant_system_prompt(request.user_id)
         else:
             user_description = ""
-            system_prompt = DEFAULT_ASSISTANT_SYSTEM_PROMPT
+            system_prompt = DEFAULT_ASSISTANT_PROMPT_ADDON
         if user_description and not self.active_threads.get(request.user_id):
             self.active_threads[request.user_id] = ModelChatThread()
             self.active_threads[request.user_id].add_message(
