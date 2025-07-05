@@ -11,7 +11,7 @@ from typing import Literal, List
 
 import matplotlib.pyplot as plt
 from PIL import Image, ImageFont, ImageDraw
-from aiogram.types import BufferedInputFile
+from aiogram.types import BufferedInputFile, FSInputFile
 
 from bots import main_bot
 from data.keyboards import buy_sub_keyboard, get_rec_keyboard
@@ -362,9 +362,10 @@ async def send_weekly_checkup_report(user_id: int, last_date = datetime.now()):
             except Exception as e:
                 logging.error(e)
     else:
-        await main_bot.send_message(
+        await main_bot.send_photo(
             user_id,
-            "Результаты <i>недельного трекинга</i> готовы, но для того, чтобы их увидеть нужна <b>подписка</b>!",
+            FSInputFile("assets/tracking_report_blured.jpg"),
+            caption="Результаты <i>недельного трекинга</i> готовы, но для того, чтобы их увидеть нужна <b>подписка</b>!",
             reply_markup=get_rec_keyboard(f"tracking-{int(last_date.timestamp())}").as_markup()
         )
 
@@ -400,8 +401,9 @@ async def send_monthly_checkup_report(user_id: int, last_date = datetime.now()):
             except Exception as e:
                 logging.error(e)
     else:
-        await main_bot.send_message(
+        await main_bot.send_photo(
             user_id,
-            "Результаты <i>месячного трекинга</i> готовы, но для того, чтобы их увидеть нужна <b>подписка</b>!",
+            FSInputFile("assets/tracking_report_blured.jpg"),
+            caption="Результаты <i>месячного трекинга</i> готовы, но для того, чтобы их увидеть нужна <b>подписка</b>!",
             reply_markup=get_rec_keyboard(f"tracking-{int(last_date.timestamp())}").as_markup()
         )
