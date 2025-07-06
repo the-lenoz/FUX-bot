@@ -174,32 +174,25 @@ class LLMProvider:
                 ),
             )
         )
-        success = False
-        while not success:
-            try:
-                async with google_genai_client.aio.live.connect(
-                        model=secrets.choice((TTS_MODEL, TTS_MODEL.rstrip("-preview-native-audio"))),
-                        config=config,
-                ) as session:
-                    text_input = f'Ты - просто text-to-speech модель. Ты не придумываешь свой ответ, а просто читаешь текст. Прочти его выразительно, в заданном стиле. Стиль: говори {"очень жёстко, злобно, строго, быстро и восклицательно. Ты как будто приказываешь" if user_ai_temperature == 0.6 else ("уютно, очень мягко и по-доброму" if user_ai_temperature == 1.3 else "спокойно")}. Текст:\n\n{text}'
-                    await session.send_client_content(
-                        turns=Content(role="user", parts=[Part(text=text_input)]))
+        async with google_genai_client.aio.live.connect(
+                model=TTS_MODEL,
+                config=config,
+        ) as session:
+            text_input = f'Ты - просто text-to-speech модель. Ты не придумываешь свой ответ, а просто читаешь текст. Прочти его выразительно, в заданном стиле. Стиль: говори {"очень жёстко, злобно, строго, быстро и восклицательно. Ты как будто приказываешь" if user_ai_temperature == 0.6 else ("уютно, очень мягко и по-доброму" if user_ai_temperature == 1.3 else "спокойно")}. Текст:\n\n{text}'
+            await session.send_client_content(
+                turns=Content(role="user", parts=[Part(text=text_input)]))
 
-                    audio_data = []
-                    async for message in session.receive():
-                        if (
-                                message.server_content.model_turn
-                                and message.server_content.model_turn.parts
-                        ):
-                            for part in message.server_content.model_turn.parts:
-                                if part.inline_data:
-                                    audio_data.append(
-                                        np.frombuffer(part.inline_data.data, dtype=np.int16)
-                                    )
-                success = True
-            except Exception as e:
-                logger.error(e)
-
+            audio_data = []
+            async for message in session.receive():
+                if (
+                        message.server_content.model_turn
+                        and message.server_content.model_turn.parts
+                ):
+                    for part in message.server_content.model_turn.parts:
+                        if part.inline_data:
+                            audio_data.append(
+                                np.frombuffer(part.inline_data.data, dtype=np.int16)
+                            )
 
         buffer = BytesIO()
         with wave.open(buffer, "w") as f:
