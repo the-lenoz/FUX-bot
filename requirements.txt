@@ -26,4 +26,3 @@ Deprecated~=1.2.18
 protobuf~=6.31.1
 google-cloud-texttospeech
 google-cloud-storage
-numpy
