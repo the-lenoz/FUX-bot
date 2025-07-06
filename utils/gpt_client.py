@@ -120,40 +120,18 @@ class LLMProvider:
 
         return types.Part.from_uri(file_uri=f"gs://fuxfiles/{name}", mime_type=mimetypes.guess_type(image.filename)[0])
 
-    async def create_voice_content_item(self, voice: UserFile) -> types.Part:
-        """voice_file = await google_genai_client.aio.files.upload(
-            file=BytesIO(voice.file_bytes),
-            config=types.UploadFileConfig(mime_type=mimetypes.guess_type(voice.filename)[0])
+    @staticmethod
+    async def create_voice_content_item(voice: UserFile) -> types.Part:
+        bucket = storage_client.bucket("fuxfiles")
+        name = secrets.token_hex(16) + voice.filename
+        blob = bucket.blob(name)
+
+        blob.upload_from_string(
+            data=voice.file_bytes,
+            content_type=mimetypes.guess_type(voice.filename)[0]
         )
 
-        transcript = await self.process_request(
-            [
-                self.create_message(
-                    [
-                        await self.create_text_content_item("Provide a transcript of the speech"),
-                        types.Part.from_uri(
-                            file_uri=voice_file.uri,
-                            mime_type=voice_file.mime_type
-                        )
-                    ]
-                )
-            ]
-        )"""
-
-        try:
-            transcript = await openAI_client.audio.transcriptions.create(
-                model="whisper-1",
-                file=(voice.filename, voice.file_bytes),
-                language="ru"
-            )
-            return await self.create_text_content_item(
-                text=transcript.text
-            )
-
-        except openai.BadRequestError:
-            return await self.create_text_content_item(
-                text=" "
-            )
+        return types.Part.from_uri(file_uri=f"gs://fuxfiles/{name}", mime_type=mimetypes.guess_type(voice.filename)[0])
 
 
 
