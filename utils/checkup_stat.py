@@ -242,7 +242,7 @@ def generate_tracking_calendar(year: int, month: int, checkup_type: Literal["emo
     # Шаблон уже содержит "ПН, ВТ, ...", мы рисуем сетку под ними
     cal = calendar.monthcalendar(year, month)
     top_value = 0
-    top_y = 0
+    top_y = []
 
     for week_idx, week in enumerate(cal):
         y = DAYS_GRID_Y_START + week_idx * (CELL_SIZE + CELL_SPACING_VERTICAL)
@@ -311,17 +311,19 @@ def generate_tracking_calendar(year: int, month: int, checkup_type: Literal["emo
         week_data = [d for d in data[max(last_week_day - last_week_length, 0) : last_week_day] if d is not None]
         if week_data and len(week_data) > 2:
             week_avg = round(fmean(week_data) * 2)
-            if week_avg > top_value:
-                top_value = week_avg
-                top_y = y
+            ranking_value = week_avg * 100 + len(week_data)
+            if ranking_value >= top_value:
+                top_value = ranking_value
+                top_y.append(y)
+
             week_avg_str = str(week_avg) + "/10"
             week_avg_bbox = draw.textbbox((0, 0), week_avg_str, font=font_week_avg)
             draw.text((1340 - week_avg_bbox[2] - 55,
                        y + CELL_SIZE / 2 - week_avg_bbox[3] / 2), week_avg_str, font=font_week_avg,
                       fill=BLACK_COLOR)
 
-    img.paste(trophy_image, (round(1340 - 45), round(top_y + CELL_SIZE / 2 - 16)), trophy_image)
-
+    for y in top_y:
+        img.paste(trophy_image, (round(1340 - 45), round(y + CELL_SIZE / 2 - 16)), trophy_image)
 
 
     buffer = io.BytesIO()
