@@ -127,11 +127,19 @@ async def standard_message_document_handler(message: Message, bot: Bot):
     file_buffer.seek(0)
     data = file_buffer.read()
 
-    file = UserFile(
-        file_bytes=data,
-        file_type="document",
-        filename=message.document.file_name
-    )
+    filename_suffix = message.document.file_name.split('.')[-1]
+    if filename_suffix in ('png', 'jpg', 'gif'):
+        file = UserFile(
+            file_bytes=data,
+            file_type="image",
+            filename=message.document.file_name
+        )
+    else:
+        file = UserFile(
+            file_bytes=data,
+            file_type="document",
+            filename=message.document.file_name
+        )
 
     request = UserRequest(
         user_id=user_id,
