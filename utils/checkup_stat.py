@@ -362,6 +362,11 @@ async def send_weekly_checkup_report(user_id: int, last_date = datetime.now()):
                         chat_id=user.user_id,
                         caption=f"✅ Трекинг <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за неделю готов!"
                     )
+                    await main_bot.send_document(
+                        chat_id=user_id,
+                        document=BufferedInputFile(file=graphic, filename=f"Недельный Трекинг {'Эмоций' if checkup_type == 'emotions' else 'Продуктивности'}.png"),
+                        caption="☝️Скачать <b>файл</b> в лучшем <u>качестве</u> можно здесь"
+                    )
             except Exception as e:
                 logging.error(e)
     else:
@@ -401,6 +406,12 @@ async def send_monthly_checkup_report(user_id: int, last_date = datetime.now()):
                         photo=BufferedInputFile(file=graphic, filename="graphic.png"),
                         chat_id=user_id,
                         caption=f"✅ Трекинг <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за <u>месяц</u> готов!"
+                    )
+                    await main_bot.send_document(
+                        chat_id=user_id,
+                        document=BufferedInputFile(file=graphic,
+                                                   filename=f"Месячный Трекинг {'Эмоций' if checkup_type == 'emotions' else 'Продуктивности'}.png"),
+                        caption="☝️Скачать <b>файл</b> в лучшем <u>качестве</u> можно здесь"
                     )
             except Exception as e:
                 logging.error(e)
