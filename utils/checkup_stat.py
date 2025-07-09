@@ -4,7 +4,7 @@ import logging
 import os
 import random
 import secrets
-from datetime import timedelta, date, datetime
+from datetime import timedelta, date, datetime, timezone
 from io import BytesIO
 from statistics import fmean
 from typing import Literal, List
@@ -332,7 +332,8 @@ def generate_tracking_calendar(year: int, month: int, checkup_type: Literal["emo
 
     return buffer.getvalue()
 
-async def send_weekly_checkup_report(user_id: int, last_date = datetime.now()):
+async def send_weekly_checkup_report(user_id: int, last_date = None):
+    last_date = last_date or datetime.now(timezone.utc)
     user = await users_repository.get_user_by_user_id(user_id)
     if user.received_weekly_tracking_reports < 3 or await check_is_subscribed(user_id):
         checkup_type: Literal["emotions", "productivity"]
@@ -378,7 +379,8 @@ async def send_weekly_checkup_report(user_id: int, last_date = datetime.now()):
             reply_markup=get_rec_keyboard(f"tracking-{int(last_date.timestamp())}").as_markup()
         )
 
-async def send_monthly_checkup_report(user_id: int, last_date = datetime.now()):
+async def send_monthly_checkup_report(user_id: int, last_date = None):
+    last_date = last_date or datetime.now(timezone.utc)
     if await check_is_subscribed(user_id):
         checkup_type: Literal["emotions", "productivity"]
         for checkup_type in ("emotions", "productivity"):

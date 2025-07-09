@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from bots import main_bot
 from data.keyboards import buy_sub_keyboard
@@ -8,7 +8,7 @@ from settings import payment_photo
 
 async def send_subscription_end_message(user_id: int):
     user = await users_repository.get_user_by_user_id(user_id)
-    used_time = datetime.now() - user.creation_date
+    used_time = datetime.now(timezone.utc) - user.creation_date
 
     if used_time.days % 10 == 1:
         days_str = "день"

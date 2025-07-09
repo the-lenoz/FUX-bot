@@ -1,5 +1,5 @@
 from asyncio import Lock
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
@@ -32,7 +32,7 @@ async def go_checkup(call: CallbackQuery):
     have_checkups = False
     for checkup in user_checkups:
         active_day = await days_checkups_repository.get_active_day_checkup_by_checkup_id(checkup_id=checkup.id)
-        if active_day or (datetime.now().time() < checkup.time_checkup and not await sent_today(checkup.id)):
+        if active_day or (datetime.now(timezone.utc).time() < checkup.time_checkup and not await sent_today(checkup.id)):
             have_checkups = True
             button_text = "🤩Трекинг эмоций" if checkup.type_checkup == "emotions" else "🚀Трекинг продуктивности"
             keyboard.row(InlineKeyboardButton(text=button_text, callback_data=f"start_checkup|{checkup.id}"))
@@ -191,7 +191,7 @@ async def update_tine_checkup(message: Message, state: FSMContext):
     user_checkups = await checkup_repository.get_checkups_by_user_id(user_id=user_id)
     user_timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id)
     if result:
-        time_obj = (datetime.strptime(message.text, "%H:%M") + user_timezone_delta).time()
+        time_obj = (datetime.strptime(message.text, "%H:%M") - user_timezone_delta).time()
 
         if user_checkups is None or len(user_checkups) == 0:
             number_checkup = 0

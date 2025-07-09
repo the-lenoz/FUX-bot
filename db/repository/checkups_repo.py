@@ -82,7 +82,7 @@ class CheckupRepository:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                now_date = datetime.datetime.now()
+                now_date = datetime.datetime.now(datetime.timezone.utc)
                 sql = select(Checkup).where(and_(Checkup.user_id == user_id, Checkup.end_checkup == True,
                                                  now_date - Checkup.creation_date <= datetime.timedelta(days=31)))
                 query = await session.execute(sql)
@@ -92,7 +92,7 @@ class CheckupRepository:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                now_date = datetime.datetime.now()
+                now_date = datetime.datetime.now(datetime.timezone.utc)
                 sql = select(Checkup).where(and_(Checkup.user_id == user_id, Checkup.end_checkup == True,
                                                  now_date - Checkup.creation_date <= datetime.timedelta(weeks=1)))
                 query = await session.execute(sql)

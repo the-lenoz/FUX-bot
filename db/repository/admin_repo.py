@@ -45,39 +45,3 @@ class AdminRepository:
                 sql = delete(Admin).where(or_(Admin.admin_id == admin_id))
                 await session.execute(sql)
                 await session.commit()
-
-    # async def delete_attempt_by_user_id(self, user_id: int):
-    #     async with self.session_maker() as session:
-    #         session: AsyncSession
-    #         async with session.begin():
-    #             sql = update(Admins).values({
-    #                 Admins.attempts: Admins.attempts - 1
-    #             }).where(or_(Admins.id == user_id))
-    #             await session.execute(sql)
-    #             await session.commit()
-    #
-    # async def give_attempts_by_user_id(self, user_id: int, attempts: int):
-    #     async with self.session_maker() as session:
-    #         session: AsyncSession
-    #         async with session.begin():
-    #             sql = update(Admins).values({
-    #                 Admins.attempts: Admins.attempts + attempts
-    #             }).where(or_(Admins.id == user_id))
-    #             await session.execute(sql)
-    #             await session.commit()
-
-
-
-    # async def update_user_update_date_by_user_id(self, user_id: int):
-    #     async with self.session_maker() as session:
-    #         session: AsyncSession
-    #         async with session.begin():
-    #             date_now = datetime.now()
-    #             sql = update(Admins).values({
-    #                 Admins.upd_date: date_now
-    #             }).where(or_(Admins.id == user_id))
-    #             await session.execute(sql)
-    #             await session.commit()
-
-
-

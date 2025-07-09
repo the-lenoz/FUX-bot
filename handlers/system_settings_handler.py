@@ -8,7 +8,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from bots import main_bot
 from data.keyboards import menu_keyboard, menu_button, ai_temperature_keyboard, age_keyboard, choice_gender_keyboard, \
     account_keyboard, cancel_keyboard
-from db.repository import users_repository, checkup_repository, subscriptions_repository
+from db.repository import users_repository, checkup_repository, subscriptions_repository, user_timezone_repository
 from settings import InputMessage, ai_temperature_text, is_valid_time, temperature_ai_photo, AccountSettingsStates, \
     is_valid_email, checkup_emotions_photo, checkup_productivity_photo
 from utils.gpt_distributor import user_request_handler
@@ -187,9 +187,10 @@ async def edit_checkup_time_call(call: CallbackQuery, state: FSMContext):
     checkup = await checkup_repository.get_checkup_by_checkup_id(checkup_id=checkup_id)
     await state.set_state(InputMessage.edit_time_checkup)
     await state.update_data(checkup_id=checkup_id)
+    timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id)
     await call.message.answer_photo(photo=checkup_emotions_photo if checkup.type_checkup == "emotions" else checkup_productivity_photo,
                                         caption="Для того, чтобы продолжить, введи, пожалуйста время в которое, тебе отправлять <u>трекинг</u> " + ("<b>эмоций</b>" if checkup.type_checkup == "emotions" else "<b>продуктивности</b>") +
-                              f"\n\nСейчас данный трекинг отправляется в {checkup.time_checkup.strftime('%H:%M')}",
+                              f"\n\nСейчас данный трекинг отправляется в {(checkup.time_checkup + timezone_delta).strftime('%H:%M')}",
                               reply_markup=menu_keyboard.as_markup())
     await call.message.delete()
 
