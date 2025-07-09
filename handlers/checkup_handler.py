@@ -123,14 +123,14 @@ async def start_checkups(call: CallbackQuery, state: FSMContext):
     await state.update_data(type_checkup=type_checkup)
     if user_checkup is None:
         if not await user_timezone_repository.get_user_timezone_delta(user_id):
-            await call.message.answer("🕒 Хочу быть в твоём ритме. Пришли своё текущее время, чтобы я определил часовой пояс. Пример: 18:12")
+            await call.message.answer("🕒 Хочу быть в твоём ритме. Пришли своё текущее время (в формате 24ч), чтобы я определил часовой пояс. Пример: 18:12")
             await state.set_state(InputMessage.enter_timezone)
             await state.update_data(enter_checkup_time=True)
         else:
             await call.message.answer_photo(
                 photo=checkup_emotions_photo if type_checkup == "emotions" else checkup_productivity_photo,
                 caption="Для того, чтобы продолжить, введи, пожалуйста время в которое, тебе отправлять"
-                        " <u>трекинг</u>" + (
+                        " <u>трекинг</u> " + (
                             "<b>эмоций</b>" if type_checkup == "emotions" else "<b>продуктивности</b>") + ". Пример: 21:00",
                 reply_markup=menu_keyboard.as_markup())
             await state.set_state(InputMessage.enter_time_checkup)
@@ -174,7 +174,7 @@ async def set_user_timezone(message: Message, state: FSMContext):
         await message.answer_photo(
             photo=checkup_emotions_photo if type_checkup == "emotions" else checkup_productivity_photo,
             caption="Для того, чтобы продолжить, введи, пожалуйста время в которое, тебе отправлять"
-                    " <u>трекинг</u>" + (
+                    " <u>трекинг</u> " + (
                         "<b>эмоций</b>" if type_checkup == "emotions" else "<b>продуктивности</b>") + ". Пример: 21:00",
             reply_markup=menu_keyboard.as_markup())
         await state.set_state(InputMessage.enter_time_checkup)
