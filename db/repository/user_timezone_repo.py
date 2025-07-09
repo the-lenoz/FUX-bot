@@ -29,4 +29,7 @@ class UserTimezoneRepository:
             async with session.begin():
                 query = select(UserTimezone).where(UserTimezone.user_id == user_id)
                 result = await session.execute(query)
-                return result.scalars().one_or_none()
+                timezone: UserTimezone = result.scalars().one_or_none()
+                if timezone:
+                    return timezone.timezone_UTC_delta
+                return None
