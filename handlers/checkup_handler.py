@@ -16,6 +16,7 @@ from settings import mechanic_checkup, InputMessage, is_valid_time, checkups_typ
     checkup_productivity_photo
 from utils.checkups_ended import sent_today
 from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report
+from utils.timezone_matcher import calculate_timezone
 
 checkup_router = Router()
 
@@ -119,10 +120,12 @@ async def start_checkups(call: CallbackQuery, state: FSMContext):
     user_checkup = await checkup_repository.get_active_checkup_by_user_id_type_checkup(user_id=user_id,
                                                                                        type_checkup=type_checkup)
     user = await users_repository.get_user_by_user_id(user_id=user_id)
+    await state.update_data(type_checkup=type_checkup)
     if user_checkup is None:
         if not await user_timezone_repository.get_user_timezone_delta(user_id):
-
+            await call.message.answer("🕒 Хочу быть в твоём ритме. Пришли своё текущее время, чтобы я определил часовой пояс. Пример: 18:12")
             await state.set_state(InputMessage.enter_timezone)
+            await state.update_data(enter_checkup_time=True)
         else:
             await call.message.answer_photo(
                 photo=checkup_emotions_photo if type_checkup == "emotions" else checkup_productivity_photo,
@@ -131,7 +134,6 @@ async def start_checkups(call: CallbackQuery, state: FSMContext):
                             "<b>эмоций</b>" if type_checkup == "emotions" else "<b>продуктивности</b>") + ". Пример: 21:00",
                 reply_markup=menu_keyboard.as_markup())
             await state.set_state(InputMessage.enter_time_checkup)
-        await state.update_data(type_checkup=type_checkup)
         await call.message.delete()
         return
     await call.message.delete()
@@ -153,7 +155,29 @@ async def delete_checkups(call: CallbackQuery, state: FSMContext):
 
 @checkup_router.message(F.text, InputMessage.enter_timezone)
 async def set_user_timezone(message: Message, state: FSMContext):
-    time = datetime.strptime(message.text, "%H:%M")
+    try:
+        time = datetime.strptime(message.text, "%H:%M")
+    except ValueError:
+        await message.answer(
+            "Неверный формат времени, попробуй ещё раз!")
+        await state.set_state(InputMessage.enter_timezone)
+        return
+
+    timezone = calculate_timezone(time)
+    await message.answer(f"<b>Часовой пояс</b> успешно <u>установлен</u>: {timezone[0]}")
+    await user_timezone_repository.set_user_timezone_delta(user_id=message.from_user.id,
+                                                           timezone_utc_delta=timezone[1])
+
+    type_checkup = state.get_value("type_checkup")
+
+    if state.get_value("enter_checkup_time"):
+        await message.answer_photo(
+            photo=checkup_emotions_photo if type_checkup == "emotions" else checkup_productivity_photo,
+            caption="Для того, чтобы продолжить, введи, пожалуйста время в которое, тебе отправлять"
+                    " <u>трекинг</u>" + (
+                        "<b>эмоций</b>" if type_checkup == "emotions" else "<b>продуктивности</b>") + ". Пример: 21:00",
+            reply_markup=menu_keyboard.as_markup())
+        await state.set_state(InputMessage.enter_time_checkup)
 
 
 

@@ -30,6 +30,7 @@ class InputMessage(StatesGroup):
     enter_answer_go_deeper = State()
     enter_email = State()
     enter_time_checkup = State()
+    enter_timezone = State()
     edit_time_checkup = State()
     enter_answer_exercise = State()
     enter_promo_days = State()

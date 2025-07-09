@@ -334,7 +334,7 @@ def generate_tracking_calendar(year: int, month: int, checkup_type: Literal["emo
 
 async def send_weekly_checkup_report(user_id: int, last_date = datetime.now()):
     user = await users_repository.get_user_by_user_id(user_id)
-    if not user.received_weekly_tracking_reports or await check_is_subscribed(user_id):
+    if user.received_weekly_tracking_reports < 3 or await check_is_subscribed(user_id):
         checkup_type: Literal["emotions", "productivity"]
         for checkup_type in ("emotions", "productivity"):
             try:
