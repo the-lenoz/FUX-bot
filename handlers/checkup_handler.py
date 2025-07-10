@@ -171,7 +171,7 @@ async def set_user_timezone(message: Message, state: FSMContext):
 
     type_checkup = state.get_value("type_checkup")
 
-    if state.get_value("enter_checkup_time"):
+    if await state.get_value("enter_checkup_time"):
         await message.answer_photo(
             photo=checkup_emotions_photo if type_checkup == "emotions" else checkup_productivity_photo,
             caption="Для того, чтобы продолжить, введи, пожалуйста время в которое, тебе отправлять"
