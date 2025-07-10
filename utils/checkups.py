@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from bots import main_bot
 from data.keyboards import emotions_keyboard, productivity_keyboard
@@ -8,7 +8,7 @@ from settings import checkup_emotions_photo, checkup_productivity_photo
 
 async def send_checkup(checkup_id: int):
     checkup = await checkup_repository.get_checkup_by_checkup_id(checkup_id)
-    now_date = datetime.now()
+    now_date = datetime.now(timezone.utc).replace(tzinfo=None)
     checkup_day = await days_checkups_repository.get_active_day_checkup_by_checkup_id(checkup_id=checkup.id)
     if checkup_day is None:
         days_checkup = await days_checkups_repository.get_days_checkups_by_checkup_id(checkup_id=checkup.id)

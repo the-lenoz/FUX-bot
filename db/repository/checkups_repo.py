@@ -82,7 +82,7 @@ class CheckupRepository:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                now_date = datetime.datetime.now()
+                now_date = datetime.datetime.now(datetime.timezone.utc)
                 sql = select(Checkup).where(and_(Checkup.user_id == user_id, Checkup.end_checkup == True,
                                                  now_date - Checkup.creation_date <= datetime.timedelta(days=31)))
                 query = await session.execute(sql)
@@ -92,7 +92,7 @@ class CheckupRepository:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                now_date = datetime.datetime.now()
+                now_date = datetime.datetime.now(datetime.timezone.utc)
                 sql = select(Checkup).where(and_(Checkup.user_id == user_id, Checkup.end_checkup == True,
                                                  now_date - Checkup.creation_date <= datetime.timedelta(weeks=1)))
                 query = await session.execute(sql)
@@ -118,12 +118,10 @@ class CheckupRepository:
                 await session.execute(sql)
                 await session.commit()
 
-    async def update_time_checkup_by_checkup_id(self, checkup_id: int, time_checkup: str | datetime.time):
+    async def update_time_checkup_by_checkup_id(self, checkup_id: int, time_checkup: datetime.time):
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                if type(time_checkup) == str:
-                    time_checkup = datetime.datetime.strptime(time_checkup, '%H:%M')
                 sql = update(Checkup).values({
                     Checkup.time_checkup: time_checkup
                 }).where(or_(Checkup.id == checkup_id))

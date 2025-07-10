@@ -23,7 +23,7 @@ class CleanModel:
         Получить время, которое модель не обновлялась
         :return: timedelta
         """
-        return self.upd_date - datetime.datetime.now()
+        return self.upd_date - datetime.datetime.now(datetime.timezone.utc)
 
 
 

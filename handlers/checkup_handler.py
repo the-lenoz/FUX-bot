@@ -1,5 +1,5 @@
 from asyncio import Lock
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
@@ -10,11 +10,14 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 import utils.checkups
 from data.keyboards import checkup_type_keyboard, buy_sub_keyboard, menu_keyboard, menu_button, \
     delete_checkups_keyboard
-from db.repository import users_repository, subscriptions_repository, checkup_repository, days_checkups_repository
+from db.repository import users_repository, subscriptions_repository, checkup_repository, days_checkups_repository, \
+    user_timezone_repository
+from handlers.system_settings_handler import send_system_settings
 from settings import mechanic_checkup, InputMessage, is_valid_time, checkups_types_photo, checkup_emotions_photo, \
-    checkup_productivity_photo
+    checkup_productivity_photo, AccountSettingsStates
 from utils.checkups_ended import sent_today
 from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report
+from utils.timezone_matcher import calculate_timezone
 
 checkup_router = Router()
 
@@ -30,7 +33,7 @@ async def go_checkup(call: CallbackQuery):
     have_checkups = False
     for checkup in user_checkups:
         active_day = await days_checkups_repository.get_active_day_checkup_by_checkup_id(checkup_id=checkup.id)
-        if active_day or (datetime.now().time() < checkup.time_checkup and not await sent_today(checkup.id)):
+        if active_day or (datetime.now(timezone.utc).time() < checkup.time_checkup and not await sent_today(checkup.id)):
             have_checkups = True
             button_text = "🤩Трекинг эмоций" if checkup.type_checkup == "emotions" else "🚀Трекинг продуктивности"
             keyboard.row(InlineKeyboardButton(text=button_text, callback_data=f"start_checkup|{checkup.id}"))
@@ -100,8 +103,10 @@ async def enter_emoji_user(call: CallbackQuery, state: FSMContext):
 async def start_checkup(call: CallbackQuery, state: FSMContext):
     await state.clear()
     await call.message.delete()
+    user_checkups = await checkup_repository.get_checkups_by_user_id(user_id=call.from_user.id)
     await call.message.answer_photo(photo=checkups_types_photo,
-                                    caption=mechanic_checkup, reply_markup=checkup_type_keyboard.as_markup())
+                                    caption=mechanic_checkup[0] + (mechanic_checkup[1] if not user_checkups else ''),
+                                    reply_markup=checkup_type_keyboard.as_markup())
 
 
 @checkup_router.callback_query(F.data.startswith("checkups|"), any_state)
@@ -118,13 +123,20 @@ async def start_checkups(call: CallbackQuery, state: FSMContext):
     user_checkup = await checkup_repository.get_active_checkup_by_user_id_type_checkup(user_id=user_id,
                                                                                        type_checkup=type_checkup)
     user = await users_repository.get_user_by_user_id(user_id=user_id)
+    await state.update_data(type_checkup=type_checkup)
     if user_checkup is None:
-        await call.message.answer_photo(photo=checkup_emotions_photo if type_checkup == "emotions" else checkup_productivity_photo,
-                                        caption="Для того, чтобы продолжить, введи, пожалуйста время в которое, тебе отправлять"
-                                  " <u>трекинг</u>" + ("<b>эмоций</b>" if type_checkup == "emotions" else "<b>продуктивности</b>") + ". Пример: 21:00",
-                                  reply_markup=menu_keyboard.as_markup())
-        await state.set_state(InputMessage.enter_time_checkup)
-        await state.update_data(type_checkup=type_checkup)
+        if not await user_timezone_repository.get_user_timezone_delta(user_id):
+            await call.message.answer("🕒 Хочу быть в твоём ритме. Пришли своё текущее время (в формате 24ч), чтобы я определил часовой пояс. Пример: 18:12")
+            await state.set_state(InputMessage.enter_timezone)
+            await state.update_data(enter_checkup_time=True)
+        else:
+            await call.message.answer_photo(
+                photo=checkup_emotions_photo if type_checkup == "emotions" else checkup_productivity_photo,
+                caption="Для того, чтобы продолжить, введи, пожалуйста время в которое, тебе отправлять"
+                        " <u>трекинг</u> " + (
+                            "<b>эмоций</b>" if type_checkup == "emotions" else "<b>продуктивности</b>") + ". Пример: 21:00",
+                reply_markup=menu_keyboard.as_markup())
+            await state.set_state(InputMessage.enter_time_checkup)
         await call.message.delete()
         return
     await call.message.delete()
@@ -136,13 +148,41 @@ async def start_checkups(call: CallbackQuery, state: FSMContext):
 @checkup_router.callback_query(F.data.startswith("delete_checkups|"), any_state)
 async def delete_checkups(call: CallbackQuery, state: FSMContext):
     call_data = call.data.split("|")[1:]
-    type_checkup = call_data[0]
     checkup_id = int(call_data[1])
     await checkup_repository.delete_checkup_by_checkup_id(checkup_id=checkup_id)
     await call.message.answer("⚙Трекинг состояния отключён! Теперь тебе не будут приходить уведомления.\n\n"
                               "Если захочешь включить его снова, то это всегда можно будет сделать"
                               " в разделе «<b>🗓Трекинг состояния</b>»")
     await call.message.delete()
+
+
+@checkup_router.message(F.text, InputMessage.enter_timezone)
+async def set_user_timezone(message: Message, state: FSMContext):
+    try:
+        time = datetime.strptime(message.text, "%H:%M")
+    except ValueError:
+        await message.answer(
+            "Неверный формат времени, попробуй ещё раз!")
+        await state.set_state(InputMessage.enter_timezone)
+        return
+
+    timezone = calculate_timezone(time)
+    await message.answer(f"<b>Часовой пояс</b> успешно <u>установлен</u>: {timezone[0]}")
+    await user_timezone_repository.set_user_timezone_delta(user_id=message.from_user.id,
+                                                           timezone_utc_delta=timezone[1])
+
+    type_checkup = state.get_value("type_checkup")
+
+    if await state.get_value("enter_checkup_time"):
+        await message.answer_photo(
+            photo=checkup_emotions_photo if type_checkup == "emotions" else checkup_productivity_photo,
+            caption="Для того, чтобы продолжить, введи, пожалуйста время в которое, тебе отправлять"
+                    " <u>трекинг</u> " + (
+                        "<b>эмоций</b>" if type_checkup == "emotions" else "<b>продуктивности</b>") + ". Пример: 21:00",
+            reply_markup=menu_keyboard.as_markup())
+        await state.set_state(InputMessage.enter_time_checkup)
+    else:
+        await send_system_settings(message.from_user.id)
 
 
 
@@ -154,8 +194,10 @@ async def update_tine_checkup(message: Message, state: FSMContext):
     await state.clear()
     type_checkup = state_data.get("type_checkup")
     user_checkups = await checkup_repository.get_checkups_by_user_id(user_id=user_id)
+    user_timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id)
     if result:
-        time_obj = datetime.strptime(message.text, "%H:%M").time()
+        time_obj = (datetime.strptime(message.text, "%H:%M") - user_timezone_delta).time()
+
         if user_checkups is None or len(user_checkups) == 0:
             number_checkup = 0
         else:

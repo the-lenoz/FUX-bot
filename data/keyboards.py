@@ -1,4 +1,4 @@
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, timezone
 
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -39,9 +39,9 @@ referral_keyboard.row(menu_button)
 
 
 price_keyboard = InlineKeyboardBuilder()
-price_keyboard.row(InlineKeyboardButton(text="299р/Неделя", callback_data="week"))
-price_keyboard.row(InlineKeyboardButton(text="799р/Месяц", callback_data="month"))
-price_keyboard.row(InlineKeyboardButton(text="1990р/3 месяца", callback_data="three_month"))
+price_keyboard.row(InlineKeyboardButton(text="249р/Неделя", callback_data="week"))
+price_keyboard.row(InlineKeyboardButton(text="490р/Месяц", callback_data="month"))
+price_keyboard.row(InlineKeyboardButton(text="990р/3 месяца", callback_data="three_month"))
 
 menu_keyboard = InlineKeyboardBuilder()
 menu_keyboard.row(menu_button)
@@ -101,7 +101,7 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
     finish_checkup_day = True
     for checkup in user_checkups:
         active_day = await days_checkups_repository.get_active_day_checkup_by_checkup_id(checkup_id=checkup.id)
-        if active_day is not None or (datetime.now().time() < checkup.time_checkup
+        if active_day is not None or (datetime.now(timezone.utc).time() < checkup.time_checkup
                                       and not await sent_today(checkup.id)):
             finish_checkup_day = False
             break
@@ -112,7 +112,7 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
     keyboard.add(InlineKeyboardButton(text="📉️Трекинги", callback_data="checkups"))
     keyboard.row(InlineKeyboardButton(text="📜О сервисе", callback_data="all_mechanics"))
     keyboard.add(InlineKeyboardButton(text="⚙️Настройки", callback_data="system_settings"))
-    keyboard.row(InlineKeyboardButton(text="🎁 Реферальная система", callback_data="referral_system"))
+    keyboard.row(InlineKeyboardButton(text="🎁Промокоды", callback_data="referral_system"))
     user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
     if user_sub is None:
         sub_button_text = "💸 Купить подписку"
@@ -128,9 +128,9 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
 
 def generate_sub_keyboard(mode_type: str | None = None):
     subscriptions_keyboard = InlineKeyboardBuilder()
-    subscriptions_keyboard.row(InlineKeyboardButton(text="390р/неделя", callback_data=f"choice_sub|7|390.00|{mode_type}"))
-    subscriptions_keyboard.row(InlineKeyboardButton(text="790р/месяц", callback_data=f"choice_sub|30|790.00|{mode_type}"))
-    subscriptions_keyboard.row(InlineKeyboardButton(text="1990р/3 месяца", callback_data=f"choice_sub|90|1990.00|{mode_type}"))
+    subscriptions_keyboard.row(InlineKeyboardButton(text="249р/неделя", callback_data=f"choice_sub|7|249.00|{mode_type}"))
+    subscriptions_keyboard.row(InlineKeyboardButton(text="490р/месяц", callback_data=f"choice_sub|30|490.00|{mode_type}"))
+    subscriptions_keyboard.row(InlineKeyboardButton(text="990р/3 месяца", callback_data=f"choice_sub|90|990.00|{mode_type}"))
     subscriptions_keyboard.row(menu_button)
     return subscriptions_keyboard
 
@@ -179,11 +179,12 @@ def productivity_keyboard(check_data: str):
     keyboard.row(menu_button)
     return keyboard
 
-ai_temperature_keyboard = InlineKeyboardBuilder()
-ai_temperature_keyboard.row(InlineKeyboardButton(text="Мягкая версия", callback_data="ai_temperature|1.3"))
-ai_temperature_keyboard.row(InlineKeyboardButton(text="Прямолинейная версия", callback_data="ai_temperature|0.6"))
-ai_temperature_keyboard.row(InlineKeyboardButton(text="Нейтральная версия (по умолчанию)", callback_data="ai_temperature|1"))
-ai_temperature_keyboard.row(menu_button)
+def get_ai_temperature_keyboard(user_ai_temperature: int):
+    ai_temperature_keyboard = InlineKeyboardBuilder()
+    ai_temperature_keyboard.row(InlineKeyboardButton(text=f"Прямолинейная версия{' ✅' if user_ai_temperature == 0.6 else ''}", callback_data="ai_temperature|0.6"))
+    ai_temperature_keyboard.row(InlineKeyboardButton(text=f"Нейтральная версия{' ✅' if user_ai_temperature != 0.6 else ''}", callback_data="ai_temperature|1"))
+    ai_temperature_keyboard.row(menu_button)
+    return ai_temperature_keyboard
 
 
 db_tables_keyboard = InlineKeyboardBuilder()

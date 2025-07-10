@@ -26,5 +26,5 @@ __all__ = ['User',
            'Exercise',
            'Events',
            'MentalProblem',
-           'Recommendation'
+           'Recommendation',
            ]

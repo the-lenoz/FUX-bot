@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Sequence
 
 import deprecated
@@ -160,7 +160,7 @@ class UserRepository:
             session: AsyncSession
             async with session.begin():
                 sql = update(User).values({
-                    User.last_rec_week_date: datetime.now()
+                    User.last_rec_week_date: datetime.now(timezone.utc)
                 }).where(or_(User.user_id == user_id))
                 await session.execute(sql)
                 await session.commit()
@@ -275,7 +275,7 @@ class UserRepository:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                now = datetime.now()
+                now = datetime.now(timezone.utc)
 
                 day_ago = now - timedelta(days=1)
                 week_ago = now - timedelta(weeks=1)

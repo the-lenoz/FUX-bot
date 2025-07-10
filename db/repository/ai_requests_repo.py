@@ -1,4 +1,4 @@
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, timezone
 from typing import Sequence, Optional
 
 from sqlalchemy import select, or_, func, case
@@ -95,7 +95,7 @@ class AiRequestsRepository:
           - with_photo   (из них с фото)
           - with_files   (из них с файлом)
         """
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         day_ago = now - timedelta(days=1)
         week_ago = now - timedelta(weeks=1)
         month_ago = now - timedelta(days=30)  # упрощённый вариант "месяц"

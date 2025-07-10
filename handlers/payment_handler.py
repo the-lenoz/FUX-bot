@@ -1,4 +1,5 @@
 import datetime
+from datetime import timezone
 
 from aiogram import Router, F, types, Bot
 from aiogram.fsm.context import FSMContext
@@ -104,9 +105,9 @@ async def check_payment_callback(message: types.CallbackQuery, state: FSMContext
     payment_id = operation.operation_id
     if await check_payment(payment_id):
         await operation_repository.update_paid_by_operation_id(payment_id)
-        date_now = datetime.datetime.now()
+        date_now = datetime.datetime.now(timezone.utc)
         user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
-        date_end = datetime.datetime.now() + datetime.timedelta(days=days)
+        date_end = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=days)
         if user_sub is None:
             await subscriptions_repository.add_subscription(user_id=user_id,
                                                             time_limit_subscription=days,

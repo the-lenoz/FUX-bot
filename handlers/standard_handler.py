@@ -128,7 +128,7 @@ async def standard_message_document_handler(message: Message, bot: Bot):
     data = file_buffer.read()
 
     filename_suffix = message.document.file_name.split('.')[-1]
-    if filename_suffix in ('png', 'jpg', 'gif'):
+    if filename_suffix in ('png', 'jpg', 'jpeg', 'webp', 'gif'):
         file = UserFile(
             file_bytes=data,
             file_type="image",

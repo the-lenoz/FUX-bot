@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from bots import main_bot
 from data.keyboards import cancel_keyboard, menu_keyboard
@@ -42,7 +42,7 @@ async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: 
         if activate_user_sub is None:
             await subscriptions_repository.add_subscription(user_id=user_id,
                                                             time_limit_subscription=7)
-            end_date = datetime.now() + timedelta(days=7)
+            end_date = datetime.now(timezone.utc) + timedelta(days=7)
             text = f"✅ Теперь у тебя есть <b>недельная подписка</b>! Подписка действует до {end_date.strftime('%d.%m.%y, %H:%M')} (GMT+3)"
         else:
             await subscriptions_repository.increase_subscription_time_limit(subscription_id=activate_user_sub.id,
@@ -66,7 +66,7 @@ async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: 
                 logger.error(e)
         elif promo.activations == 5:
             if bring_user_subscription is None:
-                end_date = datetime.now() + timedelta(days=30)
+                end_date = datetime.now(timezone.utc) + timedelta(days=30)
                 await subscriptions_repository.add_subscription(user_id=promo.bring_user_id,
                                                                 time_limit_subscription=30)
                 text = (f"<b>Пять друзей</b> активировали твой промокод. ✅"
@@ -88,7 +88,7 @@ async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: 
                 logger.error(e)
         elif promo.activations == 10:
             if bring_user_subscription is None:
-                end_date = datetime.now() + timedelta(days=30)
+                end_date = datetime.now(timezone.utc) + timedelta(days=30)
                 await subscriptions_repository.add_subscription(user_id=promo.bring_user_id,
                                                                 time_limit_subscription=90)
                 text = (f"<b>Десять друзей</b> активировали твой промокод. ✅"
@@ -110,7 +110,7 @@ async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: 
                 logger.error(e)
         elif promo.activations == 1:
             if bring_user_subscription is None:
-                end_date = datetime.now() + timedelta(days=7)
+                end_date = datetime.now(timezone.utc) + timedelta(days=7)
                 await subscriptions_repository.add_subscription(user_id=promo.bring_user_id,
                                                                 time_limit_subscription=7)
                 text = (f"Твой друг активировал промокод. ✅ "
@@ -167,7 +167,7 @@ async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: 
         if activate_user_sub is None:
             await subscriptions_repository.add_subscription(user_id=user_id,
                                                             time_limit_subscription=promo.days_sub)
-            end_date = datetime.now() + timedelta(days=promo.days_sub)
+            end_date = datetime.now(timezone.utc) + timedelta(days=promo.days_sub)
             text = f"✅ Теперь у тебя есть подписка на <b>{promo.days_sub} дней</b>! Подписка действует до {end_date.strftime('%d.%m.%y, %H:%M')} (GMT+3)"
         else:
             await subscriptions_repository.increase_subscription_time_limit(subscription_id=activate_user_sub.id,

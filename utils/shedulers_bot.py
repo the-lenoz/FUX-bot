@@ -1,5 +1,6 @@
 import datetime
 import traceback
+from datetime import timezone
 
 from aiogram import Bot
 
@@ -15,7 +16,7 @@ from utils.messages_provider import send_subscription_end_message
 
 async def edit_activation_sub(main_bot: Bot):
     subs = await subscriptions_repository.select_all_active_subscriptions()
-    now_date = datetime.datetime.now()
+    now_date = datetime.datetime.now(datetime.timezone.utc)
     for sub in subs:
         if now_date - sub.creation_date >= datetime.timedelta(hours=24 * sub.time_limit_subscription):
             try:
@@ -37,10 +38,10 @@ async def edit_activation_sub(main_bot: Bot):
 
 async def send_checkup():
     checkups = await checkup_repository.select_all_active_checkups()
-    now_date = datetime.datetime.now()
+    now_date = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
     for checkup in checkups:
         try:
-            if (now_date.time() >= checkup.time_checkup) and ((now_date.date() - checkup.last_date_send.date()) >= datetime.timedelta(days=1)):
+            if (now_date.time() >= checkup.time_checkup) and ((now_date - checkup.last_date_send) >= datetime.timedelta(days=1)):
                 await utils.checkups.send_checkup(checkup.id)
         except Exception as e:
             print(f"\n\nВОЗНИКЛА ОШИБКА ОТПРАВКИ ПОЛЬЗОВАТЕЛЮ {checkup.user_id}\n\n" + traceback.format_exc() + "\n\n")
@@ -48,7 +49,7 @@ async def send_checkup():
 
 async def send_recommendations(main_bot: Bot):
     users = await users_repository.select_all_users()
-    now = datetime.datetime.now()  # Можно использовать локальное время, если требуется
+    now = datetime.datetime.now(datetime.timezone.utc)  # Можно использовать локальное время, если требуется
 
     for user in users:
         last_event = await events_repository.get_last_event_by_user_id(user_id=user.user_id)
@@ -71,7 +72,7 @@ async def send_recommendations(main_bot: Bot):
 
 async def notification_reminder(main_bot: Bot):
     users = await users_repository.select_all_users()
-    now = datetime.datetime.now()  # Можно использовать локальное время, если требуется
+    now = datetime.datetime.now(timezone.utc)  # Можно использовать локальное время, если требуется
 
     for user in users:
         last_event = await events_repository.get_last_event_by_user_id(user_id=user.user_id)
@@ -123,7 +124,7 @@ async def notification_reminder(main_bot: Bot):
 
 async def break_power_mode(main_bot: Bot):
     users = await users_repository.select_all_users()
-    now_date = datetime.datetime.now()
+    now_date = datetime.datetime.now(timezone.utc)
     for user in users:
         try:
             user_active_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id=user.user_id)

@@ -2,7 +2,7 @@ import asyncio
 import logging
 import signal
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -28,7 +28,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s]: %(message)s",
     handlers=[
-        logging.FileHandler(f"logs/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log"),
+        logging.FileHandler(f"logs/{datetime.now(timezone.utc).strftime('%Y-%m-%d_%H-%M-%S')}.log"),
         logging.StreamHandler(sys.stdout)
     ]
 )

@@ -4,7 +4,7 @@ import logging
 import os
 import random
 import secrets
-from datetime import timedelta, date, datetime
+from datetime import timedelta, date, datetime, timezone
 from io import BytesIO
 from statistics import fmean
 from typing import Literal, List
@@ -332,9 +332,10 @@ def generate_tracking_calendar(year: int, month: int, checkup_type: Literal["emo
 
     return buffer.getvalue()
 
-async def send_weekly_checkup_report(user_id: int, last_date = datetime.now()):
+async def send_weekly_checkup_report(user_id: int, last_date = None):
+    last_date = last_date or datetime.now(timezone.utc)
     user = await users_repository.get_user_by_user_id(user_id)
-    if not user.received_weekly_tracking_reports or await check_is_subscribed(user_id):
+    if user.received_weekly_tracking_reports < 3 or await check_is_subscribed(user_id):
         checkup_type: Literal["emotions", "productivity"]
         for checkup_type in ("emotions", "productivity"):
             try:
@@ -362,18 +363,24 @@ async def send_weekly_checkup_report(user_id: int, last_date = datetime.now()):
                         chat_id=user.user_id,
                         caption=f"✅ Трекинг <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за неделю готов!"
                     )
+                    await main_bot.send_document(
+                        chat_id=user_id,
+                        document=BufferedInputFile(file=graphic, filename=f"Недельный Трекинг {'Эмоций' if checkup_type == 'emotions' else 'Продуктивности'}.png"),
+                        caption="☝️Скачать <b>файл</b> в лучшем <u>качестве</u> можно здесь"
+                    )
             except Exception as e:
                 logging.error(e)
     else:
         await main_bot.send_photo(
             user_id,
             FSInputFile("assets/tracking_report_blured.jpg"),
-            caption="Результаты <i>недельного трекинга</i> готовы, но для того, чтобы их увидеть нужна <b>подписка</b>!",
+            caption="✅ Результаты <i>недельного трекинга</i> <b>готовы</b>, но для того, чтобы их увидеть👀 нужна <b>подписка</b>!",
             has_spoiler=True,
             reply_markup=get_rec_keyboard(f"tracking-{int(last_date.timestamp())}").as_markup()
         )
 
-async def send_monthly_checkup_report(user_id: int, last_date = datetime.now()):
+async def send_monthly_checkup_report(user_id: int, last_date = None):
+    last_date = last_date or datetime.now(timezone.utc)
     if await check_is_subscribed(user_id):
         checkup_type: Literal["emotions", "productivity"]
         for checkup_type in ("emotions", "productivity"):
@@ -402,13 +409,19 @@ async def send_monthly_checkup_report(user_id: int, last_date = datetime.now()):
                         chat_id=user_id,
                         caption=f"✅ Трекинг <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за <u>месяц</u> готов!"
                     )
+                    await main_bot.send_document(
+                        chat_id=user_id,
+                        document=BufferedInputFile(file=graphic,
+                                                   filename=f"Месячный Трекинг {'Эмоций' if checkup_type == 'emotions' else 'Продуктивности'}.png"),
+                        caption="☝️Скачать <b>файл</b> в лучшем <u>качестве</u> можно здесь"
+                    )
             except Exception as e:
                 logging.error(e)
     else:
         await main_bot.send_photo(
             user_id,
-            FSInputFile("assets/tracking_report_blured.jpg"), #TODO заменить на месячный блюр
+            FSInputFile("assets/calendar_blured.jpg"),
             has_spoiler=True,
-            caption="Результаты <i>месячного трекинга</i> готовы, но для того, чтобы их увидеть нужна <b>подписка</b>!",
+            caption="✅ Результаты <i>месячного трекинга</i> <b>готовы</b>, но для того, чтобы их увидеть👀 нужна <b>подписка</b>!",
             reply_markup=get_rec_keyboard(f"tracking-{int(last_date.timestamp())}").as_markup()
         )
