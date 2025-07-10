@@ -420,7 +420,7 @@ async def send_monthly_checkup_report(user_id: int, last_date = None):
     else:
         await main_bot.send_photo(
             user_id,
-            FSInputFile("assets/tracking_report_blured.jpg"), #TODO заменить на месячный блюр
+            FSInputFile("assets/calendar_blured.jpg"),
             has_spoiler=True,
             caption="✅ Результаты <i>месячного трекинга</i> <b>готовы</b>, но для того, чтобы их увидеть👀 нужна <b>подписка</b>!",
             reply_markup=get_rec_keyboard(f"tracking-{int(last_date.timestamp())}").as_markup()
