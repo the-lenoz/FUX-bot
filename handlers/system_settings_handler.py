@@ -202,13 +202,14 @@ async def edit_checkup_time_call(call: CallbackQuery, state: FSMContext):
 async def enter_new_checkup_time(message: Message, state: FSMContext):
     user_id = message.from_user.id
     await user_request_handler.AI_handler.exit(user_id)
-    result = is_valid_time(message.text)
     state_data = await state.get_data()
     await state.clear()
     checkup_id = int(state_data.get("checkup_id"))
-    if result:
+    if is_valid_time(message.text):
+        user_timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id)
+        time = (datetime.strptime(message.text, "%H:%M") - user_timezone_delta).time()
         await checkup_repository.update_time_checkup_by_checkup_id(checkup_id=checkup_id,
-                                                                   time_checkup=message.text)
+                                                                   time_checkup=time)
         await message.answer(f"Отлично, теперь данный трекинг будет отправляться в {message.text}",
                              reply_markup=menu_keyboard.as_markup())
         return

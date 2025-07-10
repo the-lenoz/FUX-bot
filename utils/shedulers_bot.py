@@ -38,10 +38,10 @@ async def edit_activation_sub(main_bot: Bot):
 
 async def send_checkup():
     checkups = await checkup_repository.select_all_active_checkups()
-    now_date = datetime.datetime.now(datetime.timezone.utc)
+    now_date = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
     for checkup in checkups:
         try:
-            if (now_date.time() >= checkup.time_checkup) and ((now_date.date() - checkup.last_date_send.date()) >= datetime.timedelta(days=1)):
+            if (now_date.time() >= checkup.time_checkup) and ((now_date - checkup.last_date_send) >= datetime.timedelta(days=1)):
                 await utils.checkups.send_checkup(checkup.id)
         except Exception as e:
             print(f"\n\nВОЗНИКЛА ОШИБКА ОТПРАВКИ ПОЛЬЗОВАТЕЛЮ {checkup.user_id}\n\n" + traceback.format_exc() + "\n\n")
