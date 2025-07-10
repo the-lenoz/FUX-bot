@@ -37,7 +37,7 @@ async def send_system_settings(user_id: int):
     user_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id=user_id)
     user = await users_repository.get_user_by_user_id(user_id)
     timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id)
-    user_timezone_name = calculate_timezone(datetime.now(timezone(timezone_delta)))[0]
+    user_timezone_name = calculate_timezone(datetime.now(timezone(timezone_delta)))[0] if timezone_delta else None
 
     keyboard.row(
         InlineKeyboardButton(text=f"Имя: {user.name if user.name else 'НЕ УСТАНОВЛЕНО'}",
