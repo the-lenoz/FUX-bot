@@ -179,7 +179,7 @@ async def set_user_timezone(message: Message, state: FSMContext):
                         "<b>эмоций</b>" if type_checkup == "emotions" else "<b>продуктивности</b>") + ". Пример: 21:00",
             reply_markup=menu_keyboard.as_markup())
         await state.set_state(InputMessage.enter_time_checkup)
-    elif state.get_state() == AccountSettingsStates.edit_timezone:
+    else:
         await send_system_settings(message.from_user.id)
 
 
