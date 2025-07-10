@@ -42,6 +42,7 @@ class AccountSettingsStates(StatesGroup):
     edit_age = State()
     edit_gender = State()
     edit_email = State()
+    edit_timezone = State()
 
 
 start_referral_text = ("Помоги друзьям улучшить ментальное здоровье 🐿️\n\n"

@@ -179,11 +179,12 @@ def productivity_keyboard(check_data: str):
     keyboard.row(menu_button)
     return keyboard
 
-ai_temperature_keyboard = InlineKeyboardBuilder()
-ai_temperature_keyboard.row(InlineKeyboardButton(text="Мягкая версия", callback_data="ai_temperature|1.3"))
-ai_temperature_keyboard.row(InlineKeyboardButton(text="Прямолинейная версия", callback_data="ai_temperature|0.6"))
-ai_temperature_keyboard.row(InlineKeyboardButton(text="Нейтральная версия (по умолчанию)", callback_data="ai_temperature|1"))
-ai_temperature_keyboard.row(menu_button)
+def get_ai_temperature_keyboard(user_ai_temperature: int):
+    ai_temperature_keyboard = InlineKeyboardBuilder()
+    ai_temperature_keyboard.row(InlineKeyboardButton(text=f"Прямолинейная версия{' ✅' if user_ai_temperature == 0.6 else ''}", callback_data="ai_temperature|0.6"))
+    ai_temperature_keyboard.row(InlineKeyboardButton(text=f"Нейтральная версия{' ✅' if user_ai_temperature != 0.6 else ''}", callback_data="ai_temperature|1"))
+    ai_temperature_keyboard.row(menu_button)
+    return ai_temperature_keyboard
 
 
 db_tables_keyboard = InlineKeyboardBuilder()
