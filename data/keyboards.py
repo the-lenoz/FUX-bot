@@ -39,9 +39,9 @@ referral_keyboard.row(menu_button)
 
 
 price_keyboard = InlineKeyboardBuilder()
-price_keyboard.row(InlineKeyboardButton(text="299р/Неделя", callback_data="week"))
-price_keyboard.row(InlineKeyboardButton(text="799р/Месяц", callback_data="month"))
-price_keyboard.row(InlineKeyboardButton(text="1990р/3 месяца", callback_data="three_month"))
+price_keyboard.row(InlineKeyboardButton(text="249р/Неделя", callback_data="week"))
+price_keyboard.row(InlineKeyboardButton(text="490р/Месяц", callback_data="month"))
+price_keyboard.row(InlineKeyboardButton(text="990р/3 месяца", callback_data="three_month"))
 
 menu_keyboard = InlineKeyboardBuilder()
 menu_keyboard.row(menu_button)
@@ -112,7 +112,7 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
     keyboard.add(InlineKeyboardButton(text="📉️Трекинги", callback_data="checkups"))
     keyboard.row(InlineKeyboardButton(text="📜О сервисе", callback_data="all_mechanics"))
     keyboard.add(InlineKeyboardButton(text="⚙️Настройки", callback_data="system_settings"))
-    keyboard.row(InlineKeyboardButton(text="🎁 Реферальная система", callback_data="referral_system"))
+    keyboard.row(InlineKeyboardButton(text="🎁Промокоды", callback_data="referral_system"))
     user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
     if user_sub is None:
         sub_button_text = "💸 Купить подписку"
@@ -128,9 +128,9 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
 
 def generate_sub_keyboard(mode_type: str | None = None):
     subscriptions_keyboard = InlineKeyboardBuilder()
-    subscriptions_keyboard.row(InlineKeyboardButton(text="390р/неделя", callback_data=f"choice_sub|7|390.00|{mode_type}"))
-    subscriptions_keyboard.row(InlineKeyboardButton(text="790р/месяц", callback_data=f"choice_sub|30|790.00|{mode_type}"))
-    subscriptions_keyboard.row(InlineKeyboardButton(text="1990р/3 месяца", callback_data=f"choice_sub|90|1990.00|{mode_type}"))
+    subscriptions_keyboard.row(InlineKeyboardButton(text="249р/неделя", callback_data=f"choice_sub|7|249.00|{mode_type}"))
+    subscriptions_keyboard.row(InlineKeyboardButton(text="490р/месяц", callback_data=f"choice_sub|30|490.00|{mode_type}"))
+    subscriptions_keyboard.row(InlineKeyboardButton(text="990р/3 месяца", callback_data=f"choice_sub|90|990.00|{mode_type}"))
     subscriptions_keyboard.row(menu_button)
     return subscriptions_keyboard
 
