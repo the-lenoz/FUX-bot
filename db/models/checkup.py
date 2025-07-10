@@ -17,7 +17,7 @@ class Checkup(BaseModel, CleanModel):
     number_checkup = Column(BigInteger, nullable=False)
     type_checkup = Column(String, nullable=False)
     time_checkup = Column(Time, nullable=True, unique=False)
-    last_date_send = Column(DateTime, nullable=True, unique=False, default=func.now(timezone.utc) - timedelta(days=1))
+    last_date_send = Column(DateTime, nullable=True, unique=False, default=func.now() - timedelta(days=2))
 
     @property
     def stats(self) -> str:
