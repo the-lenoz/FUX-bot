@@ -58,10 +58,10 @@ async def send_system_settings(user_id: int):
     )
     if user.email:
         keyboard.row(InlineKeyboardButton(text=f"Email: {user.email}", callback_data="settings|edit|email"))
+    keyboard.row(InlineKeyboardButton(text=f"Режим общения: {'прямолинейный' if user.ai_temperature == 0.6 else 'нейтральный'}", callback_data="settings|temperature"))
     for checkup in user_checkups:
         text = ("Время 🤩трекинга эмоций" if checkup.type_checkup == "emotions" else "Время 🚀трекинга продуктивности") + f": {(datetime.combine(datetime.today(), checkup.time_checkup) + timezone_delta).time().strftime('%H:%M')}"
         keyboard.row(InlineKeyboardButton(text=text, callback_data=f"edit_checkup|{checkup.id}"))
-    keyboard.row(InlineKeyboardButton(text=f"Режим общения: {'прямолинейный' if user.ai_temperature == 0.6 else 'нейтральный'}", callback_data="settings|temperature"))
     keyboard.row(menu_button)
     await main_bot.send_message(chat_id=user_id,
                                 text="Здесь ты можешь <b>менять</b> <u>настройки</u>",
