@@ -42,7 +42,7 @@ timezones_dict = {
 def calculate_timezone(user_time: datetime.datetime, current_utc_time: datetime.datetime | None = None):
     current_utc_time = current_utc_time or datetime.datetime.now(datetime.timezone.utc)
 
-    delta = datetime.datetime.combine(datetime.date.today(), user_time.time()) - datetime.datetime.combine(datetime.date.today(), current_utc_time.time())
+    delta = user_time.replace(tzinfo=None) - current_utc_time.replace(tzinfo=None)
 
     delta = datetime.timedelta(seconds=round(delta.seconds / 1800) * 1800, days=delta.days)
 
