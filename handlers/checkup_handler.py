@@ -154,7 +154,7 @@ async def delete_checkups(call: CallbackQuery, state: FSMContext):
     await call.message.delete()
 
 
-@checkup_router.message(F.text, InputMessage.enter_timezone, AccountSettingsStates.edit_timezone)
+@checkup_router.message(F.text, InputMessage.enter_timezone)
 async def set_user_timezone(message: Message, state: FSMContext):
     try:
         time = datetime.strptime(message.text, "%H:%M")

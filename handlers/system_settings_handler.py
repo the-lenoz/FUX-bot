@@ -111,7 +111,7 @@ async def edit_profile(call: CallbackQuery, state: FSMContext):
         await state.set_state(AccountSettingsStates.edit_gender)
     elif edit_type == 'timezone':
         await call.message.answer("🕒 Хочу быть в твоём ритме. Пришли своё текущее время (в формате 24ч), чтобы я определил часовой пояс. Пример: 18:12")
-        await state.set_state(AccountSettingsStates.edit_timezone)
+        await state.set_state(InputMessage.enter_timezone)
 
     await call.message.delete()
 
