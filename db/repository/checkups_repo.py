@@ -1,4 +1,5 @@
 import datetime
+import logging
 from typing import Sequence
 
 from sqlalchemy import select, or_, update, and_, delete
@@ -25,7 +26,8 @@ class CheckupRepository:
                 try:
                     session.add(sql)
                     await session.commit()
-                except Exception:
+                except Exception as e:
+                    logging.error(e)
                     return False
                 return True
 
