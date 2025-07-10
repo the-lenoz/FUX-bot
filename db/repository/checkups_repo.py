@@ -106,7 +106,7 @@ class CheckupRepository:
                                                                                      Checkup.end_checkup == False,
                                                                                      Checkup.type_checkup == type_checkup))
                 query = await session.execute(sql)
-                return query.scalars().one()
+                return query.scalars().one_or_none()
 
     async def update_ending_by_checkup_id(self, checkup_id: int):
         async with self.session_maker() as session:
