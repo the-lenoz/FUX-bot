@@ -33,10 +33,32 @@ async def go_checkup(call: CallbackQuery):
     have_checkups = False
     for checkup in user_checkups:
         active_day = await days_checkups_repository.get_active_day_checkup_by_checkup_id(checkup_id=checkup.id)
-        if active_day or (datetime.now(timezone.utc).time() < checkup.time_checkup and not await sent_today(checkup.id)):
+        if (active_day and active_day.creation_date.date() == datetime.now(timezone.utc).date()) or (datetime.now(timezone.utc).time() < checkup.time_checkup and not await sent_today(checkup.id)):
             have_checkups = True
             button_text = "🤩Трекинг эмоций" if checkup.type_checkup == "emotions" else "🚀Трекинг продуктивности"
             keyboard.row(InlineKeyboardButton(text=button_text, callback_data=f"start_checkup|{checkup.id}"))
+    keyboard.row(menu_button)
+    message_text = "Выбери трекинг, который хочешь пройти"
+    if not have_checkups:
+        message_text = "На данный момент у тебя нет трекингов, которые можно пройти"
+    await call.message.answer(message_text, reply_markup=keyboard.as_markup())
+    await call.message.delete()
+
+
+@checkup_router.callback_query(F.data == "missed_tracking")
+async def go_missed_tracking(call: CallbackQuery):
+    user_id = call.from_user.id
+    user_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id=user_id)
+    keyboard = InlineKeyboardBuilder()
+    have_checkups = False
+    for checkup in user_checkups:
+        active_days = await days_checkups_repository.get_active_day_checkups_by_checkup_id(checkup_id=checkup.id)
+        for active_day in active_days:
+            if active_day and active_day.creation_date.date() != datetime.now(timezone.utc).date():
+                have_checkups = True
+                button_text = ("🤩Трекинг эмоций" if checkup.type_checkup == "emotions" else "🚀Трекинг продуктивности") +\
+                              f" {active_day.creation_date.strftime('%d.%m.%Y')}"
+                keyboard.row(InlineKeyboardButton(text=button_text, callback_data=f"start_checkup|{checkup.id}"))
     keyboard.row(menu_button)
     message_text = "Выбери трекинг, который хочешь пройти"
     if not have_checkups:

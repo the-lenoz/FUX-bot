@@ -62,14 +62,19 @@ class DaysCheckupRepository:
                 return query.scalars().one_or_none()
 
     async def get_active_day_checkup_by_checkup_id(self, checkup_id: int) -> CheckupDayData:
+
+        result = await self.get_active_day_checkups_by_checkup_id(checkup_id)
+        return result[0] if result else None
+
+    async def get_active_day_checkups_by_checkup_id(self, checkup_id: int) -> Sequence[CheckupDayData]:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
                 sql = select(CheckupDayData).where(and_(CheckupDayData.checkup_id == checkup_id, CheckupDayData.send_checkup == False))
                 query = await session.execute(sql)
-                return query.scalars().one_or_none()
+                return query.scalars().all()
 
-    async def update_data_by_day_checkup_id(self, day_checkup_id: int, points: int) -> CheckupDayData:
+    async def update_data_by_day_checkup_id(self, day_checkup_id: int, points: int):
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
