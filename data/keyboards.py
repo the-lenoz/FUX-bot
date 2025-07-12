@@ -3,7 +3,8 @@ from datetime import timedelta, datetime, timezone
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from db.repository import checkup_repository, days_checkups_repository, subscriptions_repository, users_repository
+from db.repository import checkup_repository, days_checkups_repository, subscriptions_repository, users_repository, \
+    user_timezone_repository
 from settings import emoji_dict, speed_dict, table_names
 from utils.checkups_ended import sent_today
 
@@ -98,15 +99,25 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
     keyboard = InlineKeyboardBuilder()
     user_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id=user_id)
     user = await users_repository.get_user_by_user_id(user_id)
-    finish_checkup_day = True
+    user_timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id)
+    today_tracking = False
+    missed_tracking = False
     for checkup in user_checkups:
-        active_day = await days_checkups_repository.get_active_day_checkup_by_checkup_id(checkup_id=checkup.id)
-        if active_day is not None or (datetime.now(timezone.utc).time() < checkup.time_checkup
-                                      and not await sent_today(checkup.id)):
-            finish_checkup_day = False
-            break
-    if not finish_checkup_day:
-        keyboard.row(InlineKeyboardButton(text="Пройти трекинг", callback_data="go_checkup"))
+        active_days = await days_checkups_repository.get_active_day_checkups_by_checkup_id(checkup_id=checkup.id)
+        for active_day in active_days:
+            if active_day.creation_date.date() == datetime.now(timezone(user_timezone_delta)).date():
+                if not await sent_today(checkup.id):
+                    today_tracking = True
+            else:
+                missed_tracking = True
+
+        if datetime.now(timezone.utc).time() < checkup.time_checkup and not await sent_today(checkup.id):
+            today_tracking = True
+
+    if today_tracking:
+        keyboard.row(InlineKeyboardButton(text="Трекинг за сегодня", callback_data="go_checkup"))
+    if missed_tracking:
+        keyboard.row(InlineKeyboardButton(text="Пропущенные трекинги", callback_data="missed_tracking"))
 
     keyboard.row(InlineKeyboardButton(text="📝Упражнения", callback_data="exercises_by_problem"))
     keyboard.add(InlineKeyboardButton(text="📉️Трекинги", callback_data="checkups"))
