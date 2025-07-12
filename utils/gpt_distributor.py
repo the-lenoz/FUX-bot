@@ -5,9 +5,11 @@ from asyncio import Lock
 from random import choice
 from typing import Dict
 
+import telegramify_markdown
 from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramRetryAfter, TelegramBadRequest
 from aiogram.types import BufferedInputFile
+from telegramify_markdown import ContentTypes, InterpreterChain, TextInterpreter, FileInterpreter, MermaidInterpreter
 
 from bots import main_bot
 from data.keyboards import get_rec_keyboard, buy_sub_keyboard, create_practice_exercise_recommendation_keyboard
@@ -105,19 +107,42 @@ class AIHandler:
 
             result = await self.run_thread(request.user_id)
 
-        message_text = re.sub(r'【.*】.', '', result)
-        messages = split_markdown_message(message_text)
+        interpreter_chain = InterpreterChain([
+            TextInterpreter(),  # Use pure text first
+            FileInterpreter(),  # Handle code blocks
+            MermaidInterpreter(session=None),  # Handle Mermaid charts
+        ])
 
-        for message in messages:
-            try:
-                await main_bot.send_message(
+        boxs = await telegramify_markdown.telegramify(
+            content=result,
+            interpreters_use=interpreter_chain,
+            latex_escape=True,
+            normalize_whitespace=True,
+            max_word_count=4090  # The maximum number of words in a single message.
+        )
+
+        for item in boxs:
+            if item.content_type == ContentTypes.TEXT:
+                main_bot.send_message(
                     request.user_id,
-                    message,
-                    parse_mode=ParseMode.MARKDOWN
+                    item.content,
+                    parse_mode="MarkdownV2"
                 )
-            except TelegramBadRequest as e:
-                logger.error(e)
-                logger.error(message)
+            elif item.content_type == ContentTypes.PHOTO:
+                main_bot.send_photo(
+                    request.user_id,
+                    (item.file_name, item.file_data),
+                    caption=item.caption,
+                    parse_mode="MarkdownV2"
+                )
+            elif item.content_type == ContentTypes.FILE:
+                print("FILE")
+                main_bot.send_document(
+                    request.user_id,
+                    (item.file_name, item.file_data),
+                    caption=item.caption,
+                    parse_mode="MarkdownV2"
+                )
 
         await ai_requests_repository.add_request(
             user_id=request.user_id,
