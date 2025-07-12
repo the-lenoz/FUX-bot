@@ -20,7 +20,7 @@ from utils.prompts import RECOMMENDATION_PROMPT, \
     MENTAL_PROBLEM_SUMMARY_PROMPT, EXERCISE_PROMPT_FORMAT, DIALOG_LATEST_MESSAGE_CHECKER_PROMPT, \
     DEFAULT_ASSISTANT_PROMPT_ADDON, get_assistant_system_prompt, DIALOG_CHECKER_PROMPT
 from utils.subscription import check_is_subscribed
-from utils.text import split_long_message
+from utils.text import split_markdown_message
 from utils.user_properties import get_user_description
 from utils.user_request_types import UserRequest
 
@@ -106,7 +106,7 @@ class AIHandler:
             result = await self.run_thread(request.user_id)
 
         message_text = re.sub(r'【.*】.', '', result)
-        messages = split_long_message(message_text)
+        messages = split_markdown_message(message_text)
         for message in messages:
             await main_bot.send_message(
                 request.user_id,
