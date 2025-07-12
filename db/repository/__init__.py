@@ -4,6 +4,7 @@ from .checkups_repo import CheckupRepository
 from .days_checkups_repo import DaysCheckupRepository
 from .events_repo import EventsRepository
 from .exercises_user_repo import ExercisesUserRepository
+from .limits_repo import LimitsRepository
 from .mental_problems_repo import MentalProblemsRepository
 from .operations_repo import OperationRepository
 from .promo_activations_repo import PromoActivationsRepository
@@ -28,6 +29,7 @@ events_repository = EventsRepository()
 mental_problems_repository = MentalProblemsRepository()
 recommendations_repository = RecommendationsRepository()
 user_timezone_repository = UserTimezoneRepository()
+limits_repository = LimitsRepository()
 
 __all__ = ['users_repository',
            'admin_repository',
@@ -42,5 +44,6 @@ __all__ = ['users_repository',
            'events_repository',
            'mental_problems_repository',
            'recommendations_repository',
-           'user_timezone_repository'
+           'user_timezone_repository',
+           'limits_repository'
           ]

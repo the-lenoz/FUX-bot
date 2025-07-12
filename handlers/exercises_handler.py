@@ -7,7 +7,7 @@ from aiogram.types import CallbackQuery
 
 from bots import main_bot
 from data.keyboards import menu_keyboard, buy_sub_keyboard
-from db.repository import users_repository
+from db.repository import users_repository, limits_repository
 from settings import mechanic_dict, exercises_photo
 from utils.gpt_distributor import PsyHandler, user_request_handler
 from utils.subscription import check_is_subscribed
@@ -42,11 +42,13 @@ async def generate_feedback_for_user(call: CallbackQuery, bot: Bot, problem_id: 
 
 
     user = await users_repository.get_user_by_user_id(user_id)
-    if user.used_exercises < 5 or await check_is_subscribed(user_id):
+    limits = await limits_repository.get_user_limits(user_id)
+    if limits.exercises_remaining or await check_is_subscribed(user_id):
         delete_message = await call.message.answer(
             "📙Генерирую <b>индивидуальное</b> задание для тебя!")
         exercise = await user_request_handler.AI_handler.generate_exercise(user_id, problem_id)
         if exercise:
+            await limits_repository.update_user_limits(user_id, exercises_remaining=limits.exercises_remaining - 1)
             await call.message.answer(exercise + "\n\n" + "Ответ на упражнение пиши в любое время",
                                       reply_markup=menu_keyboard.as_markup())
         else:

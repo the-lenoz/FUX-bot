@@ -7,7 +7,7 @@ from aiogram import Bot
 import utils.checkups
 from data.keyboards import buy_sub_keyboard, notification_keyboard, main_keyboard
 from db.repository import subscriptions_repository, users_repository, checkup_repository, events_repository, \
-    admin_repository
+    admin_repository, limits_repository
 from settings import payment_photo, how_are_you_photo, menu_photo
 from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report
 from utils.gpt_distributor import user_request_handler
@@ -167,6 +167,11 @@ async def send_user_statistics(admin_bot: Bot):
         )
 
 
+async def reset_limits():
+    await limits_repository.reset_all_limits(
+        exercises_remaining=2,
+        universal_requests_remaining=20
+    )
 
 
 

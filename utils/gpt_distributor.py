@@ -11,7 +11,7 @@ from aiogram.types import BufferedInputFile
 from bots import main_bot
 from data.keyboards import get_rec_keyboard, buy_sub_keyboard, create_practice_exercise_recommendation_keyboard
 from db.repository import users_repository, ai_requests_repository, mental_problems_repository, \
-    exercises_user_repository, recommendations_repository
+    exercises_user_repository, recommendations_repository, limits_repository
 from utils.documents import convert_to_pdf
 from utils.gpt_client import BASIC_MODEL, ADVANCED_MODEL, ModelChatThread, LLMProvider
 from utils.photo_recommendation import generate_blurred_image_with_text
@@ -43,9 +43,12 @@ class UserRequestHandler:
             await self.AI_handler.handle(request)
         else:
             await asyncio.sleep(2)
+            limits = await limits_repository.get_user_limits(user_id=request.user_id)
             if request.file is None:
-                if await LLMProvider.is_text_smalltalk(request.text) \
+                if limits.universal_requests_remaining or await LLMProvider.is_text_smalltalk(request.text) \
                         or await self.AI_handler.check_is_dialog_latest_message_psy(request):
+                    await limits_repository.update_user_limits(user_id=request.user_id,
+                                                               universal_requests_remaining=limits.universal_requests_remaining - 1)
                     await self.AI_handler.handle(request)
                 else:
                     await main_bot.send_message(
