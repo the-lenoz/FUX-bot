@@ -33,7 +33,7 @@ class LimitsRepository:
                 sql = select(Limits).where(or_(Limits.user_id == user_id))
                 query = await session.execute(sql)
                 result = query.scalars().one_or_none()
-                return result if result else self.create_user_limits(user_id)
+                return result if result else await self.create_user_limits(user_id)
 
 
     async def update_user_limits(self, user_id: int, exercises_remaining: int = None,
