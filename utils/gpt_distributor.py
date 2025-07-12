@@ -266,17 +266,23 @@ class AIHandler:
 
 class PsyHandler(AIHandler):
     messages_count = {}
-    MESSAGES_LIMIT = 6
+    MESSAGES_LIMITS = {6, 14}
 
     async def handle(self, request: UserRequest):
         if not self.messages_count.get(request.user_id):
             self.messages_count[request.user_id] = 0
         self.messages_count[request.user_id] += 1
 
-        if self.messages_count[request.user_id] <= self.MESSAGES_LIMIT or await check_is_subscribed(request.user_id):
+        if await check_is_subscribed(request.user_id):
+            if self.messages_count[request.user_id] + 1 in self.MESSAGES_LIMITS:
+                await main_bot.send_message('Ты всегда можешь получить рекомендацию с /recommendation')
             await super().handle(request)
         else:
-            await self.provide_recommendations(request.user_id)
+            if self.messages_count[request.user_id] + 1 in self.MESSAGES_LIMITS \
+                    and self.check_is_dialog_psy(request.user_id):
+                await self.provide_recommendations(request.user_id)
+            else:
+                await super().handle(request)
 
     @staticmethod
     async def send_recommendation(user_id: int, recommendation, problem_id: int, from_notification: bool = False):
