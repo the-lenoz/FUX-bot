@@ -357,25 +357,26 @@ def generate_tracking_calendar(year: int, month: int, checkup_type: Literal["emo
 async def send_weekly_checkup_report(user_id: int, last_date = None):
     last_date = last_date or datetime.now(timezone.utc)
     user = await users_repository.get_user_by_user_id(user_id)
-    if user.received_weekly_tracking_reports < 3 or await check_is_subscribed(user_id):
-        checkup_type: Literal["emotions", "productivity"]
-        for checkup_type in ("emotions", "productivity"):
-            try:
-                checkup_days = await days_checkups_repository.get_days_checkups_by_user_id(user_id=user.user_id)
-                checkups_report = []
 
-                send = False
-                for weekday in range(7):
-                    day = last_date - timedelta(days=last_date.weekday() - weekday)
-                    day_checkup_data = None
-                    for checkup_day in checkup_days:
-                        if checkup_day.creation_date and checkup_day.creation_date.date() == day.date() \
-                                and checkup_day.checkup_type == checkup_type:
-                            day_checkup_data = checkup_day.points
-                            send = True
-                    checkups_report.append(day_checkup_data)
+    checkup_type: Literal["emotions", "productivity"]
+    for checkup_type in ("emotions", "productivity"):
+        try:
+            checkup_days = await days_checkups_repository.get_days_checkups_by_user_id(user_id=user.user_id)
+            checkups_report = []
 
-                if send:
+            send = False
+            for weekday in range(7):
+                day = last_date - timedelta(days=last_date.weekday() - weekday)
+                day_checkup_data = None
+                for checkup_day in checkup_days:
+                    if checkup_day.creation_date and checkup_day.creation_date.date() == day.date() \
+                            and checkup_day.checkup_type == checkup_type:
+                        day_checkup_data = checkup_day.points
+                        send = True
+                checkups_report.append(day_checkup_data)
+
+            if send:
+                if user.received_weekly_tracking_reports < 3 or await check_is_subscribed(user_id):
                     await users_repository.user_got_weekly_reports(user_id=user_id)
                     graphic = generate_emotion_chart(emotion_data=checkups_report,
                                                      dates=["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"],
@@ -390,16 +391,16 @@ async def send_weekly_checkup_report(user_id: int, last_date = None):
                         document=BufferedInputFile(file=graphic, filename=f"Недельный Трекинг {'Эмоций' if checkup_type == 'emotions' else 'Продуктивности'}.png"),
                         caption="☝️Скачать <b>файл</b> в лучшем <u>качестве</u> можно здесь"
                     )
-            except Exception as e:
-                logging.error(e)
-    else:
-        await main_bot.send_photo(
-            user_id,
-            FSInputFile("assets/tracking_report_blured.jpg"),
-            caption="✅ Результаты <i>недельного трекинга</i> <b>готовы</b>, но для того, чтобы их увидеть👀 нужна <b>подписка</b>!",
-            has_spoiler=True,
-            reply_markup=get_rec_keyboard(f"tracking-{int(last_date.timestamp())}").as_markup()
-        )
+                else:
+                    await main_bot.send_photo(
+                        user_id,
+                        FSInputFile(f"assets/tracking_report_{checkup_type}_blured.jpg"),
+                        caption="✅ Результаты <i>недельного трекинга</i> <b>готовы</b>, но для того, чтобы их увидеть👀 нужна <b>подписка</b>!",
+                        has_spoiler=True,
+                        reply_markup=get_rec_keyboard(f"tracking-{int(last_date.timestamp())}").as_markup()
+                    )
+        except Exception as e:
+            logging.error(e)
 
 async def send_monthly_checkup_report(user_id: int, last_date = None):
     last_date = last_date or datetime.now(timezone.utc)
