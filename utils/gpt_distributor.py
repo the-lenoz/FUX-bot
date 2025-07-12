@@ -121,6 +121,7 @@ class AIHandler:
             max_word_count=4090  # The maximum number of words in a single message.
         )
 
+        logger.info(boxs)
         for item in boxs:
             if item.content_type == ContentTypes.TEXT:
                 main_bot.send_message(
@@ -136,7 +137,6 @@ class AIHandler:
                     parse_mode="MarkdownV2"
                 )
             elif item.content_type == ContentTypes.FILE:
-                print("FILE")
                 main_bot.send_document(
                     request.user_id,
                     (item.file_name, item.file_data),
