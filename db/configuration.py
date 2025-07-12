@@ -8,7 +8,7 @@ from sqlalchemy.engine import URL
 @dataclass
 class DatabaseConfig:
     """Database connection variables"""
-    load_dotenv(find_dotenv("../.env"))
+    load_dotenv(find_dotenv())
     database: str = getenv("POSTGRES_DB")
     username: str = getenv("POSTGRES_USER", "docker")
     password: str = getenv("POSTGRES_PASSWORD", None)
