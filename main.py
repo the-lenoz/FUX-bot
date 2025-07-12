@@ -63,7 +63,7 @@ async def main():
     scheduler.add_job(notification_reminder, trigger='interval', hours=1, args=[main_bot])
     scheduler.add_job(
         send_user_statistics,
-        trigger=CronTrigger(hour=22),
+        trigger=CronTrigger(hour=19),
         args=[admin_bot]
     )
     scheduler.add_job(

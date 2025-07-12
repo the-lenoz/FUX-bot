@@ -102,10 +102,31 @@ def generate_emotion_chart(emotion_data=None, dates=None, checkup_type: Literal[
             4: "assets/car.png",  # машина — быстро
             5: "assets/rocket.png"  # ракета — очень быстро
         }
-
     # Создаём фигуру и оси с высоким разрешением
     fig, ax = plt.subplots(figsize=(8, 6), facecolor='#FEEDE1', dpi=200)
+
+    ax.set_xlim(-0.7, len(dates) - 0.5)
+    ax.set_ylim(0.5, 5.5)
+
+
     ax.set_facecolor('#FEEDE1')
+    ax.spines['right'].set_color('none')
+    ax.spines['top'].set_color('none')
+    ax.spines['bottom'].set_position(('data', 0.5))
+    ax.spines['left'].set_position(('data', 0))
+    xmin, xmax = ax.get_xlim()
+    ymin, ymax = ax.get_ylim()
+
+    ax.spines['bottom'].set_bounds(0, xmax)
+    ax.spines['left'].set_bounds(0.5, ymax)
+
+    # Создаем стрелку для оси Y
+    # fc - цвет заливки, ec - цвет контура
+    # clip_on=False - чтобы стрелка не обрезалась, если выходит за пределы
+    ax.plot(0, ymax, '^', color='black', markersize=7, clip_on=False)
+
+    # Создаем стрелку для оси X
+    ax.plot(xmax, 0.5, '>', color='black', markersize=7, clip_on=False)
 
     # Строим график линии с оранжевыми маркерами
     ax.plot(range(len(dates)),
@@ -123,6 +144,7 @@ def generate_emotion_chart(emotion_data=None, dates=None, checkup_type: Literal[
 
     # Используем переданные даты для подписей оси X
     ax.set_xticklabels(dates, fontsize=12, color='orangered')
+    fig.subplots_adjust(left=0.3, bottom=0.3, right=0.7, top=0.7)
 
     # Выделяем последний день недели (воскресенье)
     for i, label in enumerate(ax.get_xticklabels()):
@@ -133,17 +155,17 @@ def generate_emotion_chart(emotion_data=None, dates=None, checkup_type: Literal[
             label.set_bbox(dict(facecolor='orangered', edgecolor='none', pad=5, boxstyle='round,pad=0.5'))
             label.set_color('white')
 
-
-    ax.set_xlim(-0.7, len(dates) - 0.5)
-    ax.set_ylim(0.5, 5.5)
-    name = 'ТРЕКИНГ ЭМОЦИЙ' if checkup_type == "emotions" else "ТРЕКИНГ ПРОДУКТИВНОСТИ"
+    name = 'НЕДЕЛЬНЫЙ ТРЕКИНГ'
+    name2 = "ЭМОЦИЙ" if checkup_type == "emotions" else "ПРОДУКТИВНОСТИ"
 
     ax.text(0.5, 1.05, name, ha='center', va='center', transform=ax.transAxes,
-            fontsize=24, color='orangered', weight='bold')
+            fontsize=18, color='black', weight='bold')
 
-    # Убираем рамки
-    for spine in ax.spines.values():
-        spine.set_visible(False)
+    ax.text(0.5, 1, name2, ha='center', va='center', transform=ax.transAxes,
+            fontsize=18, color='orangered', weight='bold')
+
+    ax.text(0.1, -0.15, '@FuhMentalBot', ha='center', va='center', transform=ax.transAxes,
+            fontsize=16, color='orangered')
 
     # Сохраняем график во временный файл
     temp_filename = f'temp_chart_{secrets.token_hex(32)}.png'
@@ -174,7 +196,7 @@ def generate_emotion_chart(emotion_data=None, dates=None, checkup_type: Literal[
 
     # Получаем координаты для размещения эмодзи на графике
     x_min, x_max = 0.1 * width, 0.9 * width
-    y_min, y_max = 0.3 * height, 0.85 * height
+    y_min, y_max = 0.26 * height, 0.78 * height
     y_step = (y_max - y_min) / 4  # 5 уровней (1-5)
 
     # Новая логика для размещения эмодзи с правильными цветами
