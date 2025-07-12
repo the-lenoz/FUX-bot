@@ -130,14 +130,14 @@ class AIHandler:
             elif item.content_type == ContentTypes.PHOTO:
                 await main_bot.send_photo(
                     request.user_id,
-                    (item.file_name, item.file_data),
+                    BufferedInputFile(file=item.file_data, filename=item.file_name),
                     caption=item.caption,
                     parse_mode=ParseMode.MARKDOWN_V2
                 )
             elif item.content_type == ContentTypes.FILE:
                 await main_bot.send_document(
                     request.user_id,
-                    (item.file_name, item.file_data),
+                    BufferedInputFile(file=item.file_data, filename=item.file_name),
                     caption=item.caption,
                     parse_mode=ParseMode.MARKDOWN_V2
                 )
