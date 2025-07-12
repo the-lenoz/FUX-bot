@@ -49,7 +49,7 @@ async def send_checkup():
 
 async def send_recommendations(main_bot: Bot):
     users = await users_repository.select_all_users()
-    now = datetime.datetime.now(datetime.timezone.utc)  # Можно использовать локальное время, если требуется
+    now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)  # Можно использовать локальное время, если требуется
 
     for user in users:
         last_event = await events_repository.get_last_event_by_user_id(user_id=user.user_id)

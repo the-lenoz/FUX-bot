@@ -6,7 +6,7 @@ from random import choice
 from typing import Dict
 
 from aiogram.enums import ParseMode
-from aiogram.exceptions import TelegramRetryAfter
+from aiogram.exceptions import TelegramRetryAfter, TelegramBadRequest
 from aiogram.types import BufferedInputFile
 
 from bots import main_bot
@@ -107,12 +107,17 @@ class AIHandler:
 
         message_text = re.sub(r'【.*】.', '', result)
         messages = split_markdown_message(message_text)
+
         for message in messages:
-            await main_bot.send_message(
-                request.user_id,
-                message,
-                parse_mode=ParseMode.MARKDOWN
-            )
+            try:
+                await main_bot.send_message(
+                    request.user_id,
+                    message,
+                    parse_mode=ParseMode.MARKDOWN
+                )
+            except TelegramBadRequest as e:
+                logger.error(e)
+                logger.error(message)
 
         await ai_requests_repository.add_request(
             user_id=request.user_id,
@@ -287,11 +292,15 @@ class PsyHandler(AIHandler):
 
     @staticmethod
     async def send_recommendation(user_id: int, recommendation, problem_id: int, from_notification: bool = False):
-        await main_bot.send_message(
-            user_id,
-            f"**{recommendation}**\n\n{'Ты всегда можешь получить рекомендацию с /recommendation' if from_notification else ''}",
-            parse_mode=ParseMode.MARKDOWN
-        )  # Дать рекомендации
+        try:
+            await main_bot.send_message(
+                user_id,
+                f"**{recommendation}**\n\n{'Ты всегда можешь получить рекомендацию с /recommendation' if from_notification else ''}",
+                parse_mode=ParseMode.MARKDOWN
+            )  # Дать рекомендации
+        except TelegramBadRequest as e:
+            logger.error(e)
+            logger.error(recommendation)
         await main_bot.send_chat_action(
             user_id,
             action="record_voice"
