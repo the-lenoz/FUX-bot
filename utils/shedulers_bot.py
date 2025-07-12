@@ -3,6 +3,7 @@ import traceback
 from datetime import timezone
 
 from aiogram import Bot
+from aiogram.enums import ParseMode
 
 import utils.checkups
 from data.keyboards import buy_sub_keyboard, notification_keyboard, main_keyboard
@@ -89,7 +90,7 @@ async def notification_reminder(main_bot: Bot):
                     photo=how_are_you_photo,
                     chat_id=user.user_id,
                     caption="> Добрый день, коллеги\.\.\.\n\n\nВы подготовили отчёт\?📙",
-                    parse_mode="MarkdownV2",
+                    parse_mode=ParseMode.MARKDOWN_V2,
                     reply_markup=notification_keyboard.as_markup()
                 )
                 last_event.day_notif_sent = True

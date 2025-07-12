@@ -1,6 +1,8 @@
 import logging
 
+import telegramify_markdown
 from aiogram import Router, F, Bot
+from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
@@ -49,8 +51,8 @@ async def generate_feedback_for_user(call: CallbackQuery, bot: Bot, problem_id: 
         exercise = await user_request_handler.AI_handler.generate_exercise(user_id, problem_id)
         if exercise:
             await limits_repository.update_user_limits(user_id, exercises_remaining=limits.exercises_remaining - 1)
-            await call.message.answer(exercise + "\n\n" + "Ответ на упражнение пиши в любое время",
-                                      reply_markup=menu_keyboard.as_markup())
+            await call.message.answer(telegramify_markdown.markdownify(exercise) + "\n\n" + "Ответ на упражнение пиши в любое время",
+                                      reply_markup=menu_keyboard.as_markup(), parse_mode=ParseMode.MARKDOWN_V2)
         else:
             await call.message.answer("Сначала разбери со мной проблему в чате!", reply_markup=menu_keyboard.as_markup())
         await bot.delete_message(message_id=delete_message.message_id, chat_id=user_id)

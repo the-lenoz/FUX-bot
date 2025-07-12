@@ -125,21 +125,21 @@ class AIHandler:
                 await main_bot.send_message(
                     request.user_id,
                     item.content,
-                    parse_mode="MarkdownV2"
+                    parse_mode=ParseMode.MARKDOWN_V2
                 )
             elif item.content_type == ContentTypes.PHOTO:
                 await main_bot.send_photo(
                     request.user_id,
                     (item.file_name, item.file_data),
                     caption=item.caption,
-                    parse_mode="MarkdownV2"
+                    parse_mode=ParseMode.MARKDOWN_V2
                 )
             elif item.content_type == ContentTypes.FILE:
                 await main_bot.send_document(
                     request.user_id,
                     (item.file_name, item.file_data),
                     caption=item.caption,
-                    parse_mode="MarkdownV2"
+                    parse_mode=ParseMode.MARKDOWN_V2
                 )
 
         await ai_requests_repository.add_request(
@@ -319,7 +319,7 @@ class PsyHandler(AIHandler):
             await main_bot.send_message(
                 user_id,
                 f"{telegramify_markdown.markdownify(recommendation)}\n\n{'Ты всегда можешь получить рекомендацию с /recommendation' if from_notification else ''}",
-                parse_mode=ParseMode.MARKDOWN
+                parse_mode=ParseMode.MARKDOWN_V2
             )  # Дать рекомендации
         except TelegramBadRequest as e:
             logger.error(e)
