@@ -4,11 +4,12 @@ from datetime import timezone
 
 from aiogram import Bot
 from aiogram.enums import ParseMode
+from aiogram.exceptions import TelegramForbiddenError
 
 import utils.checkups
 from data.keyboards import buy_sub_keyboard, notification_keyboard, main_keyboard
 from db.repository import subscriptions_repository, users_repository, checkup_repository, events_repository, \
-    admin_repository, limits_repository
+    admin_repository, limits_repository, days_checkups_repository
 from settings import payment_photo, how_are_you_photo, menu_photo
 from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report
 from utils.gpt_distributor import user_request_handler
@@ -44,6 +45,10 @@ async def send_checkup():
         try:
             if now_date.time() >= checkup.time_checkup and now_date.date() != checkup.last_date_send.date():
                 await utils.checkups.send_checkup(checkup.id)
+        except TelegramForbiddenError as e:
+            await days_checkups_repository.delete_days_checkups_by_checkup_id(checkup.id)
+            await checkup_repository.delete_checkup_by_checkup_id(checkup.id)
+
         except Exception as e:
             print(f"\n\nВОЗНИКЛА ОШИБКА ОТПРАВКИ ПОЛЬЗОВАТЕЛЮ {checkup.user_id}\n\n" + traceback.format_exc() + "\n\n")
             continue

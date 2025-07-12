@@ -1,6 +1,6 @@
 from typing import Sequence
 
-from sqlalchemy import select, or_, update, and_, func
+from sqlalchemy import select, or_, update, and_, func, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.engine import DatabaseEngine
@@ -107,3 +107,11 @@ class DaysCheckupRepository:
                 )
                 result = await session.execute(sql)
                 return result.scalars().first()
+
+    async def delete_days_checkups_by_checkup_id(self, checkup_id: int):
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = delete(CheckupDayData).where(or_(CheckupDayData.checkup_id == checkup_id))
+                await session.execute(sql)
+                await session.commit()
