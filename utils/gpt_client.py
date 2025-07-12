@@ -207,7 +207,7 @@ class LLMProvider:
                 safety_settings=[
                     types.SafetySetting(
                         category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-                        threshold=types.HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+                        threshold=types.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
                     ),
                 ]
             ),

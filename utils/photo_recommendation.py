@@ -3,7 +3,7 @@ import io
 import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-FONT_PATH = os.path.join(HERE, "fonts", "Roboto-VariableFont_wdth,wght.ttf")
+FONT_PATH = "assets/fonts/Roboto-Regular.ttf"
 
 def generate_blurred_image_with_text(
     text: str,

@@ -220,4 +220,9 @@ async def user_choice_age(call: CallbackQuery, state: FSMContext):
         )
     await users_repository.update_age_by_user_id(user_id=user_id, age=age)
     await users_repository.update_full_reg_by_user_id(user_id=user_id)
+    await call.message.answer(
+        "🟡Сейчас у тебя <b>бесплатная</b> версия и тебе доступно: \n"
+        "✍️<b>20 запросов</b> <i>универсальному ассистенту</i> /в неделю\n"
+        "✏<b>️2 Упражнения</b> /в неделю"
+    )
     await call.message.delete()

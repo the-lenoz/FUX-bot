@@ -5,13 +5,16 @@ from asyncio import Lock
 from random import choice
 from typing import Dict
 
-from aiogram.exceptions import TelegramRetryAfter
+import telegramify_markdown
+from aiogram.enums import ParseMode
+from aiogram.exceptions import TelegramRetryAfter, TelegramBadRequest
 from aiogram.types import BufferedInputFile
+from telegramify_markdown import ContentTypes, InterpreterChain, TextInterpreter, FileInterpreter, MermaidInterpreter
 
 from bots import main_bot
 from data.keyboards import get_rec_keyboard, buy_sub_keyboard, create_practice_exercise_recommendation_keyboard
 from db.repository import users_repository, ai_requests_repository, mental_problems_repository, \
-    exercises_user_repository, recommendations_repository
+    exercises_user_repository, recommendations_repository, limits_repository
 from utils.documents import convert_to_pdf
 from utils.gpt_client import BASIC_MODEL, ADVANCED_MODEL, ModelChatThread, LLMProvider
 from utils.photo_recommendation import generate_blurred_image_with_text
@@ -19,7 +22,6 @@ from utils.prompts import RECOMMENDATION_PROMPT, \
     MENTAL_PROBLEM_SUMMARY_PROMPT, EXERCISE_PROMPT_FORMAT, DIALOG_LATEST_MESSAGE_CHECKER_PROMPT, \
     DEFAULT_ASSISTANT_PROMPT_ADDON, get_assistant_system_prompt, DIALOG_CHECKER_PROMPT
 from utils.subscription import check_is_subscribed
-from utils.text import split_long_message
 from utils.user_properties import get_user_description
 from utils.user_request_types import UserRequest
 
@@ -43,9 +45,12 @@ class UserRequestHandler:
             await self.AI_handler.handle(request)
         else:
             await asyncio.sleep(2)
+            limits = await limits_repository.get_user_limits(user_id=request.user_id)
             if request.file is None:
-                if await LLMProvider.is_text_smalltalk(request.text) \
+                if limits.universal_requests_remaining or await LLMProvider.is_text_smalltalk(request.text) \
                         or await self.AI_handler.check_is_dialog_latest_message_psy(request):
+                    await limits_repository.update_user_limits(user_id=request.user_id,
+                                                               universal_requests_remaining=limits.universal_requests_remaining - 1)
                     await self.AI_handler.handle(request)
                 else:
                     await main_bot.send_message(
@@ -101,14 +106,41 @@ class AIHandler:
 
             result = await self.run_thread(request.user_id)
 
-        message_text = re.sub(r'【.*】.', '', result)
-        messages = split_long_message(message_text)
-        for message in messages:
-            await main_bot.send_message(
-                request.user_id,
-                message,
-                parse_mode=""
-            )
+        interpreter_chain = InterpreterChain([
+            TextInterpreter(),  # Use pure text first
+            FileInterpreter(),  # Handle code blocks
+            MermaidInterpreter(session=None),  # Handle Mermaid charts
+        ])
+
+        boxs = await telegramify_markdown.telegramify(
+            content=result,
+            interpreters_use=interpreter_chain,
+            latex_escape=True,
+            normalize_whitespace=True,
+            max_word_count=4090  # The maximum number of words in a single message.
+        )
+
+        for item in boxs:
+            if item.content_type == ContentTypes.TEXT:
+                await main_bot.send_message(
+                    request.user_id,
+                    item.content,
+                    parse_mode=ParseMode.MARKDOWN_V2
+                )
+            elif item.content_type == ContentTypes.PHOTO:
+                await main_bot.send_photo(
+                    request.user_id,
+                    BufferedInputFile(file=item.file_data, filename=item.file_name),
+                    caption=item.caption,
+                    parse_mode=ParseMode.MARKDOWN_V2
+                )
+            elif item.content_type == ContentTypes.FILE:
+                await main_bot.send_document(
+                    request.user_id,
+                    BufferedInputFile(file=item.file_data, filename=item.file_name),
+                    caption=item.caption,
+                    parse_mode=ParseMode.MARKDOWN_V2
+                )
 
         await ai_requests_repository.add_request(
             user_id=request.user_id,
@@ -263,24 +295,35 @@ class AIHandler:
 
 class PsyHandler(AIHandler):
     messages_count = {}
-    MESSAGES_LIMIT = 6
+    MESSAGES_LIMITS = {6, 14}
 
     async def handle(self, request: UserRequest):
         if not self.messages_count.get(request.user_id):
             self.messages_count[request.user_id] = 0
         self.messages_count[request.user_id] += 1
 
-        if self.messages_count[request.user_id] <= self.MESSAGES_LIMIT or await check_is_subscribed(request.user_id):
+        if await check_is_subscribed(request.user_id):
+            if self.messages_count[request.user_id] + 1 in self.MESSAGES_LIMITS:
+                await main_bot.send_message('Ты всегда можешь получить рекомендацию с /recommendation')
             await super().handle(request)
         else:
-            await self.provide_recommendations(request.user_id)
+            if self.messages_count[request.user_id] + 1 in self.MESSAGES_LIMITS \
+                    and await self.check_is_dialog_psy(request.user_id):
+                await self.provide_recommendations(request.user_id)
+            else:
+                await super().handle(request)
 
     @staticmethod
     async def send_recommendation(user_id: int, recommendation, problem_id: int, from_notification: bool = False):
-        await main_bot.send_message(
-            user_id,
-            f"<b>{recommendation}</b>\n\n{'Ты всегда можешь получить рекомендацию с /recommendation' if from_notification else ''}"
-        )  # Дать рекомендации
+        try:
+            await main_bot.send_message(
+                user_id,
+                f"{telegramify_markdown.markdownify(recommendation)}\n\n{'Ты всегда можешь получить рекомендацию с /recommendation' if from_notification else ''}",
+                parse_mode=ParseMode.MARKDOWN_V2
+            )  # Дать рекомендации
+        except TelegramBadRequest as e:
+            logger.error(e)
+            logger.error(recommendation)
         await main_bot.send_chat_action(
             user_id,
             action="record_voice"

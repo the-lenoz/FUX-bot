@@ -21,7 +21,7 @@ from handlers.sub_management_handler import sub_management_router
 from handlers.system_settings_handler import system_settings_router
 from handlers.user_handler import user_router
 from utils.shedulers_bot import edit_activation_sub, send_checkup, notification_reminder, \
-    break_power_mode, send_recommendations, send_user_statistics
+    break_power_mode, send_recommendations, send_user_statistics, reset_limits
 from utils.user_middleware import EventLoggerMiddleware
 
 logging.basicConfig(
@@ -63,9 +63,15 @@ async def main():
     scheduler.add_job(notification_reminder, trigger='interval', hours=1, args=[main_bot])
     scheduler.add_job(
         send_user_statistics,
-        trigger=CronTrigger(hour=22),
+        trigger=CronTrigger(hour=19),
         args=[admin_bot]
     )
+    scheduler.add_job(
+        reset_limits,
+        trigger=CronTrigger(day_of_week=1),
+        args=[]
+    )
+
 
     scheduler.start()
     main_bot_task = asyncio.create_task(main_bot_dispatcher.start_polling(main_bot, polling_timeout=3))
