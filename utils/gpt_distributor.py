@@ -304,7 +304,7 @@ class PsyHandler(AIHandler):
 
         if await check_is_subscribed(request.user_id):
             if self.messages_count[request.user_id] + 1 in self.MESSAGES_LIMITS:
-                await main_bot.send_message('Ты всегда можешь получить рекомендацию с /recommendation')
+                await main_bot.send_message(request.user_id, 'Ты всегда можешь получить рекомендацию с /recommendation')
             await super().handle(request)
         else:
             if self.messages_count[request.user_id] + 1 in self.MESSAGES_LIMITS \
