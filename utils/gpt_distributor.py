@@ -22,7 +22,6 @@ from utils.prompts import RECOMMENDATION_PROMPT, \
     MENTAL_PROBLEM_SUMMARY_PROMPT, EXERCISE_PROMPT_FORMAT, DIALOG_LATEST_MESSAGE_CHECKER_PROMPT, \
     DEFAULT_ASSISTANT_PROMPT_ADDON, get_assistant_system_prompt, DIALOG_CHECKER_PROMPT
 from utils.subscription import check_is_subscribed
-from utils.text import split_markdown_message
 from utils.user_properties import get_user_description
 from utils.user_request_types import UserRequest
 
@@ -309,7 +308,7 @@ class PsyHandler(AIHandler):
             await super().handle(request)
         else:
             if self.messages_count[request.user_id] + 1 in self.MESSAGES_LIMITS \
-                    and self.check_is_dialog_psy(request.user_id):
+                    and await self.check_is_dialog_psy(request.user_id):
                 await self.provide_recommendations(request.user_id)
             else:
                 await super().handle(request)
@@ -319,7 +318,7 @@ class PsyHandler(AIHandler):
         try:
             await main_bot.send_message(
                 user_id,
-                f"**{recommendation}**\n\n{'Ты всегда можешь получить рекомендацию с /recommendation' if from_notification else ''}",
+                f"{telegramify_markdown.markdownify(recommendation)}\n\n{'Ты всегда можешь получить рекомендацию с /recommendation' if from_notification else ''}",
                 parse_mode=ParseMode.MARKDOWN
             )  # Дать рекомендации
         except TelegramBadRequest as e:
