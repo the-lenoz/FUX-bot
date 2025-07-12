@@ -5,6 +5,7 @@ from asyncio import Lock
 from random import choice
 from typing import Dict
 
+from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramRetryAfter
 from aiogram.types import BufferedInputFile
 
@@ -110,7 +111,7 @@ class AIHandler:
             await main_bot.send_message(
                 request.user_id,
                 message,
-                parse_mode=""
+                parse_mode=ParseMode.MARKDOWN_V2
             )
 
         await ai_requests_repository.add_request(
@@ -288,7 +289,8 @@ class PsyHandler(AIHandler):
     async def send_recommendation(user_id: int, recommendation, problem_id: int, from_notification: bool = False):
         await main_bot.send_message(
             user_id,
-            f"<b>{recommendation}</b>\n\n{'Ты всегда можешь получить рекомендацию с /recommendation' if from_notification else ''}"
+            f"<b>{recommendation}</b>\n\n{'Ты всегда можешь получить рекомендацию с /recommendation' if from_notification else ''}",
+            parse_mode=ParseMode.HTML
         )  # Дать рекомендации
         await main_bot.send_chat_action(
             user_id,
