@@ -55,7 +55,7 @@ async def send_system_settings(user_id: int):
     keyboard.row(InlineKeyboardButton(text=f"👄Режим общения: {'Прямолинейный' if user.ai_temperature == 0.6 else 'Нейтральный'}", callback_data="settings|temperature"))
     keyboard.row(
         InlineKeyboardButton(
-            text=f"Часовой пояс: {user_timezone_name if user_timezone_name else 'НЕ УСТАНОВЛЕН'}",
+            text=f"Часовой пояс: {user_timezone_name[:8] if user_timezone_name else 'НЕ УСТАНОВЛЕН'}",
             callback_data="settings|edit|timezone")
     )
     if user.email:
