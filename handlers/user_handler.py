@@ -9,7 +9,7 @@ from aiogram.fsm.state import any_state
 from aiogram.types import Message, CallbackQuery
 
 from data.keyboards import next_politic_keyboard, have_promo_keyboard, cancel_keyboard, age_keyboard, \
-    main_keyboard, choice_gender_keyboard, menu_keyboard, miss_keyboard, account_keyboard
+    main_keyboard, choice_gender_keyboard, menu_keyboard, miss_keyboard, settings_cancel_keyboard
 # from data.keyboards import choice_keyboard
 # from data.messages import start_message, wait_manager, update_language
 from db.repository import users_repository, referral_system_repository, \
@@ -199,7 +199,7 @@ async def user_enter_gender(call: CallbackQuery, state: FSMContext):
     else:
         await call.message.answer(
             "Пол сохранён!",
-            reply_markup=account_keyboard.as_markup()
+            reply_markup=settings_cancel_keyboard.as_markup()
         )
     await call.message.delete()
 
@@ -224,7 +224,7 @@ async def user_choice_age(call: CallbackQuery, state: FSMContext):
     else:
         await call.message.answer(
             "Возраст сохранён!",
-            reply_markup=account_keyboard.as_markup()
+            reply_markup=settings_cancel_keyboard.as_markup()
         )
     await users_repository.update_age_by_user_id(user_id=user_id, age=age)
     await users_repository.update_full_reg_by_user_id(user_id=user_id)

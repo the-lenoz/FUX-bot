@@ -10,7 +10,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from bots import main_bot
 from data.keyboards import menu_keyboard, menu_button, get_ai_temperature_keyboard, age_keyboard, \
     choice_gender_keyboard, \
-    account_keyboard, cancel_keyboard, menu_age_keyboard
+    cancel_keyboard, menu_age_keyboard, settings_cancel_keyboard
 from db.repository import users_repository, checkup_repository, subscriptions_repository, user_timezone_repository
 from settings import InputMessage, ai_temperature_text, is_valid_time, temperature_ai_photo, AccountSettingsStates, \
     is_valid_email, checkup_emotions_photo, checkup_productivity_photo
@@ -94,7 +94,7 @@ async def edit_profile(call: CallbackQuery, state: FSMContext):
     if edit_type == 'name':
         await call.message.answer(
             "Введи своё имя:",
-            reply_markup=account_keyboard.as_markup()
+            reply_markup=settings_cancel_keyboard.as_markup()
         )
         await state.set_state(AccountSettingsStates.edit_name)
     elif edit_type == 'email':
@@ -128,7 +128,7 @@ async def edit_account_name(message: Message, state: FSMContext, bot: Bot):
 
     await message.answer(
         "Имя сохранено!",
-        reply_markup=account_keyboard.as_markup()
+        reply_markup=settings_cancel_keyboard.as_markup()
     )
 
 @system_settings_router.message(F.text, AccountSettingsStates.edit_email)
@@ -143,7 +143,7 @@ async def edit_account_email(message: Message, state: FSMContext, bot: Bot):
 
         await message.answer(
             "Новый email сохранён!",
-            reply_markup=account_keyboard.as_markup()
+            reply_markup=settings_cancel_keyboard.as_markup()
         )
     else:
         await message.answer(

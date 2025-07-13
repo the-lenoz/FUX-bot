@@ -74,6 +74,9 @@ menu_age_keyboard.row(InlineKeyboardButton(text="35-44", callback_data="age|35-4
 menu_age_keyboard.row(InlineKeyboardButton(text="45+", callback_data="age|45+"))
 menu_age_keyboard.row(InlineKeyboardButton(text="Отмена", callback_data="system_settings"))
 
+settings_cancel_keyboard = InlineKeyboardBuilder()
+settings_cancel_keyboard.row(InlineKeyboardButton(text="Отмена", callback_data="system_settings"))
+
 choice_bot_stat = InlineKeyboardBuilder()
 choice_bot_stat.row(InlineKeyboardButton(text="Количество новых пользователей", callback_data="statistic|new_users"))
 choice_bot_stat.row(InlineKeyboardButton(text="Количество всех запросов в GPT", callback_data="statistic|ai_requests"))
