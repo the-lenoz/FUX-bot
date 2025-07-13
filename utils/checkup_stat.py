@@ -395,7 +395,7 @@ async def send_weekly_checkup_report(user_id: int, last_date = None):
                     await main_bot.send_photo(
                         user_id,
                         FSInputFile(f"assets/tracking_report_{checkup_type}_blured.jpg"),
-                        caption="✅ Результаты <i>недельного трекинга</i> <b>готовы</b>, но для того, чтобы их увидеть👀 нужна <b>подписка</b>!",
+                        caption="✅ Результаты <i>недельного трекинга</i> <b>готовы</b>, но для того, чтобы их увидеть 👀 нужна <b>подписка</b>!",
                         has_spoiler=True,
                         reply_markup=get_rec_keyboard(f"tracking-{int(last_date.timestamp())}").as_markup()
                     )
@@ -445,6 +445,6 @@ async def send_monthly_checkup_report(user_id: int, last_date = None):
             user_id,
             FSInputFile("assets/calendar_blured.jpg"),
             has_spoiler=True,
-            caption="✅ Результаты <i>месячного трекинга</i> <b>готовы</b>, но для того, чтобы их увидеть👀 нужна <b>подписка</b>!",
+            caption="✅ Результаты <i>месячного трекинга</i> <b>готовы</b>, но для того, чтобы их увидеть 👀 нужна <b>подписка</b>!",
             reply_markup=get_rec_keyboard(f"tracking-{int(last_date.timestamp())}").as_markup()
         )
