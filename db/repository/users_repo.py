@@ -275,7 +275,7 @@ class UserRepository:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                now = datetime.now(timezone.utc)
+                now = datetime.now(timezone.utc).replace(tzinfo=None)
 
                 day_ago = now - timedelta(days=1)
                 week_ago = now - timedelta(weeks=1)
