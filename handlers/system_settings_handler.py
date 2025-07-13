@@ -100,7 +100,7 @@ async def edit_profile(call: CallbackQuery, state: FSMContext):
     elif edit_type == 'email':
         await call.message.answer(
             "Введи новый email:",
-            reply_markup=cancel_keyboard.as_markup()
+            reply_markup=settings_cancel_keyboard.as_markup()
         )
         await state.set_state(AccountSettingsStates.edit_email)
     elif edit_type == 'age':
@@ -112,7 +112,8 @@ async def edit_profile(call: CallbackQuery, state: FSMContext):
                              reply_markup=choice_gender_settings_keyboard.as_markup())
         await state.set_state(AccountSettingsStates.edit_gender)
     elif edit_type == 'timezone':
-        await call.message.answer("🕒 Хочу быть в твоём ритме. Пришли своё текущее время (в формате 24ч), чтобы я определил часовой пояс. Пример: 18:12")
+        await call.message.answer("🕒 Хочу быть в твоём ритме. Пришли своё текущее время (в формате 24ч), чтобы я определил часовой пояс. Пример: 18:12",
+                                  reply_markup=settings_cancel_keyboard.as_markup())
         await state.set_state(InputMessage.enter_timezone)
 
     await call.message.delete()
