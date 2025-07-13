@@ -18,6 +18,7 @@ from handlers.standard_handler import user_request_handler
 from settings import InputMessage, photos_pages, menu_photo
 from utils.paginator import MechanicsPaginator
 from utils.promocode import user_entered_promo_code
+from utils.subscription import check_is_subscribed
 
 user_router = Router()
 
@@ -213,6 +214,13 @@ async def user_choice_age(call: CallbackQuery, state: FSMContext):
         keyboard = paginator.generate_now_page()
         await call.message.answer_photo(photo=photos_pages.get(paginator.page_now),
                                         reply_markup=keyboard)
+        if not check_is_subscribed(user_id):
+            await call.message.answer(
+                """🔒Сейчас у тебя бесплатная версия и тебе доступно: 
+
+        ✍️20 Запросов /в неделю
+        ✏️2 Упражнения /в неделю"""
+            )
     else:
         await call.message.answer(
             "Возраст сохранён!",
@@ -220,9 +228,4 @@ async def user_choice_age(call: CallbackQuery, state: FSMContext):
         )
     await users_repository.update_age_by_user_id(user_id=user_id, age=age)
     await users_repository.update_full_reg_by_user_id(user_id=user_id)
-    await call.message.answer(
-        "🟡Сейчас у тебя <b>бесплатная</b> версия и тебе доступно: \n"
-        "✍️<b>20 запросов</b> <i>универсальному ассистенту</i> /в неделю\n"
-        "✏<b>️2 Упражнения</b> /в неделю"
-    )
     await call.message.delete()
