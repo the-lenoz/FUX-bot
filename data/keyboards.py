@@ -117,7 +117,7 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
     if today_tracking:
         keyboard.row(InlineKeyboardButton(text="Трекинг за СЕГОДНЯ", callback_data="go_checkup"))
     if missed_tracking:
-        keyboard.row(InlineKeyboardButton(text="ПРОПУЩЕННЫЕ трекинги", callback_data="missed_tracking"))
+        keyboard.row(InlineKeyboardButton(text="⚠️ПРОПУЩЕННЫЕ трекинги", callback_data="missed_tracking"))
 
     keyboard.row(InlineKeyboardButton(text="📝Упражнения", callback_data="exercises_by_problem"))
     keyboard.add(InlineKeyboardButton(text="📉️Трекинги", callback_data="checkups"))
