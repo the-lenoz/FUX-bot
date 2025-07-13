@@ -125,7 +125,7 @@ async def enter_emoji_user(call: CallbackQuery, state: FSMContext):
 async def start_checkup(call: CallbackQuery, state: FSMContext):
     await state.clear()
     await call.message.delete()
-    user_checkups = await checkup_repository.get_checkups_by_user_id(user_id=call.from_user.id)
+    user_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id=call.from_user.id)
     await call.message.answer_photo(photo=checkups_types_photo,
                                     caption=mechanic_checkup[0] + (mechanic_checkup[1] if not user_checkups else ''),
                                     reply_markup=checkup_type_keyboard.as_markup())
