@@ -94,7 +94,7 @@ async def edit_profile(call: CallbackQuery, state: FSMContext):
     if edit_type == 'name':
         await call.message.answer(
             "Введи своё имя:",
-            reply_markup=cancel_keyboard.as_markup()
+            reply_markup=account_keyboard.as_markup()
         )
         await state.set_state(AccountSettingsStates.edit_name)
     elif edit_type == 'email':

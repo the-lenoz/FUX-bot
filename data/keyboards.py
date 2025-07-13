@@ -225,7 +225,7 @@ type_users_mailing_keyboard.row(InlineKeyboardButton(text="Отмена", callba
 
 
 account_keyboard = InlineKeyboardBuilder()
-account_keyboard.row(InlineKeyboardButton(text="Настройки", callback_data="settings"))
+account_keyboard.row(InlineKeyboardButton(text="Настройки", callback_data="system_settings"))
 account_keyboard.row(InlineKeyboardButton(text="В меню", callback_data="start_menu"))
 
 statistics_keyboard = InlineKeyboardBuilder()
