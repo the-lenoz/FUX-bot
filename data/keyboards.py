@@ -18,7 +18,7 @@ admin_kb = [
     ]
 admin_keyboard = ReplyKeyboardMarkup(keyboard=admin_kb, resize_keyboard=True)
 
-menu_button = InlineKeyboardButton(text="В меню", callback_data="start_menu")
+menu_button = InlineKeyboardButton(text="В Меню", callback_data="start_menu")
 
 edit_delete_notification_keyboard = InlineKeyboardBuilder()
 edit_delete_notification_keyboard.row(InlineKeyboardButton(text="Изменить время отчета",
@@ -31,7 +31,7 @@ edit_delete_notification_keyboard.row(InlineKeyboardButton(text="Отмена", 
 edit_activate_notification_keyboard = InlineKeyboardBuilder()
 edit_activate_notification_keyboard.row(InlineKeyboardButton(text="Включить автоматическую отправку отчета",
                                                            callback_data="activate_notification"))
-edit_activate_notification_keyboard.row(InlineKeyboardButton(text="В меню", callback_data="start_menu"))
+edit_activate_notification_keyboard.row(InlineKeyboardButton(text="В Меню", callback_data="start_menu"))
 
 referral_keyboard = InlineKeyboardBuilder()
 referral_keyboard.row(InlineKeyboardButton(text="Выпустить промокод", callback_data="create_promo_code"))
@@ -234,7 +234,7 @@ type_users_mailing_keyboard.row(InlineKeyboardButton(text="Отмена", callba
 
 account_keyboard = InlineKeyboardBuilder()
 account_keyboard.row(InlineKeyboardButton(text="Настройки", callback_data="system_settings"))
-account_keyboard.row(InlineKeyboardButton(text="В меню", callback_data="start_menu"))
+account_keyboard.row(InlineKeyboardButton(text="В Меню", callback_data="start_menu"))
 
 statistics_keyboard = InlineKeyboardBuilder()
 statistics_keyboard.row(InlineKeyboardButton(text="Количество новых пользователей", callback_data="statistics|users"))
