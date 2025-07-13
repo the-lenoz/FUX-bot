@@ -204,9 +204,9 @@ async def edit_checkup_time_call(call: CallbackQuery, state: FSMContext):
     await state.update_data(checkup_id=checkup_id)
     timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id)
     await call.message.answer_photo(photo=checkup_emotions_photo if checkup.type_checkup == "emotions" else checkup_productivity_photo,
-                                        caption="Для того, чтобы продолжить, введи, пожалуйста время в которое, тебе отправлять <u>трекинг</u> " + ("<b>эмоций</b>" if checkup.type_checkup == "emotions" else "<b>продуктивности</b>") +
+                                        caption="Для того, чтобы продолжить, введи, пожалуйста время, в которое тебе отправлять <u>трекинг</u> " + ("<b>эмоций</b>" if checkup.type_checkup == "emotions" else "<b>продуктивности</b>") +
                               f"\n\nСейчас данный трекинг отправляется в {(datetime.combine(datetime.today(), checkup.time_checkup) + timezone_delta).time().strftime('%H:%M')}",
-                              reply_markup=menu_keyboard.as_markup())
+                              reply_markup=settings_cancel_keyboard.as_markup())
     await call.message.delete()
 
 
