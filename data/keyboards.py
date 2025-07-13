@@ -99,6 +99,11 @@ choice_gender_keyboard.row(InlineKeyboardButton(text="В женском роде
 choice_gender_keyboard.row(InlineKeyboardButton(text="В мужском роде♂️", callback_data="gender|male"))
 choice_gender_keyboard.row(InlineKeyboardButton(text="Пропустить", callback_data="gender|No"))
 
+choice_gender_settings_keyboard = InlineKeyboardBuilder()
+choice_gender_settings_keyboard.row(InlineKeyboardButton(text="В женском роде♀️", callback_data="gender|female"))
+choice_gender_settings_keyboard.row(InlineKeyboardButton(text="В мужском роде♂️", callback_data="gender|male"))
+choice_gender_settings_keyboard.row(InlineKeyboardButton(text="Отменить", callback_data="system_settings"))
+
 
 exercises_keyboard = InlineKeyboardBuilder()
 exercises_keyboard.row(InlineKeyboardButton(text="Упражнения", callback_data="exercises_by_problem"))
