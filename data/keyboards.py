@@ -18,7 +18,7 @@ admin_kb = [
     ]
 admin_keyboard = ReplyKeyboardMarkup(keyboard=admin_kb, resize_keyboard=True)
 
-menu_button = InlineKeyboardButton(text="В меню", callback_data="start_menu")
+menu_button = InlineKeyboardButton(text="в Меню", callback_data="start_menu")
 
 edit_delete_notification_keyboard = InlineKeyboardBuilder()
 edit_delete_notification_keyboard.row(InlineKeyboardButton(text="Изменить время отчета",
@@ -31,7 +31,7 @@ edit_delete_notification_keyboard.row(InlineKeyboardButton(text="Отмена", 
 edit_activate_notification_keyboard = InlineKeyboardBuilder()
 edit_activate_notification_keyboard.row(InlineKeyboardButton(text="Включить автоматическую отправку отчета",
                                                            callback_data="activate_notification"))
-edit_activate_notification_keyboard.row(InlineKeyboardButton(text="В меню", callback_data="start_menu"))
+edit_activate_notification_keyboard.row(InlineKeyboardButton(text="в Меню", callback_data="start_menu"))
 
 referral_keyboard = InlineKeyboardBuilder()
 referral_keyboard.row(InlineKeyboardButton(text="Выпустить промокод", callback_data="create_promo_code"))
@@ -67,6 +67,16 @@ age_keyboard.row(InlineKeyboardButton(text="35-44", callback_data="age|35-44"))
 age_keyboard.row(InlineKeyboardButton(text="45+", callback_data="age|45+"))
 age_keyboard.row(InlineKeyboardButton(text="Пропустить", callback_data="age|No"))
 
+menu_age_keyboard = InlineKeyboardBuilder()
+menu_age_keyboard.row(InlineKeyboardButton(text="18-24", callback_data="age|18-24"))
+menu_age_keyboard.row(InlineKeyboardButton(text="25-34", callback_data="age|25-34"))
+menu_age_keyboard.row(InlineKeyboardButton(text="35-44", callback_data="age|35-44"))
+menu_age_keyboard.row(InlineKeyboardButton(text="45+", callback_data="age|45+"))
+menu_age_keyboard.row(InlineKeyboardButton(text="Отмена", callback_data="system_settings"))
+
+settings_cancel_keyboard = InlineKeyboardBuilder()
+settings_cancel_keyboard.row(InlineKeyboardButton(text="Отмена", callback_data="system_settings"))
+
 choice_bot_stat = InlineKeyboardBuilder()
 choice_bot_stat.row(InlineKeyboardButton(text="Количество новых пользователей", callback_data="statistic|new_users"))
 choice_bot_stat.row(InlineKeyboardButton(text="Количество всех запросов в GPT", callback_data="statistic|ai_requests"))
@@ -88,6 +98,11 @@ choice_gender_keyboard = InlineKeyboardBuilder()
 choice_gender_keyboard.row(InlineKeyboardButton(text="В женском роде♀️", callback_data="gender|female"))
 choice_gender_keyboard.row(InlineKeyboardButton(text="В мужском роде♂️", callback_data="gender|male"))
 choice_gender_keyboard.row(InlineKeyboardButton(text="Пропустить", callback_data="gender|No"))
+
+choice_gender_settings_keyboard = InlineKeyboardBuilder()
+choice_gender_settings_keyboard.row(InlineKeyboardButton(text="В женском роде♀️", callback_data="gender|female"))
+choice_gender_settings_keyboard.row(InlineKeyboardButton(text="В мужском роде♂️", callback_data="gender|male"))
+choice_gender_settings_keyboard.row(InlineKeyboardButton(text="Отменить", callback_data="system_settings"))
 
 
 exercises_keyboard = InlineKeyboardBuilder()
@@ -115,9 +130,9 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
             today_tracking = True
 
     if today_tracking:
-        keyboard.row(InlineKeyboardButton(text="Трекинг за сегодня", callback_data="go_checkup"))
+        keyboard.row(InlineKeyboardButton(text="Трекинги за СЕГОДНЯ", callback_data="go_checkup"))
     if missed_tracking:
-        keyboard.row(InlineKeyboardButton(text="Пропущенные трекинги", callback_data="missed_tracking"))
+        keyboard.row(InlineKeyboardButton(text="⚠️ПРОПУЩЕННЫЕ трекинги", callback_data="missed_tracking"))
 
     keyboard.row(InlineKeyboardButton(text="📝Упражнения", callback_data="exercises_by_problem"))
     keyboard.add(InlineKeyboardButton(text="📉️Трекинги", callback_data="checkups"))
@@ -218,8 +233,8 @@ type_users_mailing_keyboard.row(InlineKeyboardButton(text="Отмена", callba
 
 
 account_keyboard = InlineKeyboardBuilder()
-account_keyboard.row(InlineKeyboardButton(text="Настройки аккаунта", callback_data="settings|account"))
-account_keyboard.row(InlineKeyboardButton(text="В меню", callback_data="start_menu"))
+account_keyboard.row(InlineKeyboardButton(text="Настройки", callback_data="system_settings"))
+account_keyboard.row(InlineKeyboardButton(text="в Меню", callback_data="start_menu"))
 
 statistics_keyboard = InlineKeyboardBuilder()
 statistics_keyboard.row(InlineKeyboardButton(text="Количество новых пользователей", callback_data="statistics|users"))

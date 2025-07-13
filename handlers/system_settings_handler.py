@@ -8,8 +8,9 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from bots import main_bot
-from data.keyboards import menu_keyboard, menu_button, get_ai_temperature_keyboard, age_keyboard, choice_gender_keyboard, \
-    account_keyboard, cancel_keyboard
+from data.keyboards import menu_keyboard, menu_button, get_ai_temperature_keyboard, age_keyboard, \
+    choice_gender_keyboard, \
+    cancel_keyboard, menu_age_keyboard, settings_cancel_keyboard, choice_gender_settings_keyboard
 from db.repository import users_repository, checkup_repository, subscriptions_repository, user_timezone_repository
 from settings import InputMessage, ai_temperature_text, is_valid_time, temperature_ai_photo, AccountSettingsStates, \
     is_valid_email, checkup_emotions_photo, checkup_productivity_photo
@@ -51,14 +52,14 @@ async def send_system_settings(user_id: int):
         InlineKeyboardButton(text=f"Пол: {'Мужской' if user.gender == 'male' else ('Женский' if user.gender == 'female' else 'НЕ УСТАНОВЛЕН')}",
                              callback_data="settings|edit|gender")
     )
+    keyboard.row(InlineKeyboardButton(text=f"👄Режим общения: {'Прямолинейный' if user.ai_temperature == 0.6 else 'Нейтральный'}", callback_data="settings|temperature"))
     keyboard.row(
         InlineKeyboardButton(
-            text=f"Часовой пояс: {user_timezone_name if user_timezone_name else 'НЕ УСТАНОВЛЕН'}",
+            text=f"Часовой пояс: {user_timezone_name[:8] if user_timezone_name else 'НЕ УСТАНОВЛЕН'}",
             callback_data="settings|edit|timezone")
     )
     if user.email:
         keyboard.row(InlineKeyboardButton(text=f"Email: {user.email}", callback_data="settings|edit|email"))
-    keyboard.row(InlineKeyboardButton(text=f"Режим общения: {'прямолинейный' if user.ai_temperature == 0.6 else 'нейтральный'}", callback_data="settings|temperature"))
     for checkup in user_checkups:
         text = ("Время трекинга эмоций🤩" if checkup.type_checkup == "emotions" else "Время трекинга продуктивности🚀") + f": {(datetime.combine(datetime.today(), checkup.time_checkup) + timezone_delta).time().strftime('%H:%M')}"
         keyboard.row(InlineKeyboardButton(text=text, callback_data=f"edit_checkup|{checkup.id}"))
@@ -78,7 +79,7 @@ async def account_settings(call: CallbackQuery, state: FSMContext):
     #    InlineKeyboardButton(text="Удалить аккаунт", callback_data="account|delete|0")
     #)
     keyboard.row(
-        InlineKeyboardButton(text="В меню", callback_data="start_menu")
+        InlineKeyboardButton(text="в Меню", callback_data="start_menu")
     )
     await call.message.answer(
         text="Здесь можно менять свои данные",
@@ -93,25 +94,26 @@ async def edit_profile(call: CallbackQuery, state: FSMContext):
     if edit_type == 'name':
         await call.message.answer(
             "Введи своё имя:",
-            reply_markup=cancel_keyboard.as_markup()
+            reply_markup=settings_cancel_keyboard.as_markup()
         )
         await state.set_state(AccountSettingsStates.edit_name)
     elif edit_type == 'email':
         await call.message.answer(
             "Введи новый email:",
-            reply_markup=cancel_keyboard.as_markup()
+            reply_markup=settings_cancel_keyboard.as_markup()
         )
         await state.set_state(AccountSettingsStates.edit_email)
     elif edit_type == 'age':
         await call.message.answer("Какой возрастной диапазон тебе ближе?",
-                                  reply_markup=age_keyboard.as_markup())
+                                  reply_markup=menu_age_keyboard.as_markup())
         await state.set_state(AccountSettingsStates.edit_age)
     elif edit_type == 'gender':
         await call.message.answer("В каком роде мне к тебе обращаться?🧡",
-                             reply_markup=choice_gender_keyboard.as_markup())
+                             reply_markup=choice_gender_settings_keyboard.as_markup())
         await state.set_state(AccountSettingsStates.edit_gender)
     elif edit_type == 'timezone':
-        await call.message.answer("🕒 Хочу быть в твоём ритме. Пришли своё текущее время (в формате 24ч), чтобы я определил часовой пояс. Пример: 18:12")
+        await call.message.answer("🕒 Хочу быть в твоём ритме. Пришли своё текущее время (в формате 24ч), чтобы я определил часовой пояс. Пример: 18:12",
+                                  reply_markup=settings_cancel_keyboard.as_markup())
         await state.set_state(InputMessage.enter_timezone)
 
     await call.message.delete()
@@ -127,7 +129,7 @@ async def edit_account_name(message: Message, state: FSMContext, bot: Bot):
 
     await message.answer(
         "Имя сохранено!",
-        reply_markup=account_keyboard.as_markup()
+        reply_markup=settings_cancel_keyboard.as_markup()
     )
 
 @system_settings_router.message(F.text, AccountSettingsStates.edit_email)
@@ -142,7 +144,7 @@ async def edit_account_email(message: Message, state: FSMContext, bot: Bot):
 
         await message.answer(
             "Новый email сохранён!",
-            reply_markup=account_keyboard.as_markup()
+            reply_markup=settings_cancel_keyboard.as_markup()
         )
     else:
         await message.answer(
@@ -202,9 +204,9 @@ async def edit_checkup_time_call(call: CallbackQuery, state: FSMContext):
     await state.update_data(checkup_id=checkup_id)
     timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id)
     await call.message.answer_photo(photo=checkup_emotions_photo if checkup.type_checkup == "emotions" else checkup_productivity_photo,
-                                        caption="Для того, чтобы продолжить, введи, пожалуйста время в которое, тебе отправлять <u>трекинг</u> " + ("<b>эмоций</b>" if checkup.type_checkup == "emotions" else "<b>продуктивности</b>") +
+                                        caption="Для того, чтобы продолжить, введи, пожалуйста время, в которое тебе отправлять <u>трекинг</u> " + ("<b>эмоций</b>" if checkup.type_checkup == "emotions" else "<b>продуктивности</b>") +
                               f"\n\nСейчас данный трекинг отправляется в {(datetime.combine(datetime.today(), checkup.time_checkup) + timezone_delta).time().strftime('%H:%M')}",
-                              reply_markup=menu_keyboard.as_markup())
+                              reply_markup=settings_cancel_keyboard.as_markup())
     await call.message.delete()
 
 

@@ -4,11 +4,12 @@ from datetime import timezone
 
 from aiogram import Bot
 from aiogram.enums import ParseMode
+from aiogram.exceptions import TelegramForbiddenError
 
 import utils.checkups
 from data.keyboards import buy_sub_keyboard, notification_keyboard, main_keyboard
 from db.repository import subscriptions_repository, users_repository, checkup_repository, events_repository, \
-    admin_repository, limits_repository
+    admin_repository, limits_repository, days_checkups_repository
 from settings import payment_photo, how_are_you_photo, menu_photo
 from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report
 from utils.gpt_distributor import user_request_handler
@@ -44,6 +45,10 @@ async def send_checkup():
         try:
             if now_date.time() >= checkup.time_checkup and now_date.date() != checkup.last_date_send.date():
                 await utils.checkups.send_checkup(checkup.id)
+        except TelegramForbiddenError as e:
+            await days_checkups_repository.delete_days_checkups_by_checkup_id(checkup.id)
+            await checkup_repository.delete_checkup_by_checkup_id(checkup.id)
+
         except Exception as e:
             print(f"\n\nВОЗНИКЛА ОШИБКА ОТПРАВКИ ПОЛЬЗОВАТЕЛЮ {checkup.user_id}\n\n" + traceback.format_exc() + "\n\n")
             continue
@@ -168,11 +173,24 @@ async def send_user_statistics(admin_bot: Bot):
         )
 
 
-async def reset_limits():
+async def reset_limits(main_bot: Bot):
     await limits_repository.reset_all_limits(
         exercises_remaining=2,
         universal_requests_remaining=20
     )
+
+    users = await users_repository.select_all_users()
+    for user in users:
+        user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user.user_id)
+        if user_sub is None:
+            try:
+                await main_bot.send_message(chat_id=user.user_id, text="""✅Начало недели, а это значит, что тебе снова <b>доступно</b>: 
+
+👨‍💻<b>20 Запросов</b> /в неделю
+✍️<b>2 Упражнения</b> /в неделю""")
+            except:
+                continue
+
 
 
 
