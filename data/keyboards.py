@@ -67,6 +67,13 @@ age_keyboard.row(InlineKeyboardButton(text="35-44", callback_data="age|35-44"))
 age_keyboard.row(InlineKeyboardButton(text="45+", callback_data="age|45+"))
 age_keyboard.row(InlineKeyboardButton(text="Пропустить", callback_data="age|No"))
 
+menu_age_keyboard = InlineKeyboardBuilder()
+menu_age_keyboard.row(InlineKeyboardButton(text="18-24", callback_data="age|18-24"))
+menu_age_keyboard.row(InlineKeyboardButton(text="25-34", callback_data="age|25-34"))
+menu_age_keyboard.row(InlineKeyboardButton(text="35-44", callback_data="age|35-44"))
+menu_age_keyboard.row(InlineKeyboardButton(text="45+", callback_data="age|45+"))
+menu_age_keyboard.row(InlineKeyboardButton(text="Отмена", callback_data="system_settings"))
+
 choice_bot_stat = InlineKeyboardBuilder()
 choice_bot_stat.row(InlineKeyboardButton(text="Количество новых пользователей", callback_data="statistic|new_users"))
 choice_bot_stat.row(InlineKeyboardButton(text="Количество всех запросов в GPT", callback_data="statistic|ai_requests"))
