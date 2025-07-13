@@ -69,7 +69,7 @@ async def main():
     scheduler.add_job(
         reset_limits,
         trigger=CronTrigger(day_of_week=1),
-        args=[]
+        args=[main_bot]
     )
 
 

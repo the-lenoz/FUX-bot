@@ -173,11 +173,24 @@ async def send_user_statistics(admin_bot: Bot):
         )
 
 
-async def reset_limits():
+async def reset_limits(main_bot: Bot):
     await limits_repository.reset_all_limits(
         exercises_remaining=2,
         universal_requests_remaining=20
     )
+
+    users = await users_repository.select_all_users()
+    for user in users:
+        user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user.user_id)
+        if user_sub is None:
+            try:
+                await main_bot.send_message(chat_id=user.user_id, text="""✅Начало недели, а это значит, что тебе снова <b>доступно</b>: 
+
+👨‍💻<b>20 Запросов</b> /в неделю
+✍️<b>2 Упражнения</b> /в неделю""")
+            except:
+                continue
+
 
 
 
