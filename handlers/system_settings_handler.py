@@ -8,8 +8,9 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from bots import main_bot
-from data.keyboards import menu_keyboard, menu_button, get_ai_temperature_keyboard, age_keyboard, choice_gender_keyboard, \
-    account_keyboard, cancel_keyboard
+from data.keyboards import menu_keyboard, menu_button, get_ai_temperature_keyboard, age_keyboard, \
+    choice_gender_keyboard, \
+    account_keyboard, cancel_keyboard, menu_age_keyboard
 from db.repository import users_repository, checkup_repository, subscriptions_repository, user_timezone_repository
 from settings import InputMessage, ai_temperature_text, is_valid_time, temperature_ai_photo, AccountSettingsStates, \
     is_valid_email, checkup_emotions_photo, checkup_productivity_photo
