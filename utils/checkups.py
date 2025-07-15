@@ -32,8 +32,3 @@ async def send_checkup(checkup_id: int):
                                                                          last_date_send=now_date)
 
 
-async def sent_today(day_checkup_id: int) -> bool:
-    day_checkup = await days_checkups_repository.get_latest_ended_day_checkup_by_checkup_id(day_checkup_id)
-    if day_checkup and day_checkup.creation_date and day_checkup.creation_date.date() == datetime.now(timezone.utc).date():
-        return True
-    return False
