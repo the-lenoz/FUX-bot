@@ -44,22 +44,3 @@ def export_table_to_memory(table_name: str):
     except Exception as e:
         print(e)
         return "Error"
-
-
-# if __name__ == "__main__":
-#     # Параметры для подключения к базе данных
-#
-#     # Формируем строку подключения
-#
-#     # Пример вызова функции для таблицы "users"
-#     table_name = "users"  # замените на нужную вам таблицу
-#
-#     excel_in_memory = export_table_to_memory(table_name)
-#
-#     # Теперь excel_in_memory содержит Excel-файл в виде байтов.
-#     # Вы можете, например, сохранить его на диск (если нужно) или передать куда-то дальше:
-#     # Пример сохранения в файл:
-#     with open("users_data.xlsx", "wb") as f:
-#         f.write(excel_in_memory.getbuffer())
-#
-#     print("Excel-файл успешно сформирован в памяти и сохранён в 'users_data.xlsx'.")

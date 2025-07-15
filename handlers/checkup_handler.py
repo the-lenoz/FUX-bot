@@ -18,7 +18,7 @@ from settings import checkups_types_photo, checkup_emotions_photo, \
 from utils.state_models import InputMessage
 from utils.validators import is_valid_time
 from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report
-from utils.checkups_ended import sent_today
+from utils.checkups import sent_today
 from utils.timezone_matcher import calculate_timezone
 
 checkup_router = Router()

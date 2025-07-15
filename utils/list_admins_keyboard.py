@@ -4,8 +4,9 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from db.repository import admin_repository
 
 
-class Admins_kb:
-    async def generate_list(self):
+class AdminsKeyboard:
+    @staticmethod
+    async def generate_list():
         admins = await admin_repository.select_all_admins()
         keyboard = InlineKeyboardBuilder()
         for admin in admins:

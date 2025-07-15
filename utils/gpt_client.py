@@ -2,26 +2,22 @@ import logging
 import mimetypes
 import os
 import secrets
-from io import BytesIO
 from typing import Literal, Dict, List
 
 import httpx
 import openai
-import pydub
 from aiogram.types import BufferedInputFile
 from google.cloud import texttospeech, storage
-from google.cloud.storage import transfer_manager
-from google.cloud.texttospeech import SynthesisInput, VoiceSelectionParams, SsmlVoiceGender, AudioConfig, \
-    AudioEncoding, ListVoicesRequest
+from google.cloud.texttospeech import SynthesisInput, VoiceSelectionParams, AudioConfig, \
+    AudioEncoding
 from google.genai import types, Client
 from google.genai.types import HttpOptions
 from openai import AsyncOpenAI
 from pydantic import BaseModel
 
-from settings import openai_api_key, gemini_api_key
+from settings import openai_api_key
 from utils.prompts import SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT
 from utils.user_request_types import UserFile
-
 
 BASIC_MODEL = "gemini-2.5-flash-lite-preview-06-17"
 ADVANCED_MODEL = "gemini-2.5-flash"

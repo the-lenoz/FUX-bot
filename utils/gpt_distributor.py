@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import re
 from asyncio import Lock
 from random import choice
 from typing import Dict
@@ -15,6 +14,7 @@ from bots import main_bot
 from data.keyboards import get_rec_keyboard, buy_sub_keyboard, create_practice_exercise_recommendation_keyboard
 from db.repository import users_repository, ai_requests_repository, mental_problems_repository, \
     exercises_user_repository, recommendations_repository, limits_repository
+from settings import messages_dict
 from utils.documents import convert_to_pdf
 from utils.gpt_client import BASIC_MODEL, ADVANCED_MODEL, ModelChatThread, LLMProvider
 from utils.photo_recommendation import generate_blurred_image_with_text
@@ -55,26 +55,26 @@ class UserRequestHandler:
                 else:
                     await main_bot.send_message(
                         request.user_id,
-                        "Чтобы общаться с 🤖 <i>универсальным ассистентом</i> — оформи <b>подписку</b>",
+                        messages_dict["universal_assistant_subscription_text"],
                         reply_markup=buy_sub_keyboard.as_markup()
                     )
             else:
                 if request.file.file_type == 'image':
                     await main_bot.send_message(
                         request.user_id,
-                        "Чтобы я смог считывать твои 🌇 <i>фотографии</i> — оформи <b>подписку</b>",
+                        messages_dict["send_photos_subscription_text"],
                         reply_markup=buy_sub_keyboard.as_markup()
                     )
                 elif request.file.file_type == 'voice':
                     await main_bot.send_message(
                         request.user_id,
-                        "Чтобы я смог считывать твои 🎙️ <i>голосовые сообщения</i> — оформи <b>подписку</b>",
+                        messages_dict["send_voice_subscription_text"],
                         reply_markup=buy_sub_keyboard.as_markup()
                     )
                 elif request.file.file_type == 'document':
                     await main_bot.send_message(
                         request.user_id,
-                        "Чтобы я смог считывать твои 📁 <i>файлы</i> — оформи <b>подписку</b>",
+                        messages_dict["send_document_subscription_text"],
                         reply_markup=buy_sub_keyboard.as_markup()
                     )
 
@@ -91,7 +91,7 @@ class AIHandler:
     async def handle(self, request: UserRequest):
         typing_message = await main_bot.send_message(
             request.user_id,
-            "💬<i>Печатаю…</i>"
+            messages_dict["typing_message_text"]
         )
         try:
             await main_bot.send_chat_action(chat_id=request.user_id, action="typing")
@@ -304,7 +304,7 @@ class PsyHandler(AIHandler):
 
         if await check_is_subscribed(request.user_id):
             if self.messages_count[request.user_id] + 1 in self.MESSAGES_LIMITS:
-                await main_bot.send_message(request.user_id, 'Ты всегда можешь получить рекомендацию с /recommendation')
+                await main_bot.send_message(request.user_id, messages_dict["recommendation_command_reminder_text"])
             await super().handle(request)
         else:
             if self.messages_count[request.user_id] + 1 in self.MESSAGES_LIMITS \
@@ -318,7 +318,8 @@ class PsyHandler(AIHandler):
         try:
             await main_bot.send_message(
                 user_id,
-                f"{telegramify_markdown.markdownify(recommendation)}\n\n{'Ты всегда можешь получить рекомендацию с /recommendation' if from_notification else ''}",
+                telegramify_markdown.markdownify(recommendation) + '\n\n' +
+                (messages_dict["recommendation_command_reminder_text"] if from_notification else ''),
                 parse_mode=ParseMode.MARKDOWN_V2
             )  # Дать рекомендации
         except TelegramBadRequest as e:
@@ -344,7 +345,7 @@ class PsyHandler(AIHandler):
     async def provide_recommendations(self, user_id: int, from_notification: bool = False):
         typing_message = await main_bot.send_message(
             user_id,
-            "💬<i>Печатаю…</i>"
+            messages_dict["typing_message_text"]
         )
 
         try:
@@ -393,15 +394,13 @@ class PsyHandler(AIHandler):
                     user_id,
                     has_spoiler=True,
                     photo=BufferedInputFile(file=photo_recommendation, filename=f"recommendation.png"),
-                    caption=
-                    f"🌰<i>Рекомендация</i> готова, но чтобы получить её, нужна <b>подписка</b>"
-                    f"\n\n{'Ты всегда можешь получить рекомендацию с /recommendation' if from_notification else ''}",
+                    caption=messages_dict["subscribe_for_recommendation_text"],
                     reply_markup=get_rec_keyboard(mode_type=f"recommendation-{recommendation_object.id}").as_markup())
 
         else:
             await main_bot.send_message(
                 user_id,
-                "Для того, чтобы получить рекомендацию, обсуди проблему"
+                messages_dict["discuss_problem_for_recommendation_text"]
             )
 
 

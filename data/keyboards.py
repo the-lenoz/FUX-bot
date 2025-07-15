@@ -6,7 +6,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from db.repository import checkup_repository, days_checkups_repository, subscriptions_repository, users_repository, \
     user_timezone_repository
 from settings import emoji_dict, speed_dict, table_names
-from utils.checkups_ended import sent_today
+from utils.checkups import sent_today
 
 admin_kb = [
         [KeyboardButton(text='Статистика')],
