@@ -10,7 +10,7 @@ import utils.checkups
 from data.keyboards import buy_sub_keyboard, notification_keyboard, main_keyboard
 from db.repository import subscriptions_repository, users_repository, checkup_repository, events_repository, \
     admin_repository, limits_repository, days_checkups_repository
-from settings import payment_photo, how_are_you_photo, menu_photo
+from settings import payment_photo, how_are_you_photo, menu_photo, messages_dict
 from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report
 from utils.gpt_distributor import user_request_handler
 from utils.messages_provider import send_subscription_end_message
@@ -184,10 +184,7 @@ async def reset_limits(main_bot: Bot):
         user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user.user_id)
         if user_sub is None:
             try:
-                await main_bot.send_message(chat_id=user.user_id, text="""✅Начало недели, а это значит, что тебе снова <b>доступно</b>: 
-
-👨‍💻<b>20 Запросов</b> /в неделю
-✍️<b>2 Упражнения</b> /в неделю""")
+                await main_bot.send_message(chat_id=user.user_id, text=messages_dict["week_quota_message_text"])
             except:
                 continue
 

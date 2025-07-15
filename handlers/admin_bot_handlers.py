@@ -10,11 +10,11 @@ from data.keyboards import admin_keyboard, add_delete_admin, cancel_keyboard, db
     type_users_mailing_keyboard, statistics_keyboard
 from db.repository import admin_repository, users_repository, ai_requests_repository, subscriptions_repository, \
     referral_system_repository
-from settings import InputMessage
+from utils.state_models import InputMessage
 from utils.generate_promo import generate_single_promo_code
 from utils.get_table_db_to_excel import export_table_to_memory
 from utils.is_main_admin import is_main_admin
-from utils.list_admins_keyboard import Admins_kb
+from utils.list_admins_keyboard import AdminsKeyboard
 
 admin_router = Router()
 
@@ -245,7 +245,7 @@ async def enter_new_admin_id(call: types.CallbackQuery, state: FSMContext, bot: 
 @admin_router.callback_query(F.data == "delete_admin")
 @is_main_admin
 async def delete_old_admin(call: types.CallbackQuery, state: FSMContext, bot: Bot):
-    keyboard = await Admins_kb().generate_list()
+    keyboard = await AdminsKeyboard().generate_list()
     await call.message.edit_text(text="Отлично, теперь выбери из представленных админов, которого хочешь удалить",
                                  reply_markup=keyboard.as_markup())
 

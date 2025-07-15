@@ -5,7 +5,6 @@ import os
 import random
 import secrets
 from datetime import timedelta, date, datetime, timezone
-from io import BytesIO
 from statistics import fmean
 from typing import Literal, List
 
@@ -14,7 +13,7 @@ from PIL import Image, ImageFont, ImageDraw
 from aiogram.types import BufferedInputFile, FSInputFile
 
 from bots import main_bot
-from data.keyboards import buy_sub_keyboard, get_rec_keyboard
+from data.keyboards import get_rec_keyboard
 from db.repository import days_checkups_repository, users_repository
 from settings import calendar_template_photo
 from utils.subscription import check_is_subscribed
@@ -51,8 +50,8 @@ trophy_image = Image.open("assets/trophy.png").resize((40, 40))
 
 # Шрифты Roboto
 try:
-    FONT_PATH_BOLD = "assets/fonts/Roboto-Bold.ttf"
-    FONT_PATH_REGULAR = "assets/fonts/Roboto-Regular.ttf"
+    FONT_PATH_BOLD = os.path.join('assets', 'fonts', 'SFProDisplay-Bold.ttf')
+    FONT_PATH_REGULAR = os.path.join('assets', 'fonts', 'SFProDisplay-Regular.ttf')
     font_subtitle = ImageFont.truetype(FONT_PATH_BOLD, 72)
     font_month_header = ImageFont.truetype(FONT_PATH_BOLD, 56)
     font_day_num = ImageFont.truetype(FONT_PATH_REGULAR, 22)
@@ -72,7 +71,7 @@ MONTH_NAMES_RU = {
 MONTH_NAMES_RU_CAPS = {k: v.upper() for k, v in MONTH_NAMES_RU.items()}
 
 
-def generate_emotion_chart(emotion_data=None, dates=None, checkup_type: Literal["emotions", "productivity"] | None = None):
+def generate_weekly_tracking_report(emotion_data=None, dates=None, checkup_type: Literal["emotions", "productivity"] | None = None):
     """
     Принимает список эмоций (от 1 до 5) длиной 7 элементов.
     Возвращает график в виде bytes (для отправки через Telegram-бота).
@@ -133,8 +132,8 @@ def generate_emotion_chart(emotion_data=None, dates=None, checkup_type: Literal[
             emotion_data, marker='o',
             markersize=10,
             color='black',
-            markerfacecolor='orangered',
-            markeredgecolor='orangered',
+            markerfacecolor='#F76000',
+            markeredgecolor='#F76000',
             linewidth=2)
 
     # Настраиваем оси
@@ -143,29 +142,29 @@ def generate_emotion_chart(emotion_data=None, dates=None, checkup_type: Literal[
     ax.set_xticks(range(len(dates)))
 
     # Используем переданные даты для подписей оси X
-    ax.set_xticklabels(dates, fontsize=12, color='orangered')
+    ax.set_xticklabels(dates, fontsize=12, color='#F76000')
     fig.subplots_adjust(left=0.3, bottom=0.3, right=0.7, top=0.7)
 
     # Выделяем последний день недели (воскресенье)
     for i, label in enumerate(ax.get_xticklabels()):
         if i != len(dates) - 1:
             label.set_bbox(dict(facecolor='white', edgecolor='none', pad=5, boxstyle='round,pad=0.5'))
-            label.set_color('orangered')
+            label.set_color('#F76000')
         else: # Последний день (воскресенье)
-            label.set_bbox(dict(facecolor='orangered', edgecolor='none', pad=5, boxstyle='round,pad=0.5'))
+            label.set_bbox(dict(facecolor='#F76000', edgecolor='none', pad=5, boxstyle='round,pad=0.5'))
             label.set_color('white')
 
     name = 'НЕДЕЛЬНЫЙ ТРЕКИНГ'
     name2 = "ЭМОЦИЙ" if checkup_type == "emotions" else "ПРОДУКТИВНОСТИ"
 
     ax.text(0.5, 1.05, name, ha='center', va='center', transform=ax.transAxes,
-            fontsize=18, color='black', weight='bold')
+            fontsize=18, color='black', font=FONT_PATH_BOLD, weight='bold')
 
     ax.text(0.5, 1, name2, ha='center', va='center', transform=ax.transAxes,
-            fontsize=18, color='orangered', weight='bold')
+            fontsize=18, color='#F76000', font=FONT_PATH_BOLD, weight='bold')
 
     ax.text(0.1, -0.15, '@FuhMentalBot', ha='center', va='center', transform=ax.transAxes,
-            fontsize=16, color='orangered')
+            fontsize=16, color='#F76000', font=FONT_PATH_REGULAR)
 
     # Сохраняем график во временный файл
     temp_filename = f'temp_chart_{secrets.token_hex(32)}.png'
@@ -179,20 +178,6 @@ def generate_emotion_chart(emotion_data=None, dates=None, checkup_type: Literal[
 
     # Преобразуем в RGBA для поддержки прозрачности
     img = img.convert('RGBA')
-
-    # Пробуем найти подходящий шрифт для эмодзи
-    # try:
-        # Указываем путь к вашему локальному шрифту
-    font_path = os.path.join('utils', 'fonts', 'NotoColorEmoji-Regular.ttf')
-    emoji_font = None
-    emoji_size = 40
-    # Сначала пробуем загрузить локальный шрифт
-    try:
-        emoji_font = ImageFont.truetype(font_path, emoji_size)
-        # print(f"Успешно загружен локальный шрифт: {font_path}")
-    except Exception as e:
-        # print(f"Критическая ошибка загрузки шрифта: {e}")
-        emoji_font = ImageFont.load_default()
 
     # Получаем координаты для размещения эмодзи на графике
     x_min, x_max = 0.1 * width, 0.9 * width
@@ -378,9 +363,9 @@ async def send_weekly_checkup_report(user_id: int, last_date = None):
             if send:
                 if user.received_weekly_tracking_reports < 3 or await check_is_subscribed(user_id):
                     await users_repository.user_got_weekly_reports(user_id=user_id)
-                    graphic = generate_emotion_chart(emotion_data=checkups_report,
-                                                     dates=["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"],
-                                                     checkup_type=checkup_type)
+                    graphic = generate_weekly_tracking_report(emotion_data=checkups_report,
+                                                              dates=["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"],
+                                                              checkup_type=checkup_type)
                     await main_bot.send_photo(
                         photo=BufferedInputFile(file=graphic, filename="graphic.png"),
                         chat_id=user.user_id,

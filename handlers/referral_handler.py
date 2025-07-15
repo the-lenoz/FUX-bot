@@ -4,10 +4,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
 from data.keyboards import referral_keyboard, menu_keyboard
-# from data.keyboards import choice_keyboard
-# from data.messages import start_message, wait_manager, update_language
 from db.repository import referral_system_repository
-from settings import InputMessage, start_referral_text
+from settings import messages_dict
+from utils.state_models import InputMessage
 from utils.generate_promo import generate_single_promo_code
 
 referral_router = Router()
@@ -15,13 +14,13 @@ referral_router = Router()
 
 @referral_router.callback_query(F.data == "referral_system")
 async def referral_system_message(call: CallbackQuery):
-    await call.message.answer(text=start_referral_text, reply_markup=referral_keyboard.as_markup())
+    await call.message.answer(text=messages_dict["start_referral_text"], reply_markup=referral_keyboard.as_markup())
     await call.message.delete()
 
 
 @referral_router.message(Command("referral"))
 async def referral_command_handler(message: Message, bot: Bot):
-    await message.answer(text=start_referral_text, reply_markup=referral_keyboard.as_markup())
+    await message.answer(text=messages_dict["start_referral_text"], reply_markup=referral_keyboard.as_markup())
 
 
 @referral_router.callback_query(F.data == "create_promo_code")

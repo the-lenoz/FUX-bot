@@ -13,10 +13,12 @@ from data.keyboards import checkup_type_keyboard, buy_sub_keyboard, menu_keyboar
 from db.repository import users_repository, subscriptions_repository, checkup_repository, days_checkups_repository, \
     user_timezone_repository
 from handlers.system_settings_handler import send_system_settings
-from settings import mechanic_checkup, InputMessage, is_valid_time, checkups_types_photo, checkup_emotions_photo, \
-    checkup_productivity_photo, AccountSettingsStates
-from utils.checkups_ended import sent_today
+from settings import checkups_types_photo, checkup_emotions_photo, \
+    checkup_productivity_photo, messages_dict
+from utils.state_models import InputMessage
+from utils.validators import is_valid_time
 from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report
+from utils.checkups_sent import sent_today
 from utils.timezone_matcher import calculate_timezone
 
 checkup_router = Router()
@@ -127,7 +129,7 @@ async def start_checkup(call: CallbackQuery, state: FSMContext):
     await call.message.delete()
     user_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id=call.from_user.id)
     await call.message.answer_photo(photo=checkups_types_photo,
-                                    caption=mechanic_checkup[0] + (mechanic_checkup[1] if not user_checkups else ''),
+                                    caption=messages_dict["tracking_mechanic_text"] + (messages_dict["tracking_mechanic_start_text"] if not user_checkups else ''),
                                     reply_markup=checkup_type_keyboard.as_markup())
 
 

@@ -8,15 +8,15 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from bots import main_bot
-from data.keyboards import menu_keyboard, menu_button, get_ai_temperature_keyboard, age_keyboard, \
-    choice_gender_keyboard, \
-    cancel_keyboard, menu_age_keyboard, settings_cancel_keyboard, choice_gender_settings_keyboard
+from data.keyboards import menu_keyboard, menu_button, get_ai_temperature_keyboard, menu_age_keyboard, \
+    settings_cancel_keyboard, choice_gender_settings_keyboard
 from db.repository import users_repository, checkup_repository, subscriptions_repository, user_timezone_repository
-from settings import InputMessage, ai_temperature_text, is_valid_time, temperature_ai_photo, AccountSettingsStates, \
-    is_valid_email, checkup_emotions_photo, checkup_productivity_photo
+from settings import temperature_ai_photo, checkup_emotions_photo, checkup_productivity_photo, messages_dict
+from utils.state_models import InputMessage, AccountSettingsStates
 from utils.gpt_distributor import user_request_handler
 from utils.timezone_matcher import calculate_timezone
 from utils.user_properties import delete_user
+from utils.validators import is_valid_email, is_valid_time
 
 system_settings_router = Router()
 
@@ -112,7 +112,7 @@ async def edit_profile(call: CallbackQuery, state: FSMContext):
                              reply_markup=choice_gender_settings_keyboard.as_markup())
         await state.set_state(AccountSettingsStates.edit_gender)
     elif edit_type == 'timezone':
-        await call.message.answer("🕒 Хочу быть в твоём ритме. Пришли своё текущее время (в формате 24ч), чтобы я определил часовой пояс. Пример: 18:12",
+        await call.message.answer(messages_dict["timezone_input_message_text"],
                                   reply_markup=settings_cancel_keyboard.as_markup())
         await state.set_state(InputMessage.enter_timezone)
 
@@ -172,7 +172,7 @@ async def set_system_settings_temperature(call: CallbackQuery, state: FSMContext
     user = await users_repository.get_user_by_user_id(user_id)
     if user_sub:
         await call.message.answer_photo(photo=temperature_ai_photo,
-                                        caption=ai_temperature_text, reply_markup=get_ai_temperature_keyboard(user.ai_temperature).as_markup())
+                                        caption=messages_dict["communication_mode_mechanic_text"], reply_markup=get_ai_temperature_keyboard(user.ai_temperature).as_markup())
         await call.message.delete()
     else:
         await call.message.answer("К сожалению, ты не можешь изменить "

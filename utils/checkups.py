@@ -31,3 +31,4 @@ async def send_checkup(checkup_id: int):
     await checkup_repository.update_last_date_send_checkup_by_checkup_id(checkup_id=checkup.id,
                                                                          last_date_send=now_date)
 
+
