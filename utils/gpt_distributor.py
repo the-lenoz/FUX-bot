@@ -39,57 +39,58 @@ class UserRequestHandler:
             if not request.file.filename.endswith('pdf'):
                 request.file.filename, request.file.file_bytes = await convert_to_pdf(request.file.filename,
                                                                                 request.file.file_bytes)
-
-
-        if await check_is_subscribed(request.user_id):
-            await self.AI_handler.handle(request)
-        else:
-            await asyncio.sleep(2)
-            limits = await limits_repository.get_user_limits(user_id=request.user_id)
-            if request.file is None:
-                if await LLMProvider.is_text_smalltalk(request.text):
-                    await self.AI_handler.handle(request)
-                elif await self.AI_handler.check_is_dialog_latest_message_psy(request):
-                    if limits.psychological_requests_remaining:
-                        await limits_repository.update_user_limits(user_id=request.user_id,
-                                                                   psychological_requests_remaining=limits.psychological_requests_remaining - 1)
-                        await self.AI_handler.handle(request)
-                    else:
-                        await main_bot.send_message(
-                            request.user_id,
-                            messages_dict["mental_assistant_subscription_text"],
-                            reply_markup=buy_sub_keyboard.as_markup()
-                        )
-                else:
-                    if limits.universal_requests_remaining:
-                        await limits_repository.update_user_limits(user_id=request.user_id,
-                                                                   universal_requests_remaining=limits.universal_requests_remaining - 1)
-                        await self.AI_handler.handle(request)
-                    else:
-                        await main_bot.send_message(
-                            request.user_id,
-                            messages_dict["universal_assistant_subscription_text"],
-                            reply_markup=buy_sub_keyboard.as_markup()
-                        )
+        if not self.AI_handler.thread_locks.get(request.user_id):
+            self.AI_handler.thread_locks[request.user_id] = Lock()
+        async with self.AI_handler.thread_locks[request.user_id]:
+            if await check_is_subscribed(request.user_id):
+                await self.AI_handler.handle(request)
             else:
-                if request.file.file_type == 'image':
-                    await main_bot.send_message(
-                        request.user_id,
-                        messages_dict["send_photos_subscription_text"],
-                        reply_markup=buy_sub_keyboard.as_markup()
-                    )
-                elif request.file.file_type == 'voice':
-                    await main_bot.send_message(
-                        request.user_id,
-                        messages_dict["send_voice_subscription_text"],
-                        reply_markup=buy_sub_keyboard.as_markup()
-                    )
-                elif request.file.file_type == 'document':
-                    await main_bot.send_message(
-                        request.user_id,
-                        messages_dict["send_document_subscription_text"],
-                        reply_markup=buy_sub_keyboard.as_markup()
-                    )
+                await asyncio.sleep(2)
+                limits = await limits_repository.get_user_limits(user_id=request.user_id)
+                if request.file is None:
+                    if await LLMProvider.is_text_smalltalk(request.text):
+                        await self.AI_handler.handle(request)
+                    elif await self.AI_handler.check_is_dialog_latest_message_psy(request):
+                        if limits.psychological_requests_remaining:
+                            await limits_repository.update_user_limits(user_id=request.user_id,
+                                                                       psychological_requests_remaining=limits.psychological_requests_remaining - 1)
+                            await self.AI_handler.handle(request)
+                        else:
+                            await main_bot.send_message(
+                                request.user_id,
+                                messages_dict["mental_assistant_subscription_text"],
+                                reply_markup=buy_sub_keyboard.as_markup()
+                            )
+                    else:
+                        if limits.universal_requests_remaining:
+                            await limits_repository.update_user_limits(user_id=request.user_id,
+                                                                       universal_requests_remaining=limits.universal_requests_remaining - 1)
+                            await self.AI_handler.handle(request)
+                        else:
+                            await main_bot.send_message(
+                                request.user_id,
+                                messages_dict["universal_assistant_subscription_text"],
+                                reply_markup=buy_sub_keyboard.as_markup()
+                            )
+                else:
+                    if request.file.file_type == 'image':
+                        await main_bot.send_message(
+                            request.user_id,
+                            messages_dict["send_photos_subscription_text"],
+                            reply_markup=buy_sub_keyboard.as_markup()
+                        )
+                    elif request.file.file_type == 'voice':
+                        await main_bot.send_message(
+                            request.user_id,
+                            messages_dict["send_voice_subscription_text"],
+                            reply_markup=buy_sub_keyboard.as_markup()
+                        )
+                    elif request.file.file_type == 'document':
+                        await main_bot.send_message(
+                            request.user_id,
+                            messages_dict["send_document_subscription_text"],
+                            reply_markup=buy_sub_keyboard.as_markup()
+                        )
 
 
 class AIHandler:
@@ -110,14 +111,9 @@ class AIHandler:
             await main_bot.send_chat_action(chat_id=request.user_id, action="typing")
         except TelegramRetryAfter:
             pass
+        await self.create_message(request)
 
-        if not self.thread_locks.get(request.user_id):
-            self.thread_locks[request.user_id] = Lock()
-
-        async with self.thread_locks[request.user_id]:
-            await self.create_message(request)
-
-            result = await self.run_thread(request.user_id)
+        result = await self.run_thread(request.user_id)
 
         interpreter_chain = InterpreterChain([
             TextInterpreter(),  # Use pure text first
@@ -256,51 +252,41 @@ class AIHandler:
             )
 
     async def exit(self, user_id: int):
-        if self.thread_locks.get(user_id):
-            async with self.thread_locks[user_id]:
-                self.active_threads[user_id] = None
+        self.active_threads[user_id] = None
 
 
     async def check_is_dialog_latest_message_psy(self, request: UserRequest) -> bool:
-        if not self.thread_locks.get(request.user_id):
-            self.thread_locks[request.user_id] = Lock()
+        check_request = UserRequest(
+            user_id=request.user_id,
+            text=DIALOG_LATEST_MESSAGE_CHECKER_PROMPT
+        )
 
-        async with self.thread_locks[request.user_id]:
-            check_request = UserRequest(
-                user_id=request.user_id,
-                text=DIALOG_LATEST_MESSAGE_CHECKER_PROMPT
-            )
+        message_id = await self.create_message(request)
+        check_message_id = await self.create_message(check_request)
 
-            message_id = await self.create_message(request)
-            check_message_id = await self.create_message(check_request)
+        result = False
+        response = await self.run_thread(request.user_id, False)
+        logger.info(f"Checker response: {response}")
+        result = 'true' in response.lower()
 
-            result = False
-            response = await self.run_thread(request.user_id, False)
-            logger.info(f"Checker response: {response}")
-            result = 'true' in response.lower()
-
-            self.active_threads[request.user_id].delete_message(message_id)
-            self.active_threads[request.user_id].delete_message(check_message_id)
+        self.active_threads[request.user_id].delete_message(message_id)
+        self.active_threads[request.user_id].delete_message(check_message_id)
 
         return result
 
     async def check_is_dialog_psy(self, user_id: int) -> bool:
-        if not self.thread_locks.get(user_id):
-            self.thread_locks[user_id] = Lock()
+        check_request = UserRequest(
+            user_id=user_id,
+            text=DIALOG_CHECKER_PROMPT
+        )
+        check_message_id = await self.create_message(check_request)
 
-        async with self.thread_locks[user_id]:
-            check_request = UserRequest(
-                user_id=user_id,
-                text=DIALOG_CHECKER_PROMPT
-            )
-            check_message_id = await self.create_message(check_request)
+        result = False
+        response = await self.run_thread(user_id, False)
+        logger.info(f"Checker response: {response}")
+        result = 'true' in response.lower()
 
-            result = False
-            response = await self.run_thread(user_id, False)
-            logger.info(f"Checker response: {response}")
-            result = 'true' in response.lower()
-
-            self.active_threads[user_id].delete_message(check_message_id)
+        self.active_threads[user_id].delete_message(check_message_id)
 
         return result
 
@@ -353,65 +339,65 @@ class PsyHandler(AIHandler):
             user_id,
             messages_dict["typing_message_text"]
         )
-
-        try:
-            await main_bot.send_chat_action(chat_id=user_id, action="typing")
-        except TelegramRetryAfter:
-            pass
-        await users_repository.user_got_recommendation(user_id)
-
-        user = await users_repository.get_user_by_user_id(user_id)
-        is_subscribed = await check_is_subscribed(user_id)
-
-        problem_id = await self.summarize_dialog_problem(user_id)
-
-        if (self.thread_locks.get(user_id) and self.active_threads.get(user_id)
-                and problem_id and self.thread_locks.get(user_id)): # doubled because await takes time
+        problem_id = None
+        if self.thread_locks.get(user_id):
             async with self.thread_locks[user_id]:
-                recommendation_request = UserRequest(
-                    user_id=user_id,
-                    text=RECOMMENDATION_PROMPT
-                )
-                await self.create_message(recommendation_request)
-                recommendation = await self.run_thread(user_id, save_answer=False)
-            logger.info("exiting thread...")
+                try:
+                    await main_bot.send_chat_action(chat_id=user_id, action="typing")
+                except TelegramRetryAfter:
+                    pass
+                await users_repository.user_got_recommendation(user_id)
 
-            recommendation_object = await recommendations_repository.add_recommendation(
-                user_id=user_id,
-                text=recommendation,
-                problem_id=problem_id
-            )
+                user = await users_repository.get_user_by_user_id(user_id)
+                is_subscribed = await check_is_subscribed(user_id)
 
+                problem_id = await self.summarize_dialog_problem(user_id)
+
+                if self.active_threads.get(user_id) and problem_id:
+                    recommendation_request = UserRequest(
+                        user_id=user_id,
+                        text=RECOMMENDATION_PROMPT
+                    )
+                    await self.create_message(recommendation_request)
+                    recommendation = await self.run_thread(user_id, save_answer=False)
+                    logger.info("exiting thread...")
+
+                    recommendation_object = await recommendations_repository.add_recommendation(
+                        user_id=user_id,
+                        text=recommendation,
+                        problem_id=problem_id
+                    )
+
+                    if not user.used_free_recommendation or is_subscribed:
+                        await self.send_recommendation(
+                            user_id=user_id,
+                            recommendation=recommendation,
+                            problem_id=problem_id,
+                            from_notification=from_notification
+                        )
+
+                        if not is_subscribed:
+                            await users_repository.used_free_recommendation(user_id)
+
+                    else:
+                        photo_recommendation = generate_blurred_image_with_text(text=recommendation, enable_blur=True)
+                        await main_bot.send_photo(
+                            user_id,
+                            has_spoiler=True,
+                            photo=BufferedInputFile(file=photo_recommendation, filename=f"recommendation.png"),
+                            caption=messages_dict["subscribe_for_recommendation_text"],
+                            reply_markup=get_rec_keyboard(mode_type=f"recommendation-{recommendation_object.id}").as_markup())
+
+                else:
+                    await main_bot.send_message(
+                        user_id,
+                        messages_dict["discuss_problem_for_recommendation_text"]
+                    )
+
+
+                await typing_message.delete()
+        if problem_id:
             await self.exit(user_id, save=False)
-            if not user.used_free_recommendation or is_subscribed:
-                await self.send_recommendation(
-                    user_id=user_id,
-                    recommendation=recommendation,
-                    problem_id=problem_id,
-                    from_notification=from_notification
-                )
-
-                if not is_subscribed:
-                    await users_repository.used_free_recommendation(user_id)
-
-            else:
-                photo_recommendation = generate_blurred_image_with_text(text=recommendation, enable_blur=True)
-                await main_bot.send_photo(
-                    user_id,
-                    has_spoiler=True,
-                    photo=BufferedInputFile(file=photo_recommendation, filename=f"recommendation.png"),
-                    caption=messages_dict["subscribe_for_recommendation_text"],
-                    reply_markup=get_rec_keyboard(mode_type=f"recommendation-{recommendation_object.id}").as_markup())
-
-        else:
-            await main_bot.send_message(
-                user_id,
-                messages_dict["discuss_problem_for_recommendation_text"]
-            )
-
-
-        await typing_message.delete()
-        await self.exit(user_id)
 
     async def generate_exercise(self, user_id: int, problem_id: int | None = None) -> str | None:
         if problem_id is None:
@@ -455,40 +441,40 @@ class PsyHandler(AIHandler):
     async def summarize_dialog_problem(self, user_id: int) -> int | None:
         logger.info("Summarizing dialog...")
         user = await users_repository.get_user_by_user_id(user_id)
-        if user:
-            if self.thread_locks.get(user_id):
-                async with self.thread_locks[user_id]:
-                    if self.active_threads.get(user_id):
-                        summary_request = UserRequest(
-                            user_id=user_id,
-                            text=MENTAL_PROBLEM_SUMMARY_PROMPT
-                        )
 
-                        await self.create_message(summary_request)
+        if self.active_threads.get(user_id):
+            summary_request = UserRequest(
+                user_id=user_id,
+                text=MENTAL_PROBLEM_SUMMARY_PROMPT
+            )
 
-                        problem_summary = await self.run_thread(user_id)
+            await self.create_message(summary_request)
+
+            problem_summary = await self.run_thread(user_id)
 
 
 
-                        return await mental_problems_repository.add_problem(
-                            user_id=user_id,
-                            problem_summary=problem_summary
-                        )
+            return await mental_problems_repository.add_problem(
+                user_id=user_id,
+                problem_summary=problem_summary
+            )
 
         return None
 
     async def exit(self, user_id: int, save: bool = True) -> int | None:
-        if self.active_threads.get(user_id):
-            if save and await self.check_is_dialog_psy(user_id):
-                problem_id = await self.summarize_dialog_problem(user_id)
-            else:
-                problem_id = None
+        if self.thread_locks.get(user_id):
+            async with self.thread_locks[user_id]:
+                if self.active_threads.get(user_id):
+                    if save and await self.check_is_dialog_psy(user_id):
+                        problem_id = await self.summarize_dialog_problem(user_id)
+                    else:
+                        problem_id = None
 
-            await super().exit(user_id)
+                    await super().exit(user_id)
 
-            self.messages_count[user_id] = 0
+                    self.messages_count[user_id] = 0
 
-            return problem_id
+                    return problem_id
         return None
 
 
