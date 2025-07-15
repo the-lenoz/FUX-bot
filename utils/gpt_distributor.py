@@ -47,17 +47,30 @@ class UserRequestHandler:
             await asyncio.sleep(2)
             limits = await limits_repository.get_user_limits(user_id=request.user_id)
             if request.file is None:
-                if limits.universal_requests_remaining or await LLMProvider.is_text_smalltalk(request.text) \
-                        or await self.AI_handler.check_is_dialog_latest_message_psy(request):
-                    await limits_repository.update_user_limits(user_id=request.user_id,
-                                                               universal_requests_remaining=limits.universal_requests_remaining - 1)
+                if await LLMProvider.is_text_smalltalk(request.text):
                     await self.AI_handler.handle(request)
+                elif await self.AI_handler.check_is_dialog_latest_message_psy(request):
+                    if limits.psychological_requests_remaining:
+                        await limits_repository.update_user_limits(user_id=request.user_id,
+                                                                   psychological_requests_remaining=limits.psychological_requests_remaining - 1)
+                        await self.AI_handler.handle(request)
+                    else:
+                        await main_bot.send_message(
+                            request.user_id,
+                            messages_dict["mental_assistant_subscription_text"],
+                            reply_markup=buy_sub_keyboard.as_markup()
+                        )
                 else:
-                    await main_bot.send_message(
-                        request.user_id,
-                        messages_dict["universal_assistant_subscription_text"],
-                        reply_markup=buy_sub_keyboard.as_markup()
-                    )
+                    if limits.universal_requests_remaining:
+                        await limits_repository.update_user_limits(user_id=request.user_id,
+                                                                   universal_requests_remaining=limits.universal_requests_remaining - 1)
+                        await self.AI_handler.handle(request)
+                    else:
+                        await main_bot.send_message(
+                            request.user_id,
+                            messages_dict["universal_assistant_subscription_text"],
+                            reply_markup=buy_sub_keyboard.as_markup()
+                        )
             else:
                 if request.file.file_type == 'image':
                     await main_bot.send_message(
@@ -302,16 +315,9 @@ class PsyHandler(AIHandler):
             self.messages_count[request.user_id] = 0
         self.messages_count[request.user_id] += 1
 
-        if await check_is_subscribed(request.user_id):
-            if self.messages_count[request.user_id] + 1 in self.MESSAGES_LIMITS:
-                await main_bot.send_message(request.user_id, messages_dict["recommendation_command_reminder_text"])
-            await super().handle(request)
-        else:
-            if self.messages_count[request.user_id] + 1 in self.MESSAGES_LIMITS \
-                    and await self.check_is_dialog_psy(request.user_id):
-                await self.provide_recommendations(request.user_id)
-            else:
-                await super().handle(request)
+        if self.messages_count[request.user_id] + 1 in self.MESSAGES_LIMITS:
+            await main_bot.send_message(request.user_id, messages_dict["recommendation_command_reminder_text"])
+        await super().handle(request)
 
     @staticmethod
     async def send_recommendation(user_id: int, recommendation, problem_id: int, from_notification: bool = False):
