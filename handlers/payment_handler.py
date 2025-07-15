@@ -8,8 +8,10 @@ from aiogram.fsm.state import any_state
 from bots import main_bot
 from data.keyboards import cancel_keyboard, menu_keyboard, keyboard_for_pay, generate_sub_keyboard
 from db.repository import users_repository, subscriptions_repository, operation_repository, recommendations_repository
-from settings import InputMessage, is_valid_email, sub_description_photo, you_fooher_photo, \
+from settings import sub_description_photo, you_fooher_photo, \
     sub_description_photo2
+from utils.state_models import InputMessage
+from utils.validators import is_valid_email
 from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report
 from utils.gpt_client import LLMProvider
 from utils.gpt_distributor import user_request_handler

@@ -10,7 +10,7 @@ from data.keyboards import admin_keyboard, add_delete_admin, cancel_keyboard, db
     type_users_mailing_keyboard, statistics_keyboard
 from db.repository import admin_repository, users_repository, ai_requests_repository, subscriptions_repository, \
     referral_system_repository
-from settings import InputMessage
+from utils.state_models import InputMessage
 from utils.generate_promo import generate_single_promo_code
 from utils.get_table_db_to_excel import export_table_to_memory
 from utils.is_main_admin import is_main_admin

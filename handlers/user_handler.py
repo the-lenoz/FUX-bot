@@ -15,7 +15,8 @@ from data.keyboards import next_politic_keyboard, have_promo_keyboard, cancel_ke
 from db.repository import users_repository, referral_system_repository, \
     promo_activations_repository, subscriptions_repository
 from handlers.standard_handler import user_request_handler
-from settings import InputMessage, photos_pages, menu_photo
+from settings import photos_pages, menu_photo
+from utils.state_models import InputMessage
 from utils.paginator import MechanicsPaginator
 from utils.promocode import user_entered_promo_code
 from utils.subscription import check_is_subscribed

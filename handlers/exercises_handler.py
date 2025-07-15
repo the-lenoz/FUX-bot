@@ -10,8 +10,8 @@ from aiogram.types import CallbackQuery
 from bots import main_bot
 from data.keyboards import menu_keyboard, buy_sub_keyboard
 from db.repository import users_repository, limits_repository
-from settings import mechanic_dict, exercises_photo
-from utils.gpt_distributor import PsyHandler, user_request_handler
+from settings import exercises_photo, messages_dict
+from utils.gpt_distributor import user_request_handler
 from utils.subscription import check_is_subscribed
 
 exercises_router = Router()
@@ -23,7 +23,7 @@ async def exercises_by_problem_call(call: CallbackQuery, state: FSMContext, bot:
     user_id = call.from_user.id
     user = await users_repository.get_user_by_user_id(user_id)
     if not user.used_exercises or user.used_exercises < 3:
-        await call.message.answer_photo(caption=mechanic_dict.get("exercises_by_problem"),
+        await call.message.answer_photo(caption=messages_dict["exercises_mechanic_text"],
                                         photo=exercises_photo)
 
     try:
