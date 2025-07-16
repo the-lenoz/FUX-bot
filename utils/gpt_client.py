@@ -5,17 +5,14 @@ import secrets
 from asyncio import sleep
 from typing import Literal, Dict, List
 
-import httpx
 from aiogram.types import BufferedInputFile
 from google.cloud import texttospeech, storage
 from google.cloud.texttospeech import SynthesisInput, VoiceSelectionParams, AudioConfig, \
     AudioEncoding
 from google.genai import types, Client, errors
 from google.genai.types import HttpOptions
-from openai import AsyncOpenAI
 from pydantic import BaseModel
 
-from settings import openai_api_key
 from utils.prompts import SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT
 from utils.user_request_types import UserFile
 
@@ -32,12 +29,7 @@ standard_assistant_id = os.getenv("STANDARD_ASSISTANT_ID")
 
 logger = logging.getLogger(__name__)
 
-
-proxy_url = os.environ.get("OPENAI_PROXY_URL")
-openAI_client = AsyncOpenAI(api_key=openai_api_key) if proxy_url is None or proxy_url == "" else \
-    AsyncOpenAI(http_client=httpx.AsyncClient(proxy=proxy_url), api_key=openai_api_key)
-
-google_genai_client = Client(http_options=HttpOptions(api_version="v1"))
+google_genai_client = Client(http_options=HttpOptions(api_version="v1"), location='global')
 
 tts_client = texttospeech.TextToSpeechClient() # TODO - async
 
@@ -214,7 +206,9 @@ class LLMProvider:
                         ]
                     ),
                 )
-            except errors.ClientError:
+            except errors.ClientError as e:
+                logger.error(e)
+                logger.info(f"Retrying ({retries + 1})")
                 await sleep(retry_time)
                 retry_time *= 2
                 retries += 1
