@@ -21,7 +21,7 @@ ADVANCED_MODEL = "gemini-2.5-flash"
 
 TTS_MODEL = "gemini-2.5-flash"
 
-MAX_RETRIES = 5
+MAX_RETRIES = 10
 
 mental_assistant_id = os.getenv("MENTAL_ASSISTANT_ID")
 standard_assistant_id = os.getenv("STANDARD_ASSISTANT_ID")
