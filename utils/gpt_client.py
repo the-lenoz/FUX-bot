@@ -2,6 +2,7 @@ import logging
 import mimetypes
 import os
 import secrets
+from asyncio import sleep
 from typing import Literal, Dict, List
 
 import httpx
@@ -195,7 +196,7 @@ class LLMProvider:
             for part in content.parts:
                 if part.text:
                     logger.info(part.text[:32] + '...')
-        retry_time = 2
+        retry_time = 1
         response = None
         retries = 0
         while not response and retries < MAX_RETRIES:
@@ -214,6 +215,7 @@ class LLMProvider:
                     ),
                 )
             except errors.ClientError:
+                await sleep(retry_time)
                 retry_time *= 2
                 retries += 1
 
