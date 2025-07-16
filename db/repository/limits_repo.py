@@ -44,7 +44,9 @@ class LimitsRepository:
                                  psychological_requests_remaining: int = None):
         async with self.session_maker() as session:
             session: AsyncSession
-            if exercises_remaining is not None or universal_requests_remaining is not None:
+            if exercises_remaining is not None\
+                    or universal_requests_remaining is not None\
+                    or psychological_requests_remaining is not None:
                 async with session.begin():
                     sql = update(Limits).values({k: v for k, v in {
                         Limits.exercises_remaining: exercises_remaining,
