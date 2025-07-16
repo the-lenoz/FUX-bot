@@ -18,7 +18,7 @@ from utils.messages_provider import send_subscription_end_message
 
 async def edit_activation_sub(main_bot: Bot):
     subs = await subscriptions_repository.select_all_active_subscriptions()
-    now_date = datetime.datetime.now(datetime.timezone.utc)
+    now_date = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
     for sub in subs:
         if now_date - sub.creation_date >= datetime.timedelta(hours=24 * sub.time_limit_subscription):
             try:
@@ -78,7 +78,7 @@ async def send_recommendations(main_bot: Bot):
 
 async def notification_reminder(main_bot: Bot):
     users = await users_repository.select_all_users()
-    now = datetime.datetime.now(timezone.utc)  # Можно использовать локальное время, если требуется
+    now = datetime.datetime.now(timezone.utc).replace(tzinfo=None)  # Можно использовать локальное время, если требуется
 
     for user in users:
         last_event = await events_repository.get_last_event_by_user_id(user_id=user.user_id)

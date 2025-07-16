@@ -5,12 +5,11 @@ import secrets
 from typing import Literal, Dict, List
 
 import httpx
-import openai
 from aiogram.types import BufferedInputFile
 from google.cloud import texttospeech, storage
 from google.cloud.texttospeech import SynthesisInput, VoiceSelectionParams, AudioConfig, \
     AudioEncoding
-from google.genai import types, Client
+from google.genai import types, Client, errors
 from google.genai.types import HttpOptions
 from openai import AsyncOpenAI
 from pydantic import BaseModel
@@ -23,6 +22,8 @@ BASIC_MODEL = "gemini-2.5-flash-lite-preview-06-17"
 ADVANCED_MODEL = "gemini-2.5-flash"
 
 TTS_MODEL = "gemini-2.5-flash"
+
+MAX_RETRIES = 5
 
 mental_assistant_id = os.getenv("MENTAL_ASSISTANT_ID")
 standard_assistant_id = os.getenv("STANDARD_ASSISTANT_ID")
@@ -166,7 +167,7 @@ class LLMProvider:
             )
             logger.info(f"Smalltalk - {'true'in response.text}")
             return 'true' in response.text
-        except openai.BadRequestError:
+        except errors.ClientError:
             return False
 
     @staticmethod
@@ -194,20 +195,26 @@ class LLMProvider:
             for part in content.parts:
                 if part.text:
                     logger.info(part.text[:32] + '...')
-
-        response = await google_genai_client.aio.models.generate_content(
-            model=self.model_name,
-            contents=contents,
-            config=types.GenerateContentConfig(
-                system_instruction=[system_prompt],
-                safety_settings=[
-                    types.SafetySetting(
-                        category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-                        threshold=types.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+        retry_time = 2
+        response = None
+        retries = 0
+        while not response and retries < MAX_RETRIES:
+            try:
+                response = await google_genai_client.aio.models.generate_content(
+                    model=self.model_name,
+                    contents=contents,
+                    config=types.GenerateContentConfig(
+                        system_instruction=[system_prompt],
+                        safety_settings=[
+                            types.SafetySetting(
+                                category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                                threshold=types.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+                            ),
+                        ]
                     ),
-                ]
-            ),
-        )
+                )
+            except errors.ClientError:
+                retry_time *= 2
+                retries += 1
 
-
-        return response.text
+        return response.text if response else 'Произошла ошибка, пожалуйста, повтори запрос чуть позже или сообщи в тех. поддержку!'

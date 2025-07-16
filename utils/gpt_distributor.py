@@ -264,7 +264,6 @@ class AIHandler:
         message_id = await self.create_message(request)
         check_message_id = await self.create_message(check_request)
 
-        result = False
         response = await self.run_thread(request.user_id, False)
         logger.info(f"Checker response: {response}")
         result = 'true' in response.lower()
@@ -281,7 +280,6 @@ class AIHandler:
         )
         check_message_id = await self.create_message(check_request)
 
-        result = False
         response = await self.run_thread(user_id, False)
         logger.info(f"Checker response: {response}")
         result = 'true' in response.lower()
