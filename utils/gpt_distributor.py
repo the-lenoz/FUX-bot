@@ -378,7 +378,7 @@ class PsyHandler(AIHandler):
                             await users_repository.used_free_recommendation(user_id)
 
                     else:
-                        await pending_messages_repository.update_user_pending_messages(recommendation_id=recommendation_object.id)
+                        await pending_messages_repository.update_user_pending_messages(user_id=user_id, recommendation_id=recommendation_object.id)
                         photo_recommendation = generate_blurred_image_with_text(text=recommendation, enable_blur=True)
                         await main_bot.send_photo(
                             user_id,

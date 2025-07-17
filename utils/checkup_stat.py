@@ -377,7 +377,7 @@ async def send_weekly_checkup_report(user_id: int, last_date = None):
                         caption="☝️Скачать <b>файл</b> в лучшем <u>качестве</u> можно здесь"
                     )
                 else:
-                    await pending_messages_repository.update_user_pending_messages(weekly_tracking_date=last_date)
+                    await pending_messages_repository.update_user_pending_messages(user_id=user_id, weekly_tracking_date=last_date)
                     await main_bot.send_photo(
                         user_id,
                         FSInputFile(f"assets/tracking_report_{checkup_type}_blured.jpg"),
@@ -427,7 +427,7 @@ async def send_monthly_checkup_report(user_id: int, last_date = None):
             except Exception as e:
                 logging.error(e)
     else:
-        await pending_messages_repository.update_user_pending_messages(monthly_tracking_date=last_date)
+        await pending_messages_repository.update_user_pending_messages(user_id=user_id, monthly_tracking_date=last_date)
         await main_bot.send_photo(
             user_id,
             FSInputFile("assets/calendar_blured.jpg"),
