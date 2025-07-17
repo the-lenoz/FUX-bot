@@ -9,7 +9,7 @@ from statistics import fmean
 from typing import Literal, List
 
 import matplotlib.pyplot as plt
-from PIL import Image, ImageFont, ImageDraw
+from PIL import Image, ImageFont, ImageDraw, ImageFilter
 from aiogram.types import BufferedInputFile, FSInputFile
 
 from bots import main_bot
@@ -275,7 +275,7 @@ def generate_tracking_calendar(year: int, month: int, checkup_type: Literal["emo
 
                 day_data = data[day - 1] if day <= len(data) else None
 
-                if day_data is None:
+                if not day_data:
                     # Рисуем ячейку
                     draw.rounded_rectangle([(x, y), (x + CELL_SIZE, y + CELL_SIZE)], radius=CELL_RADIUS,
                                            fill=ORANGE_COLOR if day_idx == 6 else DAY_BOX_BG,
@@ -390,29 +390,30 @@ async def send_weekly_checkup_report(user_id: int, last_date = None):
 
 async def send_monthly_checkup_report(user_id: int, last_date = None):
     last_date = last_date or datetime.now(timezone.utc)
-    if await check_is_subscribed(user_id):
-        checkup_type: Literal["emotions", "productivity"]
-        for checkup_type in ("emotions", "productivity"):
-            try:
-                checkup_days = await days_checkups_repository.get_days_checkups_by_user_id(user_id=user_id)
-                checkups_report = []
 
-                send = False
-                for monthday in range(1, calendar.monthrange(last_date.year, last_date.month)[1] + 1):
-                    day = datetime(year=last_date.year, month=last_date.month, day=monthday)
-                    day_checkup_data = None
-                    for checkup_day in checkup_days:
-                        if checkup_day.creation_date and checkup_day.creation_date.date() == day.date() \
-                                and checkup_day.checkup_type == checkup_type:
-                            day_checkup_data = checkup_day.points
-                            send = True
-                    checkups_report.append(day_checkup_data)
+    checkup_type: Literal["emotions", "productivity"]
+    for checkup_type in ("emotions", "productivity"):
+        try:
+            checkup_days = await days_checkups_repository.get_days_checkups_by_user_id(user_id=user_id)
+            checkups_report = []
 
-                if send:
-                    await users_repository.user_got_weekly_reports(user_id=user_id)
-                    graphic = generate_tracking_calendar(year=last_date.year, month=last_date.month,
-                                                         data=checkups_report,
-                                                        checkup_type=checkup_type)
+            send = False
+            for monthday in range(1, calendar.monthrange(last_date.year, last_date.month)[1] + 1):
+                day = datetime(year=last_date.year, month=last_date.month, day=monthday)
+                day_checkup_data = None
+                for checkup_day in checkup_days:
+                    if checkup_day.creation_date and checkup_day.creation_date.date() == day.date() \
+                            and checkup_day.checkup_type == checkup_type:
+                        day_checkup_data = checkup_day.points
+                        send = True
+                checkups_report.append(day_checkup_data)
+
+            if send:
+                await users_repository.user_got_weekly_reports(user_id=user_id)
+                graphic = generate_tracking_calendar(year=last_date.year, month=last_date.month,
+                                                     data=checkups_report,
+                                                    checkup_type=checkup_type)
+                if await check_is_subscribed(user_id):
                     await main_bot.send_photo(
                         photo=BufferedInputFile(file=graphic, filename="graphic.png"),
                         chat_id=user_id,
@@ -424,14 +425,30 @@ async def send_monthly_checkup_report(user_id: int, last_date = None):
                                                    filename=f"Месячный Трекинг {'Эмоций' if checkup_type == 'emotions' else 'Продуктивности'}.png"),
                         caption="☝️Скачать <b>файл</b> в лучшем <u>качестве</u> можно здесь"
                     )
-            except Exception as e:
-                logging.error(e)
-    else:
-        await pending_messages_repository.update_user_pending_messages(user_id=user_id, monthly_tracking_date=last_date)
-        await main_bot.send_photo(
-            user_id,
-            FSInputFile("assets/calendar_blured.jpg"),
-            has_spoiler=True,
-            caption="✅ Результаты <i>месячного трекинга</i> <b>готовы</b>, но для того, чтобы их увидеть 👀 нужна <b>подписка</b>!",
-            reply_markup=buy_sub_keyboard.as_markup()
-        )
+                else:
+                    graphic_image = Image.open(io.BytesIO(graphic))
+
+                    # Create rectangle mask
+                    mask = Image.new('L', graphic_image.size, 0)
+                    draw = ImageDraw.Draw(mask)
+                    draw.rectangle([(171, 473), (1180, 1292)], fill=255)
+                    draw.rectangle([(1200, 424), (1336, 1318)], fill=255)
+
+                    # Blur image
+                    blurred = graphic_image.filter(ImageFilter.GaussianBlur(52))
+
+                    blurred.paste(graphic_image, mask=mask)
+                    new_graphic = io.BytesIO()
+                    blurred.convert('RGB').save(new_graphic, format='PNG')
+
+                    await pending_messages_repository.update_user_pending_messages(user_id=user_id,
+                                                                                   monthly_tracking_date=last_date)
+                    await main_bot.send_photo(
+                        user_id,
+                        new_graphic.getvalue(),
+                        has_spoiler=True,
+                        caption="✅ Результаты <i>месячного трекинга</i> <b>готовы</b>, но для того, чтобы их увидеть 👀 нужна <b>подписка</b>!",
+                        reply_markup=buy_sub_keyboard.as_markup()
+                    )
+        finally:
+            pass
