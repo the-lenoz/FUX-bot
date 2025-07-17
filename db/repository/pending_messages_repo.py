@@ -41,15 +41,15 @@ class PendingMessagesRepository:
         await self.get_user_pending_messages(user_id) # Ensure user record exists
         async with self.session_maker() as session:
             session: AsyncSession
-            if weekly_tracking_date is not None\
-                    or monthly_tracking_date is not None\
-                    or recommendation_id is not None:
+            if weekly_tracking_date is not False\
+                    or monthly_tracking_date is not False\
+                    or recommendation_id is not False:
                 async with session.begin():
                     sql = update(PendingMessages).values({k: v for k, v in {
                         PendingMessages.weekly_tracking_date: weekly_tracking_date,
                         PendingMessages.monthly_tracking_date: monthly_tracking_date,
                         PendingMessages.recommendation_id: recommendation_id
-                    }.items() if v is not None}).where(PendingMessages.user_id == user_id)
+                    }.items() if v is not False}).where(PendingMessages.user_id == user_id)
                     await session.execute(sql)
                     await session.commit()
 
