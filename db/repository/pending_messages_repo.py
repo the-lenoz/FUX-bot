@@ -46,9 +46,9 @@ class PendingMessagesRepository:
                     or recommendation_id is not None:
                 async with session.begin():
                     sql = update(PendingMessages).values({k: v for k, v in {
-                        PendingMessages.exercises_remaining: weekly_tracking_date,
-                        PendingMessages.universal_requests_remaining: monthly_tracking_date,
-                        PendingMessages.psychological_requests_remaining: recommendation_id
+                        PendingMessages.weekly_tracking_date: weekly_tracking_date,
+                        PendingMessages.monthly_tracking_date: monthly_tracking_date,
+                        PendingMessages.recommendation_id: recommendation_id
                     }.items() if v is not None}).where(PendingMessages.user_id == user_id)
                     await session.execute(sql)
                     await session.commit()
