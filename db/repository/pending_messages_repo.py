@@ -5,7 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.expression import update
 
 from db.engine import DatabaseEngine
-from db.models.limits import Limits
 from db.models.pending_messages import PendingMessages
 
 
@@ -46,10 +45,10 @@ class PendingMessagesRepository:
                     or monthly_tracking_date is not None\
                     or recommendation_id is not None:
                 async with session.begin():
-                    sql = update(Limits).values({k: v for k, v in {
-                        Limits.exercises_remaining: weekly_tracking_date,
-                        Limits.universal_requests_remaining: monthly_tracking_date,
-                        Limits.psychological_requests_remaining: recommendation_id
+                    sql = update(PendingMessages).values({k: v for k, v in {
+                        PendingMessages.exercises_remaining: weekly_tracking_date,
+                        PendingMessages.universal_requests_remaining: monthly_tracking_date,
+                        PendingMessages.psychological_requests_remaining: recommendation_id
                     }.items() if v is not None}).where(PendingMessages.user_id == user_id)
                     await session.execute(sql)
                     await session.commit()
