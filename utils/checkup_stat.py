@@ -13,8 +13,8 @@ from PIL import Image, ImageFont, ImageDraw
 from aiogram.types import BufferedInputFile, FSInputFile
 
 from bots import main_bot
-from data.keyboards import get_rec_keyboard
-from db.repository import days_checkups_repository, users_repository
+from data.keyboards import get_rec_keyboard, buy_sub_keyboard
+from db.repository import days_checkups_repository, users_repository, pending_messages_repository
 from settings import calendar_template_photo
 from utils.subscription import check_is_subscribed
 
@@ -377,12 +377,13 @@ async def send_weekly_checkup_report(user_id: int, last_date = None):
                         caption="☝️Скачать <b>файл</b> в лучшем <u>качестве</u> можно здесь"
                     )
                 else:
+                    await pending_messages_repository.update_user_pending_messages(weekly_tracking_date=last_date)
                     await main_bot.send_photo(
                         user_id,
                         FSInputFile(f"assets/tracking_report_{checkup_type}_blured.jpg"),
                         caption="✅ Результаты <i>недельного трекинга</i> <b>готовы</b>, но для того, чтобы их увидеть 👀 нужна <b>подписка</b>!",
                         has_spoiler=True,
-                        reply_markup=get_rec_keyboard(f"tracking-{int(last_date.timestamp())}").as_markup()
+                        reply_markup=buy_sub_keyboard.as_markup()
                     )
         except Exception as e:
             logging.error(e)
@@ -426,10 +427,11 @@ async def send_monthly_checkup_report(user_id: int, last_date = None):
             except Exception as e:
                 logging.error(e)
     else:
+        await pending_messages_repository.update_user_pending_messages(monthly_tracking_date=last_date)
         await main_bot.send_photo(
             user_id,
             FSInputFile("assets/calendar_blured.jpg"),
             has_spoiler=True,
             caption="✅ Результаты <i>месячного трекинга</i> <b>готовы</b>, но для того, чтобы их увидеть 👀 нужна <b>подписка</b>!",
-            reply_markup=get_rec_keyboard(f"tracking-{int(last_date.timestamp())}").as_markup()
+            reply_markup=buy_sub_keyboard.as_markup()
         )

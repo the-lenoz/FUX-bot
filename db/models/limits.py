@@ -1,8 +1,6 @@
-from sqlalchemy import Column, BigInteger, ForeignKey, String
-from sqlalchemy.orm import relationship, Mapped
+from sqlalchemy import Column, BigInteger
 
 from db.base import BaseModel, CleanModel
-from .user import User
 
 
 class Limits(BaseModel, CleanModel):

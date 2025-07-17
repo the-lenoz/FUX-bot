@@ -7,6 +7,7 @@ from .exercises_user_repo import ExercisesUserRepository
 from .limits_repo import LimitsRepository
 from .mental_problems_repo import MentalProblemsRepository
 from .operations_repo import OperationRepository
+from .pending_messages_repo import PendingMessagesRepository
 from .promo_activations_repo import PromoActivationsRepository
 from .recommendations_repo import RecommendationsRepository
 from .refferal_repo import ReferralSystemRepository
@@ -30,6 +31,7 @@ mental_problems_repository = MentalProblemsRepository()
 recommendations_repository = RecommendationsRepository()
 user_timezone_repository = UserTimezoneRepository()
 limits_repository = LimitsRepository()
+pending_messages_repository = PendingMessagesRepository()
 
 __all__ = ['users_repository',
            'admin_repository',
@@ -45,5 +47,6 @@ __all__ = ['users_repository',
            'mental_problems_repository',
            'recommendations_repository',
            'user_timezone_repository',
-           'limits_repository'
+           'limits_repository',
+           'pending_messages_repository'
           ]

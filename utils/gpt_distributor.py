@@ -13,7 +13,7 @@ from telegramify_markdown import ContentTypes, InterpreterChain, TextInterpreter
 from bots import main_bot
 from data.keyboards import get_rec_keyboard, buy_sub_keyboard, create_practice_exercise_recommendation_keyboard
 from db.repository import users_repository, ai_requests_repository, mental_problems_repository, \
-    exercises_user_repository, recommendations_repository, limits_repository
+    exercises_user_repository, recommendations_repository, limits_repository, pending_messages_repository
 from settings import messages_dict
 from utils.documents import convert_to_pdf
 from utils.gpt_client import BASIC_MODEL, ADVANCED_MODEL, ModelChatThread, LLMProvider
@@ -378,13 +378,14 @@ class PsyHandler(AIHandler):
                             await users_repository.used_free_recommendation(user_id)
 
                     else:
+                        await pending_messages_repository.update_user_pending_messages(recommendation_id=recommendation_object.id)
                         photo_recommendation = generate_blurred_image_with_text(text=recommendation, enable_blur=True)
                         await main_bot.send_photo(
                             user_id,
                             has_spoiler=True,
                             photo=BufferedInputFile(file=photo_recommendation, filename=f"recommendation.png"),
                             caption=messages_dict["subscribe_for_recommendation_text"],
-                            reply_markup=get_rec_keyboard(mode_type=f"recommendation-{recommendation_object.id}").as_markup())
+                            reply_markup=buy_sub_keyboard.as_markup())
 
                 else:
                     await main_bot.send_message(
@@ -438,7 +439,6 @@ class PsyHandler(AIHandler):
 
     async def summarize_dialog_problem(self, user_id: int) -> int | None:
         logger.info("Summarizing dialog...")
-        user = await users_repository.get_user_by_user_id(user_id)
 
         if self.active_threads.get(user_id):
             summary_request = UserRequest(
@@ -449,8 +449,6 @@ class PsyHandler(AIHandler):
             await self.create_message(summary_request)
 
             problem_summary = await self.run_thread(user_id)
-
-
 
             return await mental_problems_repository.add_problem(
                 user_id=user_id,
