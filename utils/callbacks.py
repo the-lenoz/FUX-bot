@@ -1,0 +1,14 @@
+from db.repository import pending_messages_repository, recommendations_repository
+from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report
+from utils.gpt_distributor import user_request_handler
+
+
+async def subscribed_callback(user_id: int):
+    pending_messages = await pending_messages_repository.get_user_pending_messages(user_id)
+    if pending_messages.recommendation_id:
+        recommendation = await recommendations_repository.get_recommendation_by_recommendation_id(pending_messages.recommendation_id)
+        await user_request_handler.AI_handler.send_recommendation(user_id, recommendation.text, recommendation.problem_id)
+    if pending_messages.weekly_tracking_date:
+        await send_weekly_checkup_report(user_id, pending_messages.weekly_tracking_date)
+    if pending_messages.monthly_tracking_date:
+        await send_monthly_checkup_report(user_id, pending_messages.weekly_tracking_date)

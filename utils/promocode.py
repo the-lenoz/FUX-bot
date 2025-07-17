@@ -5,7 +5,7 @@ from bots import main_bot
 from data.keyboards import cancel_keyboard, menu_keyboard
 from db.repository import referral_system_repository, users_repository, promo_activations_repository, \
     subscriptions_repository
-
+from utils.callbacks import subscribed_callback
 
 logger = logging.getLogger(__name__)
 
@@ -167,6 +167,7 @@ async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: 
         if activate_user_sub is None:
             await subscriptions_repository.add_subscription(user_id=user_id,
                                                             time_limit_subscription=promo.days_sub)
+            await subscribed_callback(user_id)
             end_date = datetime.now(timezone.utc) + timedelta(days=promo.days_sub)
             text = f"✅ Теперь у тебя есть подписка на <b>{promo.days_sub} дней</b>! Подписка действует до {end_date.strftime('%d.%m.%y, %H:%M')} (GMT+3)"
         else:

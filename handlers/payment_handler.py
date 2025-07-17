@@ -10,6 +10,7 @@ from data.keyboards import cancel_keyboard, menu_keyboard, keyboard_for_pay, gen
 from db.repository import users_repository, subscriptions_repository, operation_repository, recommendations_repository
 from settings import sub_description_photo, you_fooher_photo, \
     sub_description_photo2
+from utils.callbacks import subscribed_callback
 from utils.state_models import InputMessage
 from utils.validators import is_valid_email
 from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report
@@ -131,24 +132,7 @@ async def check_payment_callback(message: types.CallbackQuery, state: FSMContext
             caption=f"Поздравляю! Твоя подписка активна до {formatted_date} +GMT3",
             reply_markup=menu_keyboard.as_markup()
         )
-        if mode_type.startswith("recommendation"):
-            recommendation_id = int(mode_type.split('-')[1])
-            recommendation = await recommendations_repository.get_recommendation_by_recommendation_id(
-                recommendation_id=recommendation_id
-            )
-            await user_request_handler.AI_handler.send_recommendation(
-                user_id=user_id,
-                recommendation=recommendation.text,
-                problem_id=recommendation.problem_id,
-                from_notification=False
-            )
-        elif mode_type.startswith("tracking"):
-            date = datetime.datetime.fromtimestamp(int(mode_type.split('-')[1]))
-
-            if date.weekday() == 6:
-                await send_weekly_checkup_report(user_id, date)
-            if (date + datetime.timedelta(days=1)).month != date.month:
-                await send_monthly_checkup_report(user_id, date)
+        await subscribed_callback(user_id)
 
     else:
         try:
