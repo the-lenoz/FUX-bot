@@ -14,7 +14,7 @@ from db.repository import users_repository, subscriptions_repository, checkup_re
     user_timezone_repository
 from handlers.system_settings_handler import send_system_settings
 from settings import checkups_types_photo, checkup_emotions_photo, \
-    checkup_productivity_photo, messages_dict
+    checkup_productivity_photo, messages_dict, emotions_emoji_description_photo, productivity_emoji_description_photo
 from utils.state_models import InputMessage
 from utils.validators import is_valid_time
 from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report
@@ -156,7 +156,7 @@ async def start_checkups(call: CallbackQuery, state: FSMContext):
             await state.update_data(enter_checkup_time=True)
         else:
             await call.message.answer_photo(
-                photo=checkup_emotions_photo if type_checkup == "emotions" else checkup_productivity_photo,
+                photo=emotions_emoji_description_photo if type_checkup == "emotions" else productivity_emoji_description_photo,
                 caption="Для того, чтобы продолжить, введи, пожалуйста время в которое, тебе отправлять"
                         " <u>трекинг</u> " + (
                             "<b>эмоций</b>" if type_checkup == "emotions" else "<b>продуктивности</b>") + ". Пример: 21:00",

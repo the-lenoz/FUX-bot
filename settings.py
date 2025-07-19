@@ -57,10 +57,14 @@ checkup_emotions_photo = FSInputFile("assets/checkup_emotions_photo.jpg")
 checkup_productivity_photo = FSInputFile("assets/checkup_productivity_photo.jpg")
 premium_sub_photo = FSInputFile("assets/premium_sub_photo.jpg")
 
+productivity_emoji_description_photo = FSInputFile("assets/productivity_emoji_description_photo.jpg")
+emotions_emoji_description_photo = FSInputFile("assets/emotions_emoji_description_photo.jpg")
+emoji_description_photo = FSInputFile("assets/emoji_description_photo.jpg")
+
 photos_pages = {
     1: mental_helper_photo,
     2: exercises_photo,
-    3: checkups_types_photo,
+    3: emoji_description_photo,
     4: checkups_graphic_photo,
     5: temperature_ai_photo,
     6: universal_ai_photo,
