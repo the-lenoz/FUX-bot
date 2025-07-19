@@ -53,16 +53,17 @@ async def go_missed_tracking(call: CallbackQuery):
     user_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id=user_id)
     keyboard = InlineKeyboardBuilder()
     have_checkups = False
+    user_timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id)
     for checkup in user_checkups:
         active_days = await days_checkups_repository.get_active_day_checkups_by_checkup_id(checkup_id=checkup.id)
         for active_day in active_days:
-            if active_day and active_day.creation_date.date() != datetime.now(timezone.utc).date():
+            if active_day and active_day.creation_date.date() != datetime.now(timezone.utc).date() and datetime.now(timezone(user_timezone_delta)).date() - active_day.creation_date.date() < timedelta(days=4):
                 have_checkups = True
                 button_text = ("🤩Трекинг эмоций" if checkup.type_checkup == "emotions" else "🚀Трекинг продуктивности") +\
                               f" {active_day.creation_date.strftime('%d.%m.%Y')}"
                 keyboard.row(InlineKeyboardButton(text=button_text, callback_data=f"start_checkup|{checkup.id}"))
     keyboard.row(menu_button)
-    message_text = "Выбери трекинг, который хочешь пройти"
+    message_text = "Выбери пропущенный трекинг, который хочешь пройти"
     if not have_checkups:
         message_text = "На данный момент у тебя нет трекингов, которые можно пройти"
     await call.message.answer(message_text, reply_markup=keyboard.as_markup())

@@ -123,7 +123,7 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
             if active_day.creation_date.date() == datetime.now(timezone(user_timezone_delta)).date():
                 if not await sent_today(checkup.id):
                     today_tracking = True
-            else:
+            elif datetime.now(timezone(user_timezone_delta)).date() - active_day.creation_date.date() < timedelta(days=4):
                 missed_tracking = True
 
         if datetime.now(timezone.utc).time() < checkup.time_checkup and not await sent_today(checkup.id):
