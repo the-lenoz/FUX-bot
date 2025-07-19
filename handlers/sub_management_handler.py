@@ -6,7 +6,7 @@ from aiogram.types import Message
 
 from bots import main_bot
 from data.keyboards import generate_sub_keyboard
-from settings import sub_description_photo
+from settings import premium_sub_photo, messages_dict
 from utils.subscription import check_is_subscribed
 
 sub_management_router = Router()
@@ -26,5 +26,6 @@ async def subscription_management_menu(user_id: int):
                                     reply_markup=generate_sub_keyboard().as_markup())
     else:
         await main_bot.send_photo(user_id,
-                                    photo=sub_description_photo,
-                                    reply_markup=generate_sub_keyboard().as_markup())
+                                  caption=messages_dict["premium_sub_description_photo"],
+                                  photo=premium_sub_photo,
+                                  reply_markup=generate_sub_keyboard().as_markup())
