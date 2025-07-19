@@ -49,12 +49,12 @@ universal_ai_photo = FSInputFile("assets/universal_ai_photo.jpg")
 payment_photo = FSInputFile("assets/payment_photo.jpg")
 menu_photo = FSInputFile("assets/menu_photo.jpg")
 system_setting_photo = FSInputFile("assets/system_setting_photo.jpg")
-sub_description_photo = FSInputFile("assets/sub_description_photo.jpg")
 you_fooher_photo = FSInputFile("assets/you_fooher_photo.jpg")
-sub_description_photo2 = FSInputFile("assets/sub_description_photo2.jpg")
+premium_description_photo = FSInputFile("assets/premium_description_photo.jpg")
 how_are_you_photo = FSInputFile("assets/how_are_you_photo.jpg")
 checkup_emotions_photo = FSInputFile("assets/checkup_emotions_photo.jpg")
 checkup_productivity_photo = FSInputFile("assets/checkup_productivity_photo.jpg")
+
 
 photos_pages = {
     1: mental_helper_photo,
@@ -63,7 +63,7 @@ photos_pages = {
     4: checkups_graphic_photo,
     5: temperature_ai_photo,
     6: universal_ai_photo,
-    7: payment_photo,
+    7: premium_description_photo,
     8: system_setting_photo
 }
 

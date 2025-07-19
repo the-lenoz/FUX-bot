@@ -5,18 +5,14 @@ from aiogram import Router, F, types, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import any_state
 
-from bots import main_bot
 from data.keyboards import cancel_keyboard, menu_keyboard, keyboard_for_pay, generate_sub_keyboard
-from db.repository import users_repository, subscriptions_repository, operation_repository, recommendations_repository
-from settings import sub_description_photo, you_fooher_photo, \
-    sub_description_photo2
+from db.repository import users_repository, subscriptions_repository, operation_repository
+from settings import you_fooher_photo, \
+    premium_description_photo
 from utils.callbacks import subscribed_callback
+from utils.payment_for_services import create_payment, check_payment
 from utils.state_models import InputMessage
 from utils.validators import is_valid_email
-from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report
-from utils.gpt_client import LLMProvider
-from utils.gpt_distributor import user_request_handler
-from utils.payment_for_services import create_payment, check_payment
 
 payment_router = Router()
 
@@ -43,7 +39,7 @@ async def subscribe(call: types.CallbackQuery, state: FSMContext, bot: Bot):
             await call.message.delete()
         finally:
             return
-    await call.message.answer_photo(photo=sub_description_photo,
+    await call.message.answer_photo(photo=premium_description_photo,
                                     reply_markup=generate_sub_keyboard(mode_type=mode_type).as_markup())
     try:
         await call.message.delete()
@@ -89,7 +85,7 @@ async def enter_user_email(message: types.Message, state: FSMContext, bot: Bot):
         await state.clear()
         await message.answer("Отлично, мы сохранили твой email для следующих покупок")
         await users_repository.update_email_by_user_id(user_id=message.from_user.id, email=message.text)
-        await message.answer_photo(photo=sub_description_photo,
+        await message.answer_photo(photo=premium_description_photo,
                                    reply_markup=generate_sub_keyboard(mode_type=mode_type).as_markup())
     else:
         del_message = await message.answer("Введеный тобой email некорректен, попробуй еще раз",
@@ -128,7 +124,7 @@ async def check_payment_callback(message: types.CallbackQuery, state: FSMContext
         await message.message.answer_photo(photo=you_fooher_photo)
 
         await message.message.answer_photo(
-            photo=sub_description_photo2,
+            photo=premium_description_photo,
             caption=f"Поздравляю! Твоя подписка активна до {formatted_date} +GMT3",
             reply_markup=menu_keyboard.as_markup()
         )
