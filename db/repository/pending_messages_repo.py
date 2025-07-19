@@ -46,8 +46,8 @@ class PendingMessagesRepository:
                     or recommendation_id is not False:
                 async with session.begin():
                     sql = update(PendingMessages).values({k: v for k, v in {
-                        PendingMessages.weekly_tracking_date: weekly_tracking_date.replace(tzinfo=None),
-                        PendingMessages.monthly_tracking_date: monthly_tracking_date.replace(tzinfo=None),
+                        PendingMessages.weekly_tracking_date: weekly_tracking_date,
+                        PendingMessages.monthly_tracking_date: monthly_tracking_date,
                         PendingMessages.recommendation_id: recommendation_id
                     }.items() if v is not False}).where(PendingMessages.user_id == user_id)
                     await session.execute(sql)

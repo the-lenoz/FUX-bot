@@ -5,11 +5,12 @@ import os
 import random
 import secrets
 from datetime import timedelta, date, datetime, timezone
+from pathlib import Path
 from statistics import fmean
 from typing import Literal, List
 
 import matplotlib.pyplot as plt
-from PIL import Image, ImageFont, ImageDraw, ImageFilter
+from PIL import Image, ImageFont, ImageDraw, ImageFilter, ImageOps
 from aiogram.types import BufferedInputFile, FSInputFile
 
 from bots import main_bot
@@ -50,8 +51,8 @@ trophy_image = Image.open("assets/trophy.png").resize((40, 40))
 
 # Шрифты Roboto
 try:
-    FONT_PATH_BOLD = os.path.join('assets', 'fonts', 'SFProDisplay-Bold.ttf')
-    FONT_PATH_REGULAR = os.path.join('assets', 'fonts', 'SFProDisplay-Regular.ttf')
+    FONT_PATH_BOLD = Path(os.path.join('assets', 'fonts', 'SFProDisplay-Bold.ttf'))
+    FONT_PATH_REGULAR = Path(os.path.join('assets', 'fonts', 'SFProDisplay-Regular.ttf'))
     font_subtitle = ImageFont.truetype(FONT_PATH_BOLD, 72)
     font_month_header = ImageFont.truetype(FONT_PATH_BOLD, 56)
     font_day_num = ImageFont.truetype(FONT_PATH_REGULAR, 22)
@@ -340,7 +341,7 @@ def generate_tracking_calendar(year: int, month: int, checkup_type: Literal["emo
     return buffer.getvalue()
 
 async def send_weekly_checkup_report(user_id: int, last_date = None):
-    last_date = last_date or datetime.now(timezone.utc)
+    last_date = last_date or datetime.now(timezone.utc).replace(tzinfo=None)
     user = await users_repository.get_user_by_user_id(user_id)
 
     checkup_type: Literal["emotions", "productivity"]
@@ -361,11 +362,11 @@ async def send_weekly_checkup_report(user_id: int, last_date = None):
                 checkups_report.append(day_checkup_data)
 
             if send:
+                await users_repository.user_got_weekly_reports(user_id=user_id)
+                graphic = generate_weekly_tracking_report(emotion_data=checkups_report,
+                                                          dates=["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"],
+                                                          checkup_type=checkup_type)
                 if user.received_weekly_tracking_reports < 3 or await check_is_subscribed(user_id):
-                    await users_repository.user_got_weekly_reports(user_id=user_id)
-                    graphic = generate_weekly_tracking_report(emotion_data=checkups_report,
-                                                              dates=["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"],
-                                                              checkup_type=checkup_type)
                     await main_bot.send_photo(
                         photo=BufferedInputFile(file=graphic, filename="graphic.png"),
                         chat_id=user.user_id,
@@ -377,19 +378,35 @@ async def send_weekly_checkup_report(user_id: int, last_date = None):
                         caption="☝️Скачать <b>файл</b> в лучшем <u>качестве</u> можно здесь"
                     )
                 else:
+                    graphic_image = Image.open(io.BytesIO(graphic))
+
+                    # Create rectangle mask
+                    mask = Image.new('L', graphic_image.size, 0)
+                    draw = ImageDraw.Draw(mask)
+                    draw.rectangle([(146, 130), (1478, 1068)], fill=255)
+
+                    mask = ImageOps.invert(mask)
+
+                    # Blur image
+                    blurred = graphic_image.filter(ImageFilter.GaussianBlur(60))
+
+                    blurred.paste(graphic_image, mask=mask)
+                    new_graphic = io.BytesIO()
+                    blurred.convert('RGB').save(new_graphic, format='PNG')
+
                     await pending_messages_repository.update_user_pending_messages(user_id=user_id, weekly_tracking_date=last_date)
                     await main_bot.send_photo(
                         user_id,
-                        FSInputFile(f"assets/tracking_report_{checkup_type}_blured.jpg"),
-                        caption="✅ Результаты <i>недельного трекинга</i> <b>готовы</b>, но для того, чтобы их увидеть 👀 нужна <b>подписка</b>!",
+                        BufferedInputFile(new_graphic.getvalue(), "report.png"),
                         has_spoiler=True,
+                        caption="✅ Результаты <i>недельного трекинга</i> <b>готовы</b>, но для того, чтобы их увидеть 👀 нужна <b>подписка</b>!",
                         reply_markup=buy_sub_keyboard.as_markup()
                     )
-        except Exception as e:
-            logging.error(e)
+        finally:
+            pass
 
 async def send_monthly_checkup_report(user_id: int, last_date = None):
-    last_date = last_date or datetime.now(timezone.utc)
+    last_date = last_date or datetime.now(timezone.utc).replace(tzinfo=None)
 
     checkup_type: Literal["emotions", "productivity"]
     for checkup_type in ("emotions", "productivity"):
@@ -434,8 +451,10 @@ async def send_monthly_checkup_report(user_id: int, last_date = None):
                     draw.rectangle([(171, 473), (1180, 1292)], fill=255)
                     draw.rectangle([(1200, 424), (1336, 1318)], fill=255)
 
+                    mask = ImageOps.invert(mask)
+
                     # Blur image
-                    blurred = graphic_image.filter(ImageFilter.GaussianBlur(52))
+                    blurred = graphic_image.filter(ImageFilter.GaussianBlur(36))
 
                     blurred.paste(graphic_image, mask=mask)
                     new_graphic = io.BytesIO()
@@ -445,7 +464,7 @@ async def send_monthly_checkup_report(user_id: int, last_date = None):
                                                                                    monthly_tracking_date=last_date)
                     await main_bot.send_photo(
                         user_id,
-                        new_graphic.getvalue(),
+                        BufferedInputFile(new_graphic.getvalue(), "report.png"),
                         has_spoiler=True,
                         caption="✅ Результаты <i>месячного трекинга</i> <b>готовы</b>, но для того, чтобы их увидеть 👀 нужна <b>подписка</b>!",
                         reply_markup=buy_sub_keyboard.as_markup()
