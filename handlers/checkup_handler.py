@@ -177,7 +177,7 @@ async def delete_checkups(call: CallbackQuery, state: FSMContext):
     await checkup_repository.delete_checkup_by_checkup_id(checkup_id=checkup_id)
     await call.message.answer("⚙Трекинг состояния отключён! Теперь тебе не будут приходить уведомления.\n\n"
                               "Если захочешь включить его снова, то это всегда можно будет сделать"
-                              " в разделе «<b>🗓Трекинг состояния</b>»")
+                              " в разделе «<b>🗓Трекинги</b>»")
     await call.message.delete()
 
 
@@ -238,10 +238,9 @@ async def update_tine_checkup(message: Message, state: FSMContext):
                                                        points=0,
                                                        user_id=user_id,
                                                        checkup_type=type_checkup)
-        await message.answer('🐿️Отлично, теперь в это время тебе будет приходить ежедневный трекинг.\n\nЕсли ты захочешь пройти трекинг в другое время, то ты всегда сможешь изменить его в настройках⚙️',
-                             reply_markup=menu_keyboard.as_markup())
+        await message.answer('🐿️Отлично, теперь в это время тебе будет приходить ежедневный трекинг.\n\nЕсли ты захочешь пройти трекинг в другое время, то ты всегда сможешь изменить его в настройках⚙️')
 
-        await message.answer()
+        await message.answer(messages_dict["tracking_first_time_motivation_message"], reply_markup=menu_keyboard.as_markup())
     else:
         await state.set_state(InputMessage.enter_time_checkup)
         await state.update_data(type_checkup=type_checkup)
