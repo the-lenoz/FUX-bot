@@ -147,7 +147,6 @@ async def start_checkups(call: CallbackQuery, state: FSMContext):
         return
     user_checkup = await checkup_repository.get_active_checkup_by_user_id_type_checkup(user_id=user_id,
                                                                                        type_checkup=type_checkup)
-    user = await users_repository.get_user_by_user_id(user_id=user_id)
     await state.update_data(type_checkup=type_checkup)
     if user_checkup is None:
         if not await user_timezone_repository.get_user_timezone_delta(user_id):

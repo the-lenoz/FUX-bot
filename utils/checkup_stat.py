@@ -17,6 +17,7 @@ from bots import main_bot
 from data.keyboards import get_rec_keyboard, buy_sub_keyboard
 from db.repository import days_checkups_repository, users_repository, pending_messages_repository
 from settings import calendar_template_photo
+from utils.messages_provider import send_motivation_weekly_message
 from utils.subscription import check_is_subscribed
 
 # Цвета
@@ -388,7 +389,7 @@ async def send_weekly_checkup_report(user_id: int, last_date = None):
                     mask = ImageOps.invert(mask)
 
                     # Blur image
-                    blurred = graphic_image.filter(ImageFilter.GaussianBlur(60))
+                    blurred = graphic_image.filter(ImageFilter.GaussianBlur(80))
 
                     blurred.paste(graphic_image, mask=mask)
                     new_graphic = io.BytesIO()
@@ -403,7 +404,7 @@ async def send_weekly_checkup_report(user_id: int, last_date = None):
                         reply_markup=buy_sub_keyboard.as_markup()
                     )
         finally:
-            pass
+            await send_motivation_weekly_message(user_id)
 
 async def send_monthly_checkup_report(user_id: int, last_date = None):
     last_date = last_date or datetime.now(timezone.utc).replace(tzinfo=None)

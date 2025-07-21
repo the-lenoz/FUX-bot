@@ -1,4 +1,5 @@
 import json
+from datetime import timedelta
 from os import getenv
 
 from PIL import Image
@@ -16,6 +17,9 @@ token_admin_bot = getenv("ADMIN_BOT_TOKEN")
 business_connection_id = getenv("BUSINESS_CONNECTION_ID")
 openai_api_key = getenv("GPT_TOKEN")
 gemini_api_key = getenv("GEMINI_API_KEY")
+
+
+DEFAULT_TIMEZONE = timedelta(hours=3)
 
 with open("messages.json") as messages_file:
     messages_dict = json.load(messages_file)
@@ -92,3 +96,4 @@ table_names = [
     "summary_user",
     "users"
 ]
+

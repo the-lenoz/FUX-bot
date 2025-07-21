@@ -1,9 +1,10 @@
-from datetime import datetime, timezone
+import calendar
+from datetime import datetime, timezone, date
 
 from bots import main_bot
 from data.keyboards import buy_sub_keyboard
 from db.repository import users_repository
-from settings import payment_photo
+from settings import payment_photo, messages_dict
 
 
 async def send_subscription_end_message(user_id: int):
@@ -78,3 +79,35 @@ async def send_subscription_end_message(user_id: int):
         photo=payment_photo,
         chat_id=user_id,
         reply_markup=buy_sub_keyboard.as_markup())
+
+async def send_motivation_weekly_message(user_id: int):
+    # Получаем сегодняшнюю дату
+    today = datetime.today().date()
+
+    # Находим последний день текущего месяца
+    last_day_of_month = calendar.monthrange(today.year, today.month)[1]
+
+    # Создаем объект date для последнего дня месяца
+    last_day_date = date(today.year, today.month, last_day_of_month)
+
+    # Вычисляем количество оставшихся дней
+    remaining_days = (last_day_date - today).days
+
+    # Рассчитываем количество недель и округляем
+    weeks_left = round(remaining_days / 7)
+
+    if weeks_left == 1:
+        remaining_str = "1 неделю"
+    elif weeks_left == 2:
+        remaining_str = "2 недели"
+    elif weeks_left == 3:
+        remaining_str = "3 недели"
+    elif weeks_left == 4:
+        remaining_str = "4 недели"
+    else:
+        return
+
+    await main_bot.send_message(
+        user_id,
+        messages_dict["tracking_weekly_motivation_message"].format(remaining_str)
+    )
