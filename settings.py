@@ -72,7 +72,7 @@ photos_pages = {
     4: checkups_graphic_photo,
     5: temperature_ai_photo,
     6: universal_ai_photo,
-    7: payment_photo,
+    7: sub_description_photo_before,
     8: system_setting_photo
 }
 
