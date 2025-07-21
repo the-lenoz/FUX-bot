@@ -20,7 +20,7 @@ async def edit_activation_sub(main_bot: Bot):
     subs = await subscriptions_repository.select_all_active_subscriptions()
     now_date = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
     for sub in subs:
-        if now_date - sub.creation_date >= datetime.timedelta(hours=24 * sub.time_limit_subscription):
+        if now_date - sub.creation_date.replace(tzinfo=None) >= datetime.timedelta(hours=24 * sub.time_limit_subscription):
             try:
                 await subscriptions_repository.deactivate_subscription(sub.id)
                 await send_subscription_end_message(sub.user_id)
@@ -86,7 +86,7 @@ async def notification_reminder(main_bot: Bot):
             # Можно реализовать отдельное поведение для новых пользователей без событий
             continue
 
-        delta = now - last_event.creation_date
+        delta = now - last_event.creation_date.replace(tzinfo=None)
 
         # Если не отправлялось уведомление о дневном пороге и прошло >= 2 дня
         if not last_event.day_notif_sent and delta >= datetime.timedelta(hours=48):

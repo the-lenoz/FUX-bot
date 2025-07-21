@@ -1,4 +1,3 @@
-
 from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.expression import update
