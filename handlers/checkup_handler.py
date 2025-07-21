@@ -211,7 +211,7 @@ async def set_user_timezone(message: Message, state: FSMContext):
 
 
 @checkup_router.message(F.text, InputMessage.enter_time_checkup)
-async def update_tine_checkup(message: Message, state: FSMContext):
+async def update_time_checkup(message: Message, state: FSMContext):
     user_id = message.from_user.id
     result = is_valid_time(message.text)
     state_data = await state.get_data()
@@ -239,7 +239,8 @@ async def update_tine_checkup(message: Message, state: FSMContext):
                                                        checkup_type=type_checkup)
         await message.answer('🐿️Отлично, теперь в это время тебе будет приходить ежедневный трекинг.\n\nЕсли ты захочешь пройти трекинг в другое время, то ты всегда сможешь изменить его в настройках⚙️')
 
-        await message.answer(messages_dict["tracking_first_time_motivation_message"], reply_markup=menu_keyboard.as_markup())
+        if number_checkup == 0:
+            await message.answer(messages_dict["tracking_first_time_motivation_message"], reply_markup=menu_keyboard.as_markup())
     else:
         await state.set_state(InputMessage.enter_time_checkup)
         await state.update_data(type_checkup=type_checkup)
