@@ -2,20 +2,17 @@ import logging
 import mimetypes
 import os
 import secrets
+from asyncio import sleep
 from typing import Literal, Dict, List
 
-import httpx
-import openai
 from aiogram.types import BufferedInputFile
 from google.cloud import texttospeech, storage
 from google.cloud.texttospeech import SynthesisInput, VoiceSelectionParams, AudioConfig, \
     AudioEncoding
-from google.genai import types, Client
+from google.genai import types, Client, errors
 from google.genai.types import HttpOptions
-from openai import AsyncOpenAI
 from pydantic import BaseModel
 
-from settings import openai_api_key
 from utils.prompts import SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT
 from utils.user_request_types import UserFile
 
@@ -24,18 +21,15 @@ ADVANCED_MODEL = "gemini-2.5-flash"
 
 TTS_MODEL = "gemini-2.5-flash"
 
+MAX_RETRIES = 10
+
 mental_assistant_id = os.getenv("MENTAL_ASSISTANT_ID")
 standard_assistant_id = os.getenv("STANDARD_ASSISTANT_ID")
 
 
 logger = logging.getLogger(__name__)
 
-
-proxy_url = os.environ.get("OPENAI_PROXY_URL")
-openAI_client = AsyncOpenAI(api_key=openai_api_key) if proxy_url is None or proxy_url == "" else \
-    AsyncOpenAI(http_client=httpx.AsyncClient(proxy=proxy_url), api_key=openai_api_key)
-
-google_genai_client = Client(http_options=HttpOptions(api_version="v1"))
+google_genai_client = Client(http_options=HttpOptions(api_version="v1"), location='global')
 
 tts_client = texttospeech.TextToSpeechClient() # TODO - async
 
@@ -166,7 +160,7 @@ class LLMProvider:
             )
             logger.info(f"Smalltalk - {'true'in response.text}")
             return 'true' in response.text
-        except openai.BadRequestError:
+        except errors.ClientError:
             return False
 
     @staticmethod
@@ -194,20 +188,29 @@ class LLMProvider:
             for part in content.parts:
                 if part.text:
                     logger.info(part.text[:32] + '...')
-
-        response = await google_genai_client.aio.models.generate_content(
-            model=self.model_name,
-            contents=contents,
-            config=types.GenerateContentConfig(
-                system_instruction=[system_prompt],
-                safety_settings=[
-                    types.SafetySetting(
-                        category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-                        threshold=types.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+        retry_time = 1
+        response = None
+        retries = 0
+        while not response and retries < MAX_RETRIES:
+            try:
+                response = await google_genai_client.aio.models.generate_content(
+                    model=self.model_name,
+                    contents=contents,
+                    config=types.GenerateContentConfig(
+                        system_instruction=[system_prompt],
+                        safety_settings=[
+                            types.SafetySetting(
+                                category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                                threshold=types.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+                            ),
+                        ]
                     ),
-                ]
-            ),
-        )
+                )
+            except errors.ClientError as e:
+                logger.error(e)
+                logger.info(f"Retrying ({retries + 1})")
+                await sleep(retry_time)
+                retry_time *= 2
+                retries += 1
 
-
-        return response.text
+        return response.text if response else 'Произошла ошибка, пожалуйста, повтори запрос чуть позже или сообщи в тех. поддержку!'

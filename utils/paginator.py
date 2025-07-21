@@ -36,7 +36,7 @@ class MechanicsPaginator(Paginator):
                                          callback_data=f'{self.name_paginator}:page_now:{self.page_now}'))
         page_kb.add(InlineKeyboardButton(text='Вперед ▶️',
                                          callback_data=f'{self.name_paginator}:page_next_keys:{self.page_now}'))
-        page_kb.row(InlineKeyboardButton(text='🔽 Перейти в стартовое меню',
+        page_kb.row(InlineKeyboardButton(text='🔽 Готов(а) Начать',
                                          callback_data='start_menu'))
 
         return page_kb.as_markup()

@@ -8,8 +8,9 @@ from aiogram.fsm.state import any_state
 from bots import main_bot
 from data.keyboards import cancel_keyboard, menu_keyboard, keyboard_for_pay, generate_sub_keyboard
 from db.repository import users_repository, subscriptions_repository, operation_repository, recommendations_repository
-from settings import sub_description_photo, you_fooher_photo, \
-    sub_description_photo2
+from settings import sub_description_photo_before, you_fooher_photo, \
+    sub_description_photo_after
+from utils.callbacks import subscribed_callback
 from utils.state_models import InputMessage
 from utils.validators import is_valid_email
 from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report
@@ -42,7 +43,7 @@ async def subscribe(call: types.CallbackQuery, state: FSMContext, bot: Bot):
             await call.message.delete()
         finally:
             return
-    await call.message.answer_photo(photo=sub_description_photo,
+    await call.message.answer_photo(photo=sub_description_photo_before,
                                     reply_markup=generate_sub_keyboard(mode_type=mode_type).as_markup())
     try:
         await call.message.delete()
@@ -88,7 +89,7 @@ async def enter_user_email(message: types.Message, state: FSMContext, bot: Bot):
         await state.clear()
         await message.answer("Отлично, мы сохранили твой email для следующих покупок")
         await users_repository.update_email_by_user_id(user_id=message.from_user.id, email=message.text)
-        await message.answer_photo(photo=sub_description_photo,
+        await message.answer_photo(photo=sub_description_photo_before,
                                    reply_markup=generate_sub_keyboard(mode_type=mode_type).as_markup())
     else:
         del_message = await message.answer("Введеный тобой email некорректен, попробуй еще раз",
@@ -127,28 +128,11 @@ async def check_payment_callback(message: types.CallbackQuery, state: FSMContext
         await message.message.answer_photo(photo=you_fooher_photo)
 
         await message.message.answer_photo(
-            photo=sub_description_photo2,
+            photo=sub_description_photo_after,
             caption=f"Поздравляю! Твоя подписка активна до {formatted_date} +GMT3",
             reply_markup=menu_keyboard.as_markup()
         )
-        if mode_type.startswith("recommendation"):
-            recommendation_id = int(mode_type.split('-')[1])
-            recommendation = await recommendations_repository.get_recommendation_by_recommendation_id(
-                recommendation_id=recommendation_id
-            )
-            await user_request_handler.AI_handler.send_recommendation(
-                user_id=user_id,
-                recommendation=recommendation.text,
-                problem_id=recommendation.problem_id,
-                from_notification=False
-            )
-        elif mode_type.startswith("tracking"):
-            date = datetime.datetime.fromtimestamp(int(mode_type.split('-')[1]))
-
-            if date.weekday() == 6:
-                await send_weekly_checkup_report(user_id, date)
-            if (date + datetime.timedelta(days=1)).month != date.month:
-                await send_monthly_checkup_report(user_id, date)
+        await subscribed_callback(user_id)
 
     else:
         try:

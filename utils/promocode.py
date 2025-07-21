@@ -5,7 +5,7 @@ from bots import main_bot
 from data.keyboards import cancel_keyboard, menu_keyboard
 from db.repository import referral_system_repository, users_repository, promo_activations_repository, \
     subscriptions_repository
-
+from utils.callbacks import subscribed_callback
 
 logger = logging.getLogger(__name__)
 
@@ -167,12 +167,14 @@ async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: 
         if activate_user_sub is None:
             await subscriptions_repository.add_subscription(user_id=user_id,
                                                             time_limit_subscription=promo.days_sub)
+
             end_date = datetime.now(timezone.utc) + timedelta(days=promo.days_sub)
-            text = f"✅ Теперь у тебя есть подписка на <b>{promo.days_sub} дней</b>! Подписка действует до {end_date.strftime('%d.%m.%y, %H:%M')} (GMT+3)"
+            await main_bot.send_message(user_id, f"✅ Теперь у тебя есть подписка на <b>{promo.days_sub} дней</b>! Подписка действует до {end_date.strftime('%d.%m.%y, %H:%M')} (GMT+3)")
+            await subscribed_callback(user_id)
         else:
             await subscriptions_repository.increase_subscription_time_limit(subscription_id=activate_user_sub.id,
                                                                             time_to_add=promo.days_sub)
             end_date = activate_user_sub.creation_date + timedelta(
                 days=activate_user_sub.time_limit_subscription + promo.days_sub)
-            text = f"✅ К текущему плану тебе добавили <b>{promo.days_sub} дней</b>! Подписка действует до {end_date.strftime('%d.%m.%y, %H:%M')} (GMT+3)"
-        await main_bot.send_message(user_id, text)
+            await main_bot.send_message(user_id, f"✅ К текущему плану тебе добавили <b>{promo.days_sub} дней</b>! Подписка действует до {end_date.strftime('%d.%m.%y, %H:%M')} (GMT+3)")
+

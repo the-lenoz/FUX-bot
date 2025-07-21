@@ -45,7 +45,7 @@ async def send_exercise(call: CallbackQuery, bot: Bot, problem_id: int | None = 
     limits = await limits_repository.get_user_limits(user_id)
     if limits.exercises_remaining or await check_is_subscribed(user_id):
         delete_message = await call.message.answer(
-            "📙Генерирую <b>индивидуальное</b> задание для тебя!")
+            "✍️Генерирую <b>упражнение</b>…")
         exercise = await user_request_handler.AI_handler.generate_exercise(user_id, problem_id)
         if exercise:
             await limits_repository.update_user_limits(user_id, exercises_remaining=limits.exercises_remaining - 1)
