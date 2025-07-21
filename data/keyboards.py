@@ -115,7 +115,6 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
     user_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id=user_id)
     user = await users_repository.get_user_by_user_id(user_id)
     user_timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id)
-    user_timezone_delta = user_timezone_delta or timedelta(hours=3)
     today_tracking = False
     missed_tracking = False
     for checkup in user_checkups:

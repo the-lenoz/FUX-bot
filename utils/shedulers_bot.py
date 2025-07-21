@@ -9,7 +9,7 @@ from aiogram.exceptions import TelegramForbiddenError
 import utils.checkups
 from data.keyboards import buy_sub_keyboard, notification_keyboard, main_keyboard
 from db.repository import subscriptions_repository, users_repository, checkup_repository, events_repository, \
-    admin_repository, limits_repository, days_checkups_repository
+    admin_repository, limits_repository, days_checkups_repository, user_timezone_repository
 from settings import payment_photo, how_are_you_photo, menu_photo, messages_dict
 from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report
 from utils.gpt_distributor import user_request_handler
@@ -174,19 +174,22 @@ async def send_user_statistics(admin_bot: Bot):
 
 
 async def reset_limits(main_bot: Bot):
-    await limits_repository.reset_all_limits(
-        exercises_remaining=2,
-        universal_requests_remaining=20
-    )
-
     users = await users_repository.select_all_users()
     for user in users:
-        user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user.user_id)
-        if user_sub is None:
-            try:
-                await main_bot.send_message(chat_id=user.user_id, text=messages_dict["week_quota_message_text"])
-            except:
-                continue
+        user_timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id=user.user_id)
+        if datetime.datetime.now(timezone(user_timezone_delta)).weekday() == 1 and datetime.datetime.now(timezone(user_timezone_delta)).hour == 8:
+            await limits_repository.update_user_limits(
+                exercises_remaining=2,
+                universal_requests_remaining=10,
+                psychological_requests_remaining=30
+            )
+
+            user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user.user_id)
+            if user_sub is None:
+                try:
+                    await main_bot.send_message(chat_id=user.user_id, text=messages_dict["week_quota_message_text"])
+                except:
+                    continue
 
 
 
