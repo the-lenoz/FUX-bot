@@ -80,7 +80,7 @@ async def send_subscription_end_message(user_id: int):
         chat_id=user_id,
         reply_markup=buy_sub_keyboard.as_markup())
 
-async def send_motivation_weekly_message(user_id: int):
+async def send_motivation_weekly_message(user_id: int): #TODO только когда первый месяц
     # Получаем сегодняшнюю дату
     today = datetime.today().date()
 
