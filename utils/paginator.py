@@ -77,7 +77,7 @@ def create_paginated_keyboard(items: dict[str, int],
 
     # Добавляем кнопки для текущей страницы
     for name, item_id in item_list[start_index:end_index]:
-        builder.row(InlineKeyboardButton(text=name, callback_data=callback_data_format.format(id=item_id)))
+        builder.row(InlineKeyboardButton(text=name, callback_data=callback_data_format.format(item_id)))
 
     navigation_buttons = []
     # Добавляем кнопку "Назад", если это не первая страница
