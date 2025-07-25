@@ -292,7 +292,7 @@ class AIHandler:
 
 class PsyHandler(AIHandler):
     messages_count = {}
-    MESSAGES_LIMITS = {6, 14}
+    MESSAGES_LIMITS = {6, 20}
 
     async def handle(self, request: UserRequest):
         if not self.messages_count.get(request.user_id):

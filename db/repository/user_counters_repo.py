@@ -10,17 +10,30 @@ class UserCountersRepository:
     def __init__(self):
         self.session_maker = DatabaseEngine().create_session()
 
-    async def create_user_counters(self, user_id: int, exercises_remaining: int = 2,
-                                 universal_requests_remaining: int = 10,
-                                 psychological_requests_remaining: int = 30) -> UserCounters:
+    async def create_user_counters(self, user_id: int,
+                                    used_exercises: int,
+                                    messages_count: int,
+                                    dialogs_count: int,
+                                    recommendations_count: int,
+                                    emotions_tracks_count: int,
+                                    productivity_tracks_count: int,
+                                    notified_with_recommendation: int,
+                                    received_weekly_tracking_reports: int,
+                                    received_monthly_tracking_reports: int) -> UserCounters:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
                 limits = UserCounters(
                     user_id=user_id,
-                    exercises_remaining=exercises_remaining,
-                    universal_requests_remaining=universal_requests_remaining,
-                    psychological_requests_remaining=psychological_requests_remaining
+                    used_exercises=used_exercises,
+                    messages_count=messages_count,
+                    dialogs_count=dialogs_count,
+                    recommendations_count=recommendations_count,
+                    emotions_tracks_count=emotions_tracks_count,
+                    productivity_tracks_count=productivity_tracks_count,
+                    notified_with_recommendation=notified_with_recommendation,
+                    received_weekly_tracking_reports=received_weekly_tracking_reports,
+                    received_monthly_tracking_reports=received_monthly_tracking_reports
                 )
                 session.add(limits)
                 await session.commit()

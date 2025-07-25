@@ -15,7 +15,7 @@ from data.keyboards import next_politic_keyboard, have_promo_keyboard, cancel_ke
 from db.repository import users_repository, referral_system_repository, \
     promo_activations_repository, subscriptions_repository
 from handlers.standard_handler import user_request_handler
-from settings import photos_pages, menu_photo
+from settings import photos_pages, menu_photo, messages_dict
 from utils.state_models import InputMessage
 from utils.paginator import MechanicsPaginator
 from utils.promocode import user_entered_promo_code
@@ -217,10 +217,7 @@ async def user_choice_age(call: CallbackQuery, state: FSMContext):
                                         reply_markup=keyboard)
         if not check_is_subscribed(user_id):
             await call.message.answer(
-                """🔒Сейчас у тебя <b>бесплатная версия</b> и тебе <b>доступно</b>: 
-
-        👨‍💻<b>20 Запросов</b> /в неделю
-        ✍️<b>️2 Упражнения</b> /в неделю"""
+                messages_dict["free_account_message"]
             )
     else:
         await call.message.answer(
