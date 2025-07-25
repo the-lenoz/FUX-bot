@@ -8,7 +8,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
 from bots import main_bot
-from data.keyboards import menu_keyboard, buy_sub_keyboard
+from data.keyboards import menu_keyboard, buy_sub_keyboard, discuss_problem_keyboard
 from db.repository import users_repository, limits_repository
 from settings import exercises_photo, messages_dict
 from utils.gpt_distributor import user_request_handler
@@ -52,7 +52,7 @@ async def send_exercise(call: CallbackQuery, bot: Bot, problem_id: int | None = 
             await call.message.answer(telegramify_markdown.markdownify(exercise), parse_mode=ParseMode.MARKDOWN_V2)
             await call.message.answer(messages_dict["exercise_conversation_welcome_text"], reply_markup=menu_keyboard.as_markup())
         else:
-            await call.message.answer("Сначала разбери со мной проблему в чате!", reply_markup=menu_keyboard.as_markup())
+            await call.message.answer("Сначала разбери со мной проблему в чате!", reply_markup=discuss_problem_keyboard.as_markup())
         await bot.delete_message(message_id=delete_message.message_id, chat_id=user_id)
     else:
         await main_bot.send_message(
