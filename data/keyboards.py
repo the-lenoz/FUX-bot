@@ -47,6 +47,9 @@ price_keyboard.row(InlineKeyboardButton(text="990р/3 месяца", callback_da
 menu_keyboard = InlineKeyboardBuilder()
 menu_keyboard.row(menu_button)
 
+discuss_problem_keyboard = InlineKeyboardBuilder()
+discuss_problem_keyboard.row(InlineKeyboardButton(text="Обсудить проблему", callback_data="start_problem_conversation"))
+discuss_problem_keyboard.row(menu_button)
 
 next_politic_keyboard = InlineKeyboardBuilder()
 next_politic_keyboard.row(InlineKeyboardButton(text="Далее", callback_data="confirm_politic"))
