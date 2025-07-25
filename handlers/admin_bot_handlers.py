@@ -134,9 +134,6 @@ async def delete_subscriber(call: types.CallbackQuery, state: FSMContext, bot: B
                                               callback_data=f"grant_promocode_to_user|{user_id}"))
     keyboard_builder.row(InlineKeyboardButton(text="Отмена", callback_data="manage_subscription_paging|0"))
 
-    await subscriptions_repository.deactivate_subscription(subscription.id)
-    await call.message.answer(text="Пользователь лишён подписки."
-                                 f" выберите свои дальнейшие действия!", reply_markup=admin_keyboard)
     await call.message.delete()
 
 
