@@ -134,6 +134,11 @@ async def manage_user_subscription(call: types.CallbackQuery, state: FSMContext,
                                               callback_data=f"grant_promocode_to_user|{user_id}"))
     keyboard_builder.row(InlineKeyboardButton(text="Отмена", callback_data="manage_subscription_paging|0"))
 
+    await call.message.answer(
+        text,
+        reply_markup=keyboard_builder.as_markup()
+    )
+
     await call.message.delete()
 
 
