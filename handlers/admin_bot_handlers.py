@@ -79,9 +79,8 @@ async def manage_subscriptions(message: types.Message, state: FSMContext, bot: B
     items = {}
 
     for user in users:
-        if user.user_id in active_subscriber_ids:
-            items[f"@{user.username if user.username else '--БЕЗ НИКНЕЙМА--'} "
-                  + ('💰' if user.user_id in active_subscriber_ids else '')] = user.user_id
+        items[f"@{user.username if user.username else '--БЕЗ НИКНЕЙМА--'} "
+              + ('💰' if user.user_id in active_subscriber_ids else '')] = user.user_id
 
     keyboard = create_paginated_keyboard(items, "manage_user_subscription|{}",
                                          "manage_subscription_paging|{}",
