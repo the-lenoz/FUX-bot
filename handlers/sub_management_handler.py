@@ -22,10 +22,12 @@ async def sub_management(call: types.CallbackQuery, state: FSMContext, bot: Bot)
 
 async def subscription_management_menu(user_id: int):
     if await check_is_subscribed(user_id):
-        await main_bot.send_message(user_id, "Вы можете продлить <b>подписку</b>:",
-                                    reply_markup=generate_sub_keyboard().as_markup())
+        await main_bot.send_photo(user_id,
+                                  caption=messages_dict["buy_sub_photo_description"],
+                                  photo=premium_sub_photo,
+                                  reply_markup=generate_sub_keyboard().as_markup())
     else:
         await main_bot.send_photo(user_id,
-                                  caption=messages_dict["premium_sub_description_photo"],
+                                  caption=messages_dict["buy_sub_photo_description"],
                                   photo=premium_sub_photo,
                                   reply_markup=generate_sub_keyboard().as_markup())
