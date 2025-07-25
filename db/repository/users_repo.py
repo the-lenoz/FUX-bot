@@ -277,8 +277,8 @@ class UserRepository:
             async with session.begin():
                 now = datetime.now(timezone.utc).replace(tzinfo=None)
 
-                day_ago = now - timedelta(days=1)
-                week_ago = now - timedelta(weeks=1)
+                day_ago = now - timedelta(hours=24)
+                week_ago = now - timedelta(days=7)
                 month_ago = now - timedelta(days=30)  # упрощённый вариант
                 quarter_ago = now - timedelta(days=90)  # упрощённый вариант
 

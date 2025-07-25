@@ -14,6 +14,7 @@ from settings import payment_photo, how_are_you_photo, menu_photo, messages_dict
 from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report
 from utils.gpt_distributor import user_request_handler
 from utils.messages_provider import send_subscription_end_message
+from utils.statistics import MainStatistics, generate_statistics_text
 
 
 async def edit_activation_sub(main_bot: Bot):
@@ -157,19 +158,14 @@ async def break_power_mode(main_bot: Bot):
             continue
 
 
-async def send_user_statistics(admin_bot: Bot):
+async def send_statistics(admin_bot: Bot):
+    statistics = await generate_statistics_text()
     admins = await admin_repository.select_all_admins()
-    user_stat = await users_repository.get_user_creation_statistics()
-    text_message = (f"Количество новых пользователей:\n\n"
-                    f"Статистика за день: <b>{user_stat.get('day')}</b>\n"
-                    f"Статистика за неделю: <b>{user_stat.get('week')}</b>\n"
-                    f"Статистика за месяц: <b>{user_stat.get('month')}</b>\n"
-                    f"Статистика за квартал: <b>{user_stat.get('quarter')}</b>\n"
-                    f"Статистика за все время <b>{user_stat.get('all_time')}</b>")
+
     for admin in admins:
         await admin_bot.send_message(
             admin.admin_id,
-            text_message
+            statistics
         )
 
 
