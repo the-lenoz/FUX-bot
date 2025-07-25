@@ -23,3 +23,7 @@ class AccountSettingsStates(StatesGroup):
     edit_gender = State()
     edit_email = State()
     edit_timezone = State()
+
+class AdminBotStates(StatesGroup):
+    enter_promocode = State()
+

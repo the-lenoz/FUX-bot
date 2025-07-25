@@ -9,20 +9,20 @@ from utils.callbacks import subscribed_callback
 
 logger = logging.getLogger(__name__)
 
-async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: bool = False):
+async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: bool = False) -> bool:
     promo = await referral_system_repository.get_promo_by_promo_code(promo_code=promo_code)
     if promo is None:
         await main_bot.send_message(
             user_id,
             "Такого промокода не существует",
             reply_markup=cancel_keyboard.as_markup())
-        return
+        return False
     elif promo.bring_user_id == user_id and promo.type_promo == "standard":
         await main_bot.send_message(
             user_id,
             "Ты не можешь активировать промокод, который ты сам же выпустил)",
             reply_markup=menu_keyboard.as_markup())
-        return
+        return False
     # delete_message = await message.answer("Секундочку, загружаем информацию о промокоде)")
     if promo.type_promo == "standard":
         user = await users_repository.get_user_by_user_id(user_id=user_id)
@@ -34,7 +34,7 @@ async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: 
                 await main_bot.send_message(user_id,
                                             "К сожалению, мы вынуждены отказать. Ты уже активировал бонусы ранее",
                                             reply_markup=menu_keyboard.as_markup())
-            return
+            return False
         await referral_system_repository.update_activations_by_promo_id(promo_id=promo.id)
         await promo_activations_repository.add_activation(promo_id=promo.id, activate_user_id=user_id)
         await users_repository.update_activate_promo_by_user_id(user_id=user_id)
@@ -58,12 +58,14 @@ async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: 
         if promo.activations > 10:
             try:
                 await main_bot.send_message(chat_id=promo.bring_user_id,
-                                       text="Поздравляем, выпущенный тобой промокод только что бы активирован,"
+                                       text="Поздравляем, выпущенный тобой промокод только что был активирован,"
                                             " но, к сожалению, больше бонусов мы не можем тебе дать,"
                                             " так как этот промокод был активирован более 10 раз",
                                        reply_markup=menu_keyboard.as_markup())
+                return True
             except Exception as e:
                 logger.error(e)
+                return False
         elif promo.activations == 5:
             if bring_user_subscription is None:
                 end_date = datetime.now(timezone.utc) + timedelta(days=30)
@@ -84,8 +86,10 @@ async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: 
             try:
                 await main_bot.send_message(chat_id=promo.bring_user_id, text=text,
                                        reply_markup=menu_keyboard.as_markup())
+                return True
             except Exception as e:
                 logger.error(e)
+                return False
         elif promo.activations == 10:
             if bring_user_subscription is None:
                 end_date = datetime.now(timezone.utc) + timedelta(days=30)
@@ -106,8 +110,10 @@ async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: 
             try:
                 await main_bot.send_message(chat_id=promo.bring_user_id, text=text,
                                        reply_markup=menu_keyboard.as_markup())
+                return True
             except Exception as e:
                 logger.error(e)
+                return False
         elif promo.activations == 1:
             if bring_user_subscription is None:
                 end_date = datetime.now(timezone.utc) + timedelta(days=7)
@@ -127,12 +133,15 @@ async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: 
             try:
                 await main_bot.send_message(chat_id=promo.bring_user_id, text=text,
                                        reply_markup=menu_keyboard.as_markup())
+                return True
             except Exception as e:
                 logger.error(e)
+                return False
         else:
             await main_bot.send_message(chat_id=promo.bring_user_id, text=f"Твой друг активировал промокод. ✅"
                                                                      f" По твоему промокоду уже {promo.activations} активаций",
                                    reply_markup=menu_keyboard.as_markup())
+            return True
     else:
         promo_activations = await promo_activations_repository.get_activations_by_promo_id(promo_id=promo.id)
         if promo.active is False:
@@ -142,7 +151,7 @@ async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: 
                 await main_bot.send_message(user_id,
                                             "К сожалению, данный промокод уже неактивен",
                                             reply_markup=menu_keyboard.as_markup())
-            return
+            return False
         if len(promo_activations) >= promo.max_activations:
             if from_referral is None or not from_referral:
                 await main_bot.send_message(user_id,
@@ -151,7 +160,7 @@ async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: 
                 await main_bot.send_message(user_id,
                                             "К сожалению, данный промокод был активирован максимальное количество раз",
                                             reply_markup=menu_keyboard.as_markup())
-            return
+            return False
         if user_id in [promo_activation.activate_user_id for promo_activation in promo_activations]:
             if from_referral is None or not from_referral:
                 await main_bot.send_message(user_id, "Ты уже активировал данный промокод ранее")
@@ -159,7 +168,7 @@ async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: 
                 await main_bot.send_message(user_id,
                                             "Ты уже активировал данный промокод ранее",
                                             reply_markup=menu_keyboard.as_markup())
-            return
+            return False
         await referral_system_repository.update_activations_by_promo_id(promo_id=promo.id)
         await promo_activations_repository.add_activation(promo_id=promo.id, activate_user_id=user_id)
         # await users_repository.update_activate_promo_by_user_id(user_id=user_id)
@@ -171,10 +180,12 @@ async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: 
             end_date = datetime.now(timezone.utc) + timedelta(days=promo.days_sub)
             await main_bot.send_message(user_id, f"✅ Теперь у тебя есть подписка на <b>{promo.days_sub} дней</b>! Подписка действует до {end_date.strftime('%d.%m.%y, %H:%M')} (GMT+3)")
             await subscribed_callback(user_id)
+            return True
         else:
             await subscriptions_repository.increase_subscription_time_limit(subscription_id=activate_user_sub.id,
                                                                             time_to_add=promo.days_sub)
             end_date = activate_user_sub.creation_date + timedelta(
                 days=activate_user_sub.time_limit_subscription + promo.days_sub)
             await main_bot.send_message(user_id, f"✅ К текущему плану тебе добавили <b>{promo.days_sub} дней</b>! Подписка действует до {end_date.strftime('%d.%m.%y, %H:%M')} (GMT+3)")
+            return True
 

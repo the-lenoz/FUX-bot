@@ -53,3 +53,44 @@ class MechanicsPaginator(Paginator):
         return self._generate_page()
 
 
+def create_paginated_keyboard(items: dict[str, int],
+                              callback_data_format: str,
+                              page_callback_data_format: str,
+                              cancel_callback_data: str | None = None,
+                              page: int = 0) -> InlineKeyboardMarkup:
+    """
+    Создает клавиатуру с разбивкой на страницы.
+
+    :param page_callback_data_format: Строка для форматирования callback_data paginator'a.
+    :param items: Словарь с элементами вида {name: id}.
+    :param callback_data_format: Строка для форматирования callback_data.
+    :param cancel_callback_data:
+    :param page: Текущая страница.
+    :return: Объект InlineKeyboardMarkup.
+    """
+
+    builder = InlineKeyboardBuilder()
+    items_per_page = 12
+    item_list = list(items.items())
+    start_index = page * items_per_page
+    end_index = start_index + items_per_page
+
+    # Добавляем кнопки для текущей страницы
+    for name, item_id in item_list[start_index:end_index]:
+        builder.row(InlineKeyboardButton(text=name, callback_data=callback_data_format.format(id=item_id)))
+
+    navigation_buttons = []
+    # Добавляем кнопку "Назад", если это не первая страница
+    if page > 0:
+        navigation_buttons.append(InlineKeyboardButton(text="◀️ Назад", callback_data=page_callback_data_format.format(page - 1)))
+
+    # Добавляем кнопку "Вперед", если есть еще элементы
+    if end_index < len(item_list):
+        navigation_buttons.append(InlineKeyboardButton(text="▶️ Вперед", callback_data=page_callback_data_format.format(page + 1)))
+
+    if navigation_buttons:
+        builder.row(*navigation_buttons)
+    if cancel_callback_data:
+        builder.row(InlineKeyboardButton(text="Отмена", callback_data=cancel_callback_data))
+
+    return builder.as_markup()

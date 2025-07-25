@@ -1,9 +1,10 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from bots import main_bot
 from data.keyboards import emotions_keyboard, productivity_keyboard
 from db.repository import days_checkups_repository, checkup_repository
-from settings import checkup_emotions_photo, checkup_productivity_photo
+from settings import checkup_emotions_photo, checkup_productivity_photo, emotions_emoji_description_photo, \
+    productivity_emoji_description_photo
 
 
 async def send_checkup(checkup_id: int):
@@ -19,11 +20,14 @@ async def send_checkup(checkup_id: int):
                                                        checkup_type=checkup.type_checkup)
         checkup_day = await days_checkups_repository.get_active_day_checkup_by_checkup_id(checkup_id=checkup.id)
     checkup_id, day_checkup_id, type_checkup = checkup.id, checkup_day.id, checkup.type_checkup
-    message_photo = checkup_emotions_photo
+
+    emotions_photo, productivity_photo = (checkup_emotions_photo, checkup_productivity_photo) if now_date - checkup.creation_date.replace(tzinfo=None) > timedelta(weeks=1) else (emotions_emoji_description_photo, productivity_emoji_description_photo)
+
+    message_photo = emotions_photo
     check_data = "|".join([str(checkup_id), str(day_checkup_id), type_checkup])
     keyboard = emotions_keyboard(check_data)
     if type_checkup == "productivity":
-        message_photo = checkup_productivity_photo
+        message_photo = productivity_photo
         keyboard = productivity_keyboard(check_data)
     await main_bot.send_photo(photo=message_photo,
                               chat_id=checkup.user_id,
