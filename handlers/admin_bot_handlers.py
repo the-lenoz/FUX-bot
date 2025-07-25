@@ -115,7 +115,7 @@ async def delete_subscriber(call: types.CallbackQuery, state: FSMContext, bot: B
 
 @admin_router.callback_query(F.data.startswith("manage_user_subscription|"))
 @is_main_admin
-async def delete_subscriber(call: types.CallbackQuery, state: FSMContext, bot: Bot):
+async def manage_user_subscription(call: types.CallbackQuery, state: FSMContext, bot: Bot):
     await state.clear()
     user_id = int(call.data.split("|")[1])
     subscription = await subscriptions_repository.get_active_subscription_by_user_id(user_id)
@@ -149,7 +149,7 @@ async def delete_subscriber(call: types.CallbackQuery, state: FSMContext, bot: B
 
 @admin_router.callback_query(F.data.startswith("grant_promocode_to_user|"))
 @is_main_admin
-async def delete_subscriber(call: types.CallbackQuery, state: FSMContext, bot: Bot):
+async def grant_promocode_to_user(call: types.CallbackQuery, state: FSMContext, bot: Bot):
     user_id = int(call.data.split("|")[1])
     keyboard_builder = InlineKeyboardBuilder()
     keyboard_builder.row(InlineKeyboardButton(text="Отмена", callback_data=f"manage_user_subscription|{user_id}"))
