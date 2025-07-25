@@ -92,7 +92,7 @@ async def manage_subscriptions(message: types.Message, state: FSMContext, bot: B
 
 @admin_router.callback_query(F.data.startswith("manage_subscription_paging|"))
 @is_main_admin
-async def delete_subscriber(call: types.CallbackQuery, state: FSMContext, bot: Bot):
+async def manage_subscription_paging(call: types.CallbackQuery, state: FSMContext, bot: Bot):
     page = int(call.data.split("|")[1])
     await state.clear()
     users = await users_repository.select_all_users()
@@ -101,14 +101,14 @@ async def delete_subscriber(call: types.CallbackQuery, state: FSMContext, bot: B
     items = {}
 
     for user in users:
-        if user.user_id in active_subscriber_ids:
-            items[f"@{user.username if user.username else '--БЕЗ НИКНЕЙМА--'} "
-                  + ('💰' if user.user_id in active_subscriber_ids else '')] = user.user_id
+        items[f"@{user.username if user.username else '--БЕЗ НИКНЕЙМА--'} "
+              + ('💰' if user.user_id in active_subscriber_ids else '')] = user.user_id
 
     keyboard = create_paginated_keyboard(items, "manage_user_subscription|{}",
                                          "manage_subscription_paging|{}",
                                          cancel_callback_data="cancel",
                                          page=page)
+
     await call.message.edit_reply_markup(reply_markup=keyboard)
     await call.answer()
 
