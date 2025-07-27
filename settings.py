@@ -18,6 +18,7 @@ business_connection_id = getenv("BUSINESS_CONNECTION_ID")
 openai_api_key = getenv("GPT_TOKEN")
 gemini_api_key = getenv("GEMINI_API_KEY")
 
+MAX_DAYS_FREEZE = 3
 
 DEFAULT_TIMEZONE = timedelta(hours=3)
 

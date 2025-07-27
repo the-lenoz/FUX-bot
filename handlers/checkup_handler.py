@@ -112,9 +112,6 @@ async def enter_emoji_user(call: CallbackQuery, state: FSMContext):
             if (day_checkup.creation_date + timedelta(days=1)).month != day_checkup.creation_date.month:
                     await send_monthly_checkup_report(user.user_id, day_checkup.creation_date)
 
-            await users_repository.update_power_mode_days_by_user_id(user_id, user.power_mode_days + 1)
-            await call.message.answer(f"{user.power_mode_days + 1} орех подряд!🌰 Продолжай с трекингом в том же духе")
-
 
         if type_checkup == "emotions":
             await user_counters_repository.user_tracked_emotions(user_id)
