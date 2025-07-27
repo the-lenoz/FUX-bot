@@ -1,10 +1,18 @@
 import calendar
 from datetime import datetime, timezone, date
 
+import telegramify_markdown
+from aiogram.enums import ParseMode
+from aiogram.types import BufferedInputFile
+from telegramify_markdown import InterpreterChain, TextInterpreter, FileInterpreter, MermaidInterpreter, ContentTypes
+
 from bots import main_bot
 from data.keyboards import buy_sub_keyboard
 from db.repository import users_repository, user_counters_repository
 from settings import payment_photo, messages_dict
+from utils.gpt_client import LLMProvider, BASIC_MODEL, ADVANCED_MODEL
+from utils.prompts import TRACKING_REPORT_COMMENT_PROMPT
+from utils.user_request_types import UserFile
 
 
 async def send_subscription_end_message(user_id: int):
@@ -112,3 +120,54 @@ async def send_motivation_weekly_message(user_id: int):
         user_id,
         messages_dict["tracking_weekly_motivation_message"].format(remaining_str)
     )
+
+async def send_monthly_tracking_report_comment(user_id: int, report_image_bytes: bytes):
+    messages = [LLMProvider.create_message(
+        [
+            await LLMProvider.create_image_content_item(UserFile(
+                file_bytes=report_image_bytes,
+                filename="report.png",
+                file_type="image"
+            ))
+        ]
+    ), LLMProvider.create_message(
+        [
+            await LLMProvider.create_text_content_item(TRACKING_REPORT_COMMENT_PROMPT)
+        ]
+    )]
+    interpreter_chain = InterpreterChain([
+        TextInterpreter(),  # Use pure text first
+        FileInterpreter(),  # Handle code blocks
+        MermaidInterpreter(session=None),  # Handle Mermaid charts
+    ])
+    comment = await LLMProvider(ADVANCED_MODEL).process_request(messages)
+
+    boxs = await telegramify_markdown.telegramify(
+        content=comment,
+        interpreters_use=interpreter_chain,
+        latex_escape=True,
+        normalize_whitespace=True,
+        max_word_count=4090  # The maximum number of words in a single message.
+    )
+
+    for item in boxs:
+        if item.content_type == ContentTypes.TEXT:
+            await main_bot.send_message(
+                user_id,
+                item.content,
+                parse_mode=ParseMode.MARKDOWN_V2
+            )
+        elif item.content_type == ContentTypes.PHOTO:
+            await main_bot.send_photo(
+                user_id,
+                BufferedInputFile(file=item.file_data, filename=item.file_name),
+                caption=item.caption,
+                parse_mode=ParseMode.MARKDOWN_V2
+            )
+        elif item.content_type == ContentTypes.FILE:
+            await main_bot.send_document(
+                user_id,
+                BufferedInputFile(file=item.file_data, filename=item.file_name),
+                caption=item.caption,
+                parse_mode=ParseMode.MARKDOWN_V2
+            )

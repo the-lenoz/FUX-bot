@@ -35,7 +35,7 @@ async def choose_exercise_problem(call: CallbackQuery, state: FSMContext, bot: B
     problems = await mental_problems_repository.get_problems_by_user_id(user_id=user_id, worked_out_threshold=4)
     if not problems:
         problems = await mental_problems_repository.get_problems_by_user_id(user_id=user_id)
-    problems = sorted(problems, key=lambda p: p.worked_out)[:4]
+    problems = sorted(problems, key=lambda p: p.worked_out)[:3]
 
     if problems:
         keyboard_builder = InlineKeyboardBuilder()

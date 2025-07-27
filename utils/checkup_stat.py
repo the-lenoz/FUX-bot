@@ -1,6 +1,5 @@
 import calendar
 import io
-import logging
 import os
 import random
 import secrets
@@ -11,14 +10,14 @@ from typing import Literal, List
 
 import matplotlib.pyplot as plt
 from PIL import Image, ImageFont, ImageDraw, ImageFilter, ImageOps
-from aiogram.types import BufferedInputFile, FSInputFile
+from aiogram.types import BufferedInputFile
 
 from bots import main_bot
-from data.keyboards import get_rec_keyboard, buy_sub_keyboard
-from db.repository import days_checkups_repository, users_repository, pending_messages_repository, \
+from data.keyboards import buy_sub_keyboard
+from db.repository import days_checkups_repository, pending_messages_repository, \
     user_counters_repository
 from settings import calendar_template_photo
-from utils.messages_provider import send_motivation_weekly_message
+from utils.messages_provider import send_motivation_weekly_message, send_monthly_tracking_report_comment
 from utils.subscription import check_is_subscribed
 
 # Цвета
@@ -443,6 +442,7 @@ async def send_monthly_checkup_report(user_id: int, last_date = None):
                                                    filename=f"Месячный Трекинг {'Эмоций' if checkup_type == 'emotions' else 'Продуктивности'}.png"),
                         caption="☝️Скачать <b>файл</b> в лучшем <u>качестве</u> можно здесь"
                     )
+                    await send_monthly_tracking_report_comment(user_id, graphic)
                 else:
                     graphic_image = Image.open(io.BytesIO(graphic))
 
