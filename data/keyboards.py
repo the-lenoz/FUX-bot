@@ -4,7 +4,7 @@ from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardBut
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from db.repository import checkup_repository, days_checkups_repository, subscriptions_repository, users_repository, \
-    user_timezone_repository
+    user_timezone_repository, user_counters_repository
 from settings import emoji_dict, speed_dict, table_names
 from utils.checkups_sent import sent_today
 
@@ -116,7 +116,7 @@ exercises_keyboard.row(menu_button)
 async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
     keyboard = InlineKeyboardBuilder()
     user_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id=user_id)
-    user = await users_repository.get_user_by_user_id(user_id)
+    user_counters = await user_counters_repository.get_user_counters(user_id)
     user_timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id)
     today_tracking = False
     missed_tracking = False
@@ -150,7 +150,7 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
         sub_button_text = (f"Моя подписка (до"
                 f" {end_date.strftime('%d.%m.%y')})")
     keyboard.row(InlineKeyboardButton(text=sub_button_text, callback_data="sub_management"))
-    if user.messages_count == 0:
+    if user_counters.messages_count == 0:
         keyboard.row(InlineKeyboardButton(text="👉НАЧАТЬ ОБЩЕНИЕ", callback_data="start_problem_conversation"))
     return keyboard
 

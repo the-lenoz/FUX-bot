@@ -11,9 +11,10 @@ from aiogram.types import BufferedInputFile
 from telegramify_markdown import ContentTypes, InterpreterChain, TextInterpreter, FileInterpreter, MermaidInterpreter
 
 from bots import main_bot
-from data.keyboards import get_rec_keyboard, buy_sub_keyboard, create_practice_exercise_recommendation_keyboard
+from data.keyboards import buy_sub_keyboard, create_practice_exercise_recommendation_keyboard
 from db.repository import users_repository, ai_requests_repository, mental_problems_repository, \
-    exercises_user_repository, recommendations_repository, limits_repository, pending_messages_repository
+    exercises_user_repository, recommendations_repository, limits_repository, pending_messages_repository, \
+    user_counters_repository
 from settings import messages_dict
 from utils.documents import convert_to_pdf
 from utils.gpt_client import BASIC_MODEL, ADVANCED_MODEL, ModelChatThread, LLMProvider
@@ -33,7 +34,7 @@ class UserRequestHandler:
         self.AI_handler = PsyHandler()
 
     async def handle(self, request: UserRequest):
-        await users_repository.user_sent_message(request.user_id)
+        await user_counters_repository.user_sent_message(request.user_id)
 
         if request.file is not None and request.file.file_type == 'document':
             if not request.file.filename.endswith('pdf'):
@@ -253,6 +254,7 @@ class AIHandler:
 
     async def exit(self, user_id: int):
         self.active_threads[user_id] = None
+        await user_counters_repository.user_ended_dialog(user_id)
 
 
     async def check_is_dialog_latest_message_psy(self, request: UserRequest) -> bool:
@@ -344,9 +346,9 @@ class PsyHandler(AIHandler):
                     await main_bot.send_chat_action(chat_id=user_id, action="typing")
                 except TelegramRetryAfter:
                     pass
-                await users_repository.user_got_recommendation(user_id)
+                await user_counters_repository.user_got_recommendation(user_id)
 
-                user = await users_repository.get_user_by_user_id(user_id)
+                user_counters = await user_counters_repository.get_user_counters(user_id)
                 is_subscribed = await check_is_subscribed(user_id)
 
                 problem_id = await self.summarize_dialog_problem(user_id)
@@ -366,7 +368,7 @@ class PsyHandler(AIHandler):
                         problem_id=problem_id
                     )
 
-                    if not user.used_free_recommendation or is_subscribed:
+                    if not user_counters.used_free_recommendation or is_subscribed:
                         await self.send_recommendation(
                             user_id=user_id,
                             recommendation=recommendation,
@@ -375,7 +377,7 @@ class PsyHandler(AIHandler):
                         )
 
                         if not is_subscribed:
-                            await users_repository.used_free_recommendation(user_id)
+                            await user_counters_repository.used_free_recommendation(user_id)
 
                     else:
                         await pending_messages_repository.update_user_pending_messages(user_id=user_id, recommendation_id=recommendation_object.id)
@@ -409,7 +411,7 @@ class PsyHandler(AIHandler):
         else:
             problem = await mental_problems_repository.get_problem_by_id(problem_id=problem_id)
 
-        await users_repository.used_exercises(user_id)
+        await user_counters_repository.used_exercises(user_id)
 
         exercise_text = await self.advanced_model_provider.process_request(
             [

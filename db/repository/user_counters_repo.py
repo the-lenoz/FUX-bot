@@ -50,5 +50,111 @@ class UserCountersRepository:
                 result = query.scalars().one_or_none()
                 return result if result else await self.create_user_counters(user_id)
 
+    async def used_free_recommendation(self, user_id: int):
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(UserCounters).values({
+                    UserCounters.used_free_recommendation: True
+                }).where(or_(UserCounters.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
 
+    async def used_exercises(self, user_id: int):
+        user_counters = await self.get_user_counters(user_id)
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(UserCounters).values({
+                    UserCounters.used_exercises: user_counters.used_exercises + 1
+                }).where(or_(UserCounters.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
 
+    async def notified_with_recommendation(self, user_id: int):
+        user_counters = await self.get_user_counters(user_id)
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(UserCounters).values({
+                    UserCounters.notified_with_recommendation: user_counters.notified_with_recommendation + 1
+                }).where(or_(UserCounters.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
+    async def user_sent_message(self, user_id: int):
+        user_counters = await self.get_user_counters(user_id)
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(UserCounters).values({
+                    UserCounters.messages_count: user_counters.messages_count + 1
+                }).where(or_(UserCounters.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
+    async def user_ended_dialog(self, user_id: int):
+        user_counters = await self.get_user_counters(user_id)
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(UserCounters).values({
+                    UserCounters.dialogs_count: user_counters.dialogs_count + 1
+                }).where(or_(UserCounters.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
+    async def user_got_recommendation(self, user_id: int):
+        user_counters = await self.get_user_counters(user_id)
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(UserCounters).values({
+                    UserCounters.recommendations_count: user_counters.recommendations_count + 1
+                }).where(or_(UserCounters.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
+    async def user_tracked_emotions(self, user_id: int):
+        user_counters = await self.get_user_counters(user_id)
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(UserCounters).values({
+                    UserCounters.emotions_tracks_count: user_counters.emotions_tracks_count + 1
+                }).where(or_(UserCounters.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
+    async def user_tracked_productivity(self, user_id: int):
+        user_counters = await self.get_user_counters(user_id)
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(UserCounters).values({
+                    UserCounters.productivity_tracks_count: user_counters.productivity_tracks_count + 1
+                }).where(or_(UserCounters.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
+    async def user_got_weekly_reports(self, user_id: int):
+        user_counters = await self.get_user_counters(user_id)
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(UserCounters).values({
+                    UserCounters.received_weekly_tracking_reports: user_counters.received_weekly_tracking_reports + 1
+                }).where(or_(UserCounters.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
+    async def user_got_monthly_reports(self, user_id: int):
+        user_counters = await self.get_user_counters(user_id)
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(UserCounters).values({
+                    UserCounters.received_monthly_tracking_reports: user_counters.received_monthly_tracking_reports + 1
+                }).where(or_(UserCounters.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()

@@ -9,7 +9,7 @@ from aiogram.types import CallbackQuery
 
 from bots import main_bot
 from data.keyboards import menu_keyboard, buy_sub_keyboard, discuss_problem_keyboard
-from db.repository import users_repository, limits_repository
+from db.repository import users_repository, limits_repository, user_counters_repository
 from settings import exercises_photo, messages_dict
 from utils.gpt_distributor import user_request_handler
 from utils.subscription import check_is_subscribed
@@ -21,8 +21,8 @@ logger = logging.getLogger(__name__)
 @exercises_router.callback_query(F.data == "exercises_by_problem")
 async def exercises_by_problem_call(call: CallbackQuery, state: FSMContext, bot: Bot):
     user_id = call.from_user.id
-    user = await users_repository.get_user_by_user_id(user_id)
-    if not user.used_exercises or user.used_exercises < 3:
+    user_counters = await user_counters_repository.get_user_counters(user_id)
+    if not user_counters.used_exercises or user_counters.used_exercises < 3:
         await call.message.answer_photo(caption=messages_dict["exercises_mechanic_text"],
                                         photo=exercises_photo)
 

@@ -30,13 +30,13 @@ class User(BaseModel, CleanModel):
     used_free_recommendation = Column(Boolean, nullable=False, default=False)
 
     # Counters
-    used_exercises = Column(BigInteger, nullable=False, default=0)
-    messages_count = Column(BigInteger, nullable=False, default=0)
-    recommendations_count = Column(BigInteger, nullable=False, default=0)
-    emotions_tracks_count = Column(BigInteger, nullable=False, default=0)
-    productivity_tracks_count = Column(BigInteger, nullable=False, default=0)
-    notified_with_recommendation = Column(BigInteger, nullable=False, default=0)
-    received_weekly_tracking_reports = Column(BigInteger, nullable=False, default=0)
+    used_exercises = Column(BigInteger, nullable=False, default=0) # DEL
+    messages_count = Column(BigInteger, nullable=False, default=0) # DEL
+    recommendations_count = Column(BigInteger, nullable=False, default=0) # DEL
+    emotions_tracks_count = Column(BigInteger, nullable=False, default=0) # DEL
+    productivity_tracks_count = Column(BigInteger, nullable=False, default=0) # DEL
+    notified_with_recommendation = Column(BigInteger, nullable=False, default=0) # DEL
+    received_weekly_tracking_reports = Column(BigInteger, nullable=False, default=0) # DEL
 
     @property
     def stats(self) -> str:

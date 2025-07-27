@@ -11,7 +11,7 @@ import utils.checkups
 from data.keyboards import checkup_type_keyboard, buy_sub_keyboard, menu_keyboard, menu_button, \
     delete_checkups_keyboard
 from db.repository import users_repository, subscriptions_repository, checkup_repository, days_checkups_repository, \
-    user_timezone_repository
+    user_timezone_repository, user_counters_repository
 from handlers.system_settings_handler import send_system_settings
 from settings import checkups_types_photo, checkup_emotions_photo, \
     checkup_productivity_photo, messages_dict, emotions_emoji_description_photo, productivity_emoji_description_photo
@@ -117,9 +117,9 @@ async def enter_emoji_user(call: CallbackQuery, state: FSMContext):
 
 
         if type_checkup == "emotions":
-            await users_repository.user_tracked_emotions(user_id)
+            await user_counters_repository.user_tracked_emotions(user_id)
         elif type_checkup == "productivity":
-            await users_repository.user_tracked_productivity(user_id)
+            await user_counters_repository.user_tracked_productivity(user_id)
 
         await call.message.delete()
 

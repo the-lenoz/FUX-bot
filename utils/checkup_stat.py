@@ -15,7 +15,8 @@ from aiogram.types import BufferedInputFile, FSInputFile
 
 from bots import main_bot
 from data.keyboards import get_rec_keyboard, buy_sub_keyboard
-from db.repository import days_checkups_repository, users_repository, pending_messages_repository
+from db.repository import days_checkups_repository, users_repository, pending_messages_repository, \
+    user_counters_repository
 from settings import calendar_template_photo
 from utils.messages_provider import send_motivation_weekly_message
 from utils.subscription import check_is_subscribed
@@ -343,11 +344,11 @@ def generate_tracking_calendar(year: int, month: int, checkup_type: Literal["emo
 
 async def send_weekly_checkup_report(user_id: int, last_date = None):
     last_date = last_date or datetime.now(timezone.utc).replace(tzinfo=None)
-    user = await users_repository.get_user_by_user_id(user_id)
+    user_counters = await user_counters_repository.get_user_counters(user_id)
 
     checkup_type: Literal["emotions", "productivity"]
     for checkup_type in ("emotions", "productivity"):
-        checkup_days = await days_checkups_repository.get_days_checkups_by_user_id(user_id=user.user_id)
+        checkup_days = await days_checkups_repository.get_days_checkups_by_user_id(user_id=user_id)
         checkups_report = []
 
         send = False
@@ -362,14 +363,14 @@ async def send_weekly_checkup_report(user_id: int, last_date = None):
             checkups_report.append(day_checkup_data)
 
         if send:
-            await users_repository.user_got_weekly_reports(user_id=user_id)
+            await user_counters_repository.user_got_weekly_reports(user_id=user_id)
             graphic = generate_weekly_tracking_report(emotion_data=checkups_report,
                                                       dates=["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"],
                                                       checkup_type=checkup_type)
-            if user.received_weekly_tracking_reports < 3 or await check_is_subscribed(user_id):
+            if user_counters.received_weekly_tracking_reports < 3 or await check_is_subscribed(user_id):
                 await main_bot.send_photo(
                     photo=BufferedInputFile(file=graphic, filename="graphic.png"),
-                    chat_id=user.user_id,
+                    chat_id=user_id,
                     caption=f"✅ Трекинг <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за неделю готов!"
                 )
                 await main_bot.send_document(
@@ -402,7 +403,8 @@ async def send_weekly_checkup_report(user_id: int, last_date = None):
                     caption="✅ Результаты <i>недельного трекинга</i> <b>готовы</b>, но для того, чтобы их увидеть 👀 нужна <b>подписка</b>!",
                     reply_markup=buy_sub_keyboard.as_markup()
                 )
-    await send_motivation_weekly_message(user_id)
+    if not user_counters.received_monthly_tracking_reports:
+        await send_motivation_weekly_message(user_id)
 
 async def send_monthly_checkup_report(user_id: int, last_date = None):
     last_date = last_date or datetime.now(timezone.utc).replace(tzinfo=None)
@@ -425,7 +427,7 @@ async def send_monthly_checkup_report(user_id: int, last_date = None):
                 checkups_report.append(day_checkup_data)
 
             if send:
-                await users_repository.user_got_weekly_reports(user_id=user_id)
+                await user_counters_repository.user_got_monthly_reports(user_id=user_id)
                 graphic = generate_tracking_calendar(year=last_date.year, month=last_date.month,
                                                      data=checkups_report,
                                                     checkup_type=checkup_type)
