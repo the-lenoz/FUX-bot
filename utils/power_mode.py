@@ -43,8 +43,10 @@ async def trigger_skipped_day(user_id: int):
     await events_repository.update_event(last_user_event)
 
 async def break_power_mode(user_id: int):
-    await users_repository.update_power_mode_days_by_user_id(user_id, 0)
-    await main_bot.send_message(
-        user_id,
-        messages_dict["break_power_mode"]
-    )
+    user = await users_repository.get_user_by_user_id(user_id)
+    if user.power_mode_days:
+        await users_repository.update_power_mode_days_by_user_id(user_id, 0)
+        await main_bot.send_message(
+            user_id,
+            messages_dict["break_power_mode"]
+        )
