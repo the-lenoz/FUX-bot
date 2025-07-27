@@ -294,14 +294,17 @@ class AIHandler:
 
 class PsyHandler(AIHandler):
     messages_count = {}
-    MESSAGES_LIMITS = {6, 20}
+    MESSAGES_NOTIFICATION_COUNT = {6, 20}
+    DIALOG_NOTIFICATION_COUNT = {1, 3}
 
     async def handle(self, request: UserRequest):
         if not self.messages_count.get(request.user_id):
             self.messages_count[request.user_id] = 0
         self.messages_count[request.user_id] += 1
 
-        if self.messages_count[request.user_id] + 1 in self.MESSAGES_LIMITS:
+        user_counters = await user_counters_repository.get_user_counters(request.user_id)
+        if (self.messages_count[request.user_id] + 1 in self.MESSAGES_NOTIFICATION_COUNT
+                and user_counters.dialogs_count + 1 in self.DIALOG_NOTIFICATION_COUNT):
             await main_bot.send_message(request.user_id, messages_dict["recommendation_command_reminder_text"])
         await super().handle(request)
 
