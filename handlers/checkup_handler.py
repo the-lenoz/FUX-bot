@@ -11,7 +11,7 @@ import utils.checkups
 from data.keyboards import checkup_type_keyboard, buy_sub_keyboard, menu_keyboard, menu_button, \
     delete_checkups_keyboard
 from db.repository import users_repository, subscriptions_repository, checkup_repository, days_checkups_repository, \
-    user_timezone_repository
+    user_timezone_repository, user_counters_repository
 from handlers.system_settings_handler import send_system_settings
 from settings import checkups_types_photo, checkup_emotions_photo, \
     checkup_productivity_photo, messages_dict, emotions_emoji_description_photo, productivity_emoji_description_photo
@@ -117,9 +117,9 @@ async def enter_emoji_user(call: CallbackQuery, state: FSMContext):
 
 
         if type_checkup == "emotions":
-            await users_repository.user_tracked_emotions(user_id)
+            await user_counters_repository.user_tracked_emotions(user_id)
         elif type_checkup == "productivity":
-            await users_repository.user_tracked_productivity(user_id)
+            await user_counters_repository.user_tracked_productivity(user_id)
 
         await call.message.delete()
 
@@ -147,7 +147,6 @@ async def start_checkups(call: CallbackQuery, state: FSMContext):
         return
     user_checkup = await checkup_repository.get_active_checkup_by_user_id_type_checkup(user_id=user_id,
                                                                                        type_checkup=type_checkup)
-    user = await users_repository.get_user_by_user_id(user_id=user_id)
     await state.update_data(type_checkup=type_checkup)
     if user_checkup is None:
         if not await user_timezone_repository.get_user_timezone_delta(user_id):
@@ -157,7 +156,7 @@ async def start_checkups(call: CallbackQuery, state: FSMContext):
         else:
             await call.message.answer_photo(
                 photo=emotions_emoji_description_photo if type_checkup == "emotions" else productivity_emoji_description_photo,
-                caption="Для того, чтобы продолжить, введи, пожалуйста время в которое, тебе отправлять"
+                caption="Для того, чтобы продолжить, введи, пожалуйста, время, в которое тебе отправлять"
                         " <u>трекинг</u> " + (
                             "<b>эмоций</b>" if type_checkup == "emotions" else "<b>продуктивности</b>") + ". Пример: 21:00",
                 reply_markup=menu_keyboard.as_markup())
@@ -201,7 +200,7 @@ async def set_user_timezone(message: Message, state: FSMContext):
     if await state.get_value("enter_checkup_time"):
         await message.answer_photo(
             photo=checkup_emotions_photo if type_checkup == "emotions" else checkup_productivity_photo,
-            caption="Для того, чтобы продолжить, введи, пожалуйста время в которое, тебе отправлять"
+            caption="Для того, чтобы продолжить, введи, пожалуйста, время, в которое тебе отправлять"
                     " <u>трекинг</u> " + (
                         "<b>эмоций</b>" if type_checkup == "emotions" else "<b>продуктивности</b>") + ". Пример: 21:00",
             reply_markup=menu_keyboard.as_markup())
@@ -212,7 +211,7 @@ async def set_user_timezone(message: Message, state: FSMContext):
 
 
 @checkup_router.message(F.text, InputMessage.enter_time_checkup)
-async def update_tine_checkup(message: Message, state: FSMContext):
+async def update_time_checkup(message: Message, state: FSMContext):
     user_id = message.from_user.id
     result = is_valid_time(message.text)
     state_data = await state.get_data()
@@ -240,7 +239,8 @@ async def update_tine_checkup(message: Message, state: FSMContext):
                                                        checkup_type=type_checkup)
         await message.answer('🐿️Отлично, теперь в это время тебе будет приходить ежедневный трекинг.\n\nЕсли ты захочешь пройти трекинг в другое время, то ты всегда сможешь изменить его в настройках⚙️')
 
-        await message.answer(messages_dict["tracking_first_time_motivation_message"], reply_markup=menu_keyboard.as_markup())
+        if number_checkup == 0:
+            await message.answer(messages_dict["tracking_first_time_motivation_message"], reply_markup=menu_keyboard.as_markup())
     else:
         await state.set_state(InputMessage.enter_time_checkup)
         await state.update_data(type_checkup=type_checkup)

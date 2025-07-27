@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.engine import DatabaseEngine
 from db.models.user_timezone import UserTimezone
+from settings import DEFAULT_TIMEZONE
 
 
 class UserTimezoneRepository:
@@ -32,4 +33,6 @@ class UserTimezoneRepository:
                 timezone: UserTimezone = result.scalars().one_or_none()
                 if timezone:
                     return timezone.timezone_UTC_delta
-                return None
+                else:
+                    await self.set_user_timezone_delta(user_id, DEFAULT_TIMEZONE)
+                    return DEFAULT_TIMEZONE

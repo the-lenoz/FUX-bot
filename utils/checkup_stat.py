@@ -1,6 +1,5 @@
 import calendar
 import io
-import logging
 import os
 import random
 import secrets
@@ -11,12 +10,14 @@ from typing import Literal, List
 
 import matplotlib.pyplot as plt
 from PIL import Image, ImageFont, ImageDraw, ImageFilter, ImageOps
-from aiogram.types import BufferedInputFile, FSInputFile
+from aiogram.types import BufferedInputFile
 
 from bots import main_bot
-from data.keyboards import get_rec_keyboard, buy_sub_keyboard
-from db.repository import days_checkups_repository, users_repository, pending_messages_repository
+from data.keyboards import buy_sub_keyboard
+from db.repository import days_checkups_repository, pending_messages_repository, \
+    user_counters_repository
 from settings import calendar_template_photo
+from utils.messages_provider import send_motivation_weekly_message, send_monthly_tracking_report_comment
 from utils.subscription import check_is_subscribed
 
 # Цвета
@@ -342,68 +343,67 @@ def generate_tracking_calendar(year: int, month: int, checkup_type: Literal["emo
 
 async def send_weekly_checkup_report(user_id: int, last_date = None):
     last_date = last_date or datetime.now(timezone.utc).replace(tzinfo=None)
-    user = await users_repository.get_user_by_user_id(user_id)
+    user_counters = await user_counters_repository.get_user_counters(user_id)
 
     checkup_type: Literal["emotions", "productivity"]
     for checkup_type in ("emotions", "productivity"):
-        try:
-            checkup_days = await days_checkups_repository.get_days_checkups_by_user_id(user_id=user.user_id)
-            checkups_report = []
+        checkup_days = await days_checkups_repository.get_days_checkups_by_user_id(user_id=user_id)
+        checkups_report = []
 
-            send = False
-            for weekday in range(7):
-                day = last_date - timedelta(days=last_date.weekday() - weekday)
-                day_checkup_data = None
-                for checkup_day in checkup_days:
-                    if checkup_day.creation_date and checkup_day.creation_date.date() == day.date() \
-                            and checkup_day.checkup_type == checkup_type:
-                        day_checkup_data = checkup_day.points
-                        send = True
-                checkups_report.append(day_checkup_data)
+        send = False
+        for weekday in range(7):
+            day = last_date - timedelta(days=last_date.weekday() - weekday)
+            day_checkup_data = None
+            for checkup_day in checkup_days:
+                if checkup_day.creation_date and checkup_day.creation_date.date() == day.date() \
+                        and checkup_day.checkup_type == checkup_type:
+                    day_checkup_data = checkup_day.points
+                    send = True
+            checkups_report.append(day_checkup_data)
 
-            if send:
-                await users_repository.user_got_weekly_reports(user_id=user_id)
-                graphic = generate_weekly_tracking_report(emotion_data=checkups_report,
-                                                          dates=["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"],
-                                                          checkup_type=checkup_type)
-                if user.received_weekly_tracking_reports < 3 or await check_is_subscribed(user_id):
-                    await main_bot.send_photo(
-                        photo=BufferedInputFile(file=graphic, filename="graphic.png"),
-                        chat_id=user.user_id,
-                        caption=f"✅ Трекинг <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за неделю готов!"
-                    )
-                    await main_bot.send_document(
-                        chat_id=user_id,
-                        document=BufferedInputFile(file=graphic, filename=f"Недельный Трекинг {'Эмоций' if checkup_type == 'emotions' else 'Продуктивности'}.png"),
-                        caption="☝️Скачать <b>файл</b> в лучшем <u>качестве</u> можно здесь"
-                    )
-                else:
-                    graphic_image = Image.open(io.BytesIO(graphic))
+        if send:
+            await user_counters_repository.user_got_weekly_reports(user_id=user_id)
+            graphic = generate_weekly_tracking_report(emotion_data=checkups_report,
+                                                      dates=["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"],
+                                                      checkup_type=checkup_type)
+            if user_counters.received_weekly_tracking_reports < 3 or await check_is_subscribed(user_id):
+                await main_bot.send_photo(
+                    photo=BufferedInputFile(file=graphic, filename="graphic.png"),
+                    chat_id=user_id,
+                    caption=f"✅ Трекинг <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за неделю готов!"
+                )
+                await main_bot.send_document(
+                    chat_id=user_id,
+                    document=BufferedInputFile(file=graphic, filename=f"Недельный Трекинг {'Эмоций' if checkup_type == 'emotions' else 'Продуктивности'}.png"),
+                    caption="☝️Скачать <b>файл</b> в лучшем <u>качестве</u> можно здесь"
+                )
+            else:
+                graphic_image = Image.open(io.BytesIO(graphic))
 
-                    # Create rectangle mask
-                    mask = Image.new('L', graphic_image.size, 0)
-                    draw = ImageDraw.Draw(mask)
-                    draw.rectangle([(146, 130), (1478, 1068)], fill=255)
+                # Create rectangle mask
+                mask = Image.new('L', graphic_image.size, 0)
+                draw = ImageDraw.Draw(mask)
+                draw.rectangle([(146, 130), (1478, 1068)], fill=255)
 
-                    mask = ImageOps.invert(mask)
+                mask = ImageOps.invert(mask)
 
-                    # Blur image
-                    blurred = graphic_image.filter(ImageFilter.GaussianBlur(60))
+                # Blur image
+                blurred = graphic_image.filter(ImageFilter.GaussianBlur(80))
 
-                    blurred.paste(graphic_image, mask=mask)
-                    new_graphic = io.BytesIO()
-                    blurred.convert('RGB').save(new_graphic, format='PNG')
+                blurred.paste(graphic_image, mask=mask)
+                new_graphic = io.BytesIO()
+                blurred.convert('RGB').save(new_graphic, format='PNG')
 
-                    await pending_messages_repository.update_user_pending_messages(user_id=user_id, weekly_tracking_date=last_date)
-                    await main_bot.send_photo(
-                        user_id,
-                        BufferedInputFile(new_graphic.getvalue(), "report.png"),
-                        has_spoiler=True,
-                        caption="✅ Результаты <i>недельного трекинга</i> <b>готовы</b>, но для того, чтобы их увидеть 👀 нужна <b>подписка</b>!",
-                        reply_markup=buy_sub_keyboard.as_markup()
-                    )
-        finally:
-            pass
+                await pending_messages_repository.update_user_pending_messages(user_id=user_id, weekly_tracking_date=last_date)
+                await main_bot.send_photo(
+                    user_id,
+                    BufferedInputFile(new_graphic.getvalue(), "report.png"),
+                    has_spoiler=True,
+                    caption="✅ Результаты <i>недельного трекинга</i> <b>готовы</b>, но для того, чтобы их увидеть 👀 нужна <b>подписка</b>!",
+                    reply_markup=buy_sub_keyboard.as_markup()
+                )
+    if not user_counters.received_monthly_tracking_reports:
+        await send_motivation_weekly_message(user_id)
 
 async def send_monthly_checkup_report(user_id: int, last_date = None):
     last_date = last_date or datetime.now(timezone.utc).replace(tzinfo=None)
@@ -426,7 +426,7 @@ async def send_monthly_checkup_report(user_id: int, last_date = None):
                 checkups_report.append(day_checkup_data)
 
             if send:
-                await users_repository.user_got_weekly_reports(user_id=user_id)
+                await user_counters_repository.user_got_monthly_reports(user_id=user_id)
                 graphic = generate_tracking_calendar(year=last_date.year, month=last_date.month,
                                                      data=checkups_report,
                                                     checkup_type=checkup_type)
@@ -442,6 +442,7 @@ async def send_monthly_checkup_report(user_id: int, last_date = None):
                                                    filename=f"Месячный Трекинг {'Эмоций' if checkup_type == 'emotions' else 'Продуктивности'}.png"),
                         caption="☝️Скачать <b>файл</b> в лучшем <u>качестве</u> можно здесь"
                     )
+                    await send_monthly_tracking_report_comment(user_id, graphic)
                 else:
                     graphic_image = Image.open(io.BytesIO(graphic))
 

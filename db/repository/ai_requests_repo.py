@@ -95,7 +95,7 @@ class AiRequestsRepository:
           - with_photo   (из них с фото)
           - with_files   (из них с файлом)
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
         day_ago = now - timedelta(days=1)
         week_ago = now - timedelta(weeks=1)
         month_ago = now - timedelta(days=30)  # упрощённый вариант "месяц"

@@ -26,17 +26,6 @@ class UserRepository:
                     return False
                 return True
 
-    # async def update_language_id_by_user_id(self, user_id: int, language: int):
-    #     async with self.session_maker() as session:
-    #         session: AsyncSession
-    #         async with session.begin():
-    #             sql = update(Users).values({
-    #                 Users.language: language
-    #             }).where(or_(Users.user_id == user_id))
-    #             await session.execute(sql)
-    #             await session.commit()
-
-
     async def get_user_by_user_id(self, user_id: int) -> User:
         async with self.session_maker() as session:
             session: AsyncSession
@@ -52,8 +41,6 @@ class UserRepository:
                 sql = select(User)
                 query = await session.execute(sql)
                 return query.scalars().all()
-
-
 
     async def update_mental_ai_threat_id_by_user_id(self, user_id: int, thread_id: int):
         async with self.session_maker() as session:
@@ -175,93 +162,6 @@ class UserRepository:
                 await session.execute(sql)
                 await session.commit()
 
-    async def used_free_recommendation(self, user_id: int):
-        async with self.session_maker() as session:
-            session: AsyncSession
-            async with session.begin():
-                sql = update(User).values({
-                    User.used_free_recommendation: True
-                }).where(or_(User.user_id == user_id))
-                await session.execute(sql)
-                await session.commit()
-
-    async def used_exercises(self, user_id: int):
-        user = await self.get_user_by_user_id(user_id)
-        async with self.session_maker() as session:
-            session: AsyncSession
-            async with session.begin():
-                sql = update(User).values({
-                    User.used_exercises: user.used_exercises + 1
-                }).where(or_(User.user_id == user_id))
-                await session.execute(sql)
-                await session.commit()
-
-    async def notified_with_recommendation(self, user_id: int):
-        user = await self.get_user_by_user_id(user_id)
-        async with self.session_maker() as session:
-            session: AsyncSession
-            async with session.begin():
-                sql = update(User).values({
-                    User.notified_with_recommendation: user.notified_with_recommendation + 1
-                }).where(or_(User.user_id == user_id))
-                await session.execute(sql)
-                await session.commit()
-
-    async def user_sent_message(self, user_id: int):
-        user = await self.get_user_by_user_id(user_id)
-        async with self.session_maker() as session:
-            session: AsyncSession
-            async with session.begin():
-                sql = update(User).values({
-                    User.messages_count: user.messages_count + 1
-                }).where(or_(User.user_id == user_id))
-                await session.execute(sql)
-                await session.commit()
-
-    async def user_got_recommendation(self, user_id: int):
-        user = await self.get_user_by_user_id(user_id)
-        async with self.session_maker() as session:
-            session: AsyncSession
-            async with session.begin():
-                sql = update(User).values({
-                    User.recommendations_count: user.recommendations_count + 1
-                }).where(or_(User.user_id == user_id))
-                await session.execute(sql)
-                await session.commit()
-
-    async def user_tracked_emotions(self, user_id: int):
-        user = await self.get_user_by_user_id(user_id)
-        async with self.session_maker() as session:
-            session: AsyncSession
-            async with session.begin():
-                sql = update(User).values({
-                    User.emotions_tracks_count: user.emotions_tracks_count + 1
-                }).where(or_(User.user_id == user_id))
-                await session.execute(sql)
-                await session.commit()
-
-    async def user_tracked_productivity(self, user_id: int):
-        user = await self.get_user_by_user_id(user_id)
-        async with self.session_maker() as session:
-            session: AsyncSession
-            async with session.begin():
-                sql = update(User).values({
-                    User.productivity_tracks_count: user.productivity_tracks_count + 1
-                }).where(or_(User.user_id == user_id))
-                await session.execute(sql)
-                await session.commit()
-
-    async def user_got_weekly_reports(self, user_id: int):
-        user = await self.get_user_by_user_id(user_id)
-        async with self.session_maker() as session:
-            session: AsyncSession
-            async with session.begin():
-                sql = update(User).values({
-                    User.received_weekly_tracking_reports: user.received_weekly_tracking_reports + 1
-                }).where(or_(User.user_id == user_id))
-                await session.execute(sql)
-                await session.commit()
-
     async def delete_user_by_id(self, user_id: int):
         async with self.session_maker() as session:
             session: AsyncSession
@@ -277,8 +177,8 @@ class UserRepository:
             async with session.begin():
                 now = datetime.now(timezone.utc).replace(tzinfo=None)
 
-                day_ago = now - timedelta(days=1)
-                week_ago = now - timedelta(weeks=1)
+                day_ago = now - timedelta(hours=24)
+                week_ago = now - timedelta(days=7)
                 month_ago = now - timedelta(days=30)  # упрощённый вариант
                 quarter_ago = now - timedelta(days=90)  # упрощённый вариант
 

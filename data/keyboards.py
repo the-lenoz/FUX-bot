@@ -4,7 +4,7 @@ from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardBut
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from db.repository import checkup_repository, days_checkups_repository, subscriptions_repository, users_repository, \
-    user_timezone_repository
+    user_timezone_repository, user_counters_repository
 from settings import emoji_dict, speed_dict, table_names
 from utils.checkups_sent import sent_today
 
@@ -47,6 +47,9 @@ price_keyboard.row(InlineKeyboardButton(text="990р/3 месяца", callback_da
 menu_keyboard = InlineKeyboardBuilder()
 menu_keyboard.row(menu_button)
 
+discuss_problem_keyboard = InlineKeyboardBuilder()
+discuss_problem_keyboard.row(InlineKeyboardButton(text="Разобрать", callback_data="start_problem_conversation"))
+discuss_problem_keyboard.row(menu_button)
 
 next_politic_keyboard = InlineKeyboardBuilder()
 next_politic_keyboard.row(InlineKeyboardButton(text="Далее", callback_data="confirm_politic"))
@@ -106,16 +109,15 @@ choice_gender_settings_keyboard.row(InlineKeyboardButton(text="Отменить"
 
 
 exercises_keyboard = InlineKeyboardBuilder()
-exercises_keyboard.row(InlineKeyboardButton(text="Упражнения", callback_data="exercises_by_problem"))
+exercises_keyboard.row(InlineKeyboardButton(text="Упражнения", callback_data="choose_exercise_problem"))
 exercises_keyboard.row(menu_button)
 
 
 async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
     keyboard = InlineKeyboardBuilder()
     user_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id=user_id)
-    user = await users_repository.get_user_by_user_id(user_id)
+    user_counters = await user_counters_repository.get_user_counters(user_id)
     user_timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id)
-    user_timezone_delta = user_timezone_delta or timedelta(hours=3)
     today_tracking = False
     missed_tracking = False
     for checkup in user_checkups:
@@ -135,7 +137,7 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
     if missed_tracking:
         keyboard.row(InlineKeyboardButton(text="⚠️ПРОПУЩЕННЫЕ трекинги", callback_data="missed_tracking"))
 
-    keyboard.row(InlineKeyboardButton(text="📝Упражнения", callback_data="exercises_by_problem"))
+    keyboard.row(InlineKeyboardButton(text="📝Упражнения", callback_data="choose_exercise_problem"))
     keyboard.add(InlineKeyboardButton(text="📉️Трекинги", callback_data="checkups"))
     keyboard.row(InlineKeyboardButton(text="📜О сервисе", callback_data="all_mechanics"))
     keyboard.add(InlineKeyboardButton(text="⚙️Настройки", callback_data="system_settings"))
@@ -148,7 +150,7 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
         sub_button_text = (f"Моя подписка (до"
                 f" {end_date.strftime('%d.%m.%y')})")
     keyboard.row(InlineKeyboardButton(text=sub_button_text, callback_data="sub_management"))
-    if user.messages_count == 0:
+    if user_counters.messages_count == 0:
         keyboard.row(InlineKeyboardButton(text="👉НАЧАТЬ ОБЩЕНИЕ", callback_data="start_problem_conversation"))
     return keyboard
 
@@ -248,7 +250,7 @@ notification_keyboard.row(
     InlineKeyboardButton(text="Обсудить проблему", callback_data="start_problem_conversation")
 )
 notification_keyboard.row(
-    InlineKeyboardButton(text="Упражнение", callback_data="exercises_by_problem"),
+    InlineKeyboardButton(text="Упражнение", callback_data="choose_exercise_problem"),
     InlineKeyboardButton(text="Трекинг", callback_data="settings|checkups")
 )
 
@@ -268,5 +270,5 @@ def delete_checkups_keyboard(type_checkup: str, checkup_id: int):
 def create_practice_exercise_recommendation_keyboard(problem_id: int):
     practice_exercise_recommendation_keyboard = InlineKeyboardBuilder()
     practice_exercise_recommendation_keyboard.row(InlineKeyboardButton(text="📝Получить упражнение",
-                                                                       callback_data=f"recommendation_exercise|{problem_id}"))
+                                                                       callback_data=f"exercise_by_problem_id|{problem_id}"))
     return practice_exercise_recommendation_keyboard.as_markup()

@@ -9,11 +9,12 @@ from aiogram.exceptions import TelegramForbiddenError
 import utils.checkups
 from data.keyboards import buy_sub_keyboard, notification_keyboard, main_keyboard
 from db.repository import subscriptions_repository, users_repository, checkup_repository, events_repository, \
-    admin_repository, limits_repository, days_checkups_repository
+    admin_repository, limits_repository, days_checkups_repository, user_timezone_repository, user_counters_repository
 from settings import payment_photo, how_are_you_photo, menu_photo, messages_dict
 from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report
 from utils.gpt_distributor import user_request_handler
 from utils.messages_provider import send_subscription_end_message
+from utils.statistics import generate_statistics_text
 
 
 async def edit_activation_sub(main_bot: Bot):
@@ -58,14 +59,16 @@ async def send_recommendations(main_bot: Bot):
     now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)  # Можно использовать локальное время, если требуется
 
     for user in users:
+        user_counters = await user_counters_repository.get_user_counters(user.user_id)
         last_event = await events_repository.get_last_event_by_user_id(user_id=user.user_id)
         if user_request_handler.AI_handler.active_threads.get(user.user_id) \
                 and now - last_event.creation_date >= datetime.timedelta(minutes=120):
-            if user.notified_with_recommendation < 3 \
+            if user_counters.notified_with_recommendation < 3 \
                     and user_request_handler.AI_handler.messages_count.get(user.user_id) \
                     and user_request_handler.AI_handler.messages_count.get(user.user_id) >= 6 \
                     and user_request_handler.AI_handler.check_is_dialog_psy(user.user_id):
                 await user_request_handler.AI_handler.provide_recommendations(user.user_id, from_notification=True)
+                await user_counters_repository.notified_with_recommendation(user.user_id)
             else:
                 text = "✍️<i>Для общения - просто </i><b>пиши</b><i>, ничего выбирать не надо</i>"
                 keyboard = await main_keyboard(user_id=user.user_id)
@@ -157,36 +160,34 @@ async def break_power_mode(main_bot: Bot):
             continue
 
 
-async def send_user_statistics(admin_bot: Bot):
+async def send_statistics(admin_bot: Bot):
+    statistics = await generate_statistics_text()
     admins = await admin_repository.select_all_admins()
-    user_stat = await users_repository.get_user_creation_statistics()
-    text_message = (f"Количество новых пользователей:\n\n"
-                    f"Статистика за день: <b>{user_stat.get('day')}</b>\n"
-                    f"Статистика за неделю: <b>{user_stat.get('week')}</b>\n"
-                    f"Статистика за месяц: <b>{user_stat.get('month')}</b>\n"
-                    f"Статистика за квартал: <b>{user_stat.get('quarter')}</b>\n"
-                    f"Статистика за все время <b>{user_stat.get('all_time')}</b>")
+
     for admin in admins:
         await admin_bot.send_message(
             admin.admin_id,
-            text_message
+            statistics
         )
 
 
 async def reset_limits(main_bot: Bot):
-    await limits_repository.reset_all_limits(
-        exercises_remaining=2,
-        universal_requests_remaining=20
-    )
-
     users = await users_repository.select_all_users()
     for user in users:
-        user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user.user_id)
-        if user_sub is None:
-            try:
-                await main_bot.send_message(chat_id=user.user_id, text=messages_dict["week_quota_message_text"])
-            except:
-                continue
+        user_timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id=user.user_id)
+        if datetime.datetime.now(timezone(user_timezone_delta)).weekday() == 1 and datetime.datetime.now(timezone(user_timezone_delta)).hour == 8:
+            await limits_repository.update_user_limits(
+                exercises_remaining=2,
+                universal_requests_remaining=10,
+                psychological_requests_remaining=30
+            )
+
+            user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user.user_id)
+            if user_sub is None:
+                try:
+                    await main_bot.send_message(chat_id=user.user_id, text=messages_dict["week_quota_message_text"])
+                except:
+                    continue
 
 
 

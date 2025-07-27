@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from aiogram import Router, types, Bot, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
@@ -10,7 +12,9 @@ from data.keyboards import admin_keyboard, add_delete_admin, cancel_keyboard, db
     type_users_mailing_keyboard, statistics_keyboard
 from db.repository import admin_repository, users_repository, ai_requests_repository, subscriptions_repository, \
     referral_system_repository
-from utils.state_models import InputMessage
+from utils.paginator import create_paginated_keyboard
+from utils.promocode import user_entered_promo_code
+from utils.state_models import InputMessage, AdminBotStates
 from utils.generate_promo import generate_single_promo_code
 from utils.get_table_db_to_excel import export_table_to_memory
 from utils.is_main_admin import is_main_admin
@@ -72,18 +76,70 @@ async def manage_subscriptions(message: types.Message, state: FSMContext, bot: B
     users = await users_repository.select_all_users()
     subscriptions = await subscriptions_repository.select_all_subscriptions()
     active_subscriber_ids = {subscription.user_id for subscription in subscriptions if subscription.active}
-    keyboard = InlineKeyboardBuilder()
+    items = {}
+
     for user in users:
-        if user.user_id in active_subscriber_ids:
-            keyboard.row(
-                InlineKeyboardButton(text=f"@{user.username if user.username else '--БЕЗ НИКНЕЙМА--'}",
-                                     callback_data=f"delete_subscriber|{user.user_id}")
-            )
+        items[f"@{user.username if user.username else '--БЕЗ НИКНЕЙМА--'} "
+              + ('💰' if user.user_id in active_subscriber_ids else '')] = user.user_id
 
-    keyboard.row(InlineKeyboardButton(text="Отмена", callback_data="cancel"))
+    keyboard = create_paginated_keyboard(items, "manage_user_subscription|{}",
+                                         "manage_subscription_paging|{}",
+                                         cancel_callback_data="cancel")
 
-    await message.answer(text="Отлично, теперь выбери из представленных пользователей, которого хочешь лишить подписки",
-                                 reply_markup=keyboard.as_markup())
+    await message.answer(text="Выбери пользователя, чью подписку хочешь изменить (💰 == УЖЕ подписан)",
+                                 reply_markup=keyboard)
+
+
+@admin_router.callback_query(F.data.startswith("manage_subscription_paging|"))
+@is_main_admin
+async def manage_subscription_paging(call: types.CallbackQuery, state: FSMContext, bot: Bot):
+    page = int(call.data.split("|")[1])
+    await state.clear()
+    users = await users_repository.select_all_users()
+    subscriptions = await subscriptions_repository.select_all_subscriptions()
+    active_subscriber_ids = {subscription.user_id for subscription in subscriptions if subscription.active}
+    items = {}
+
+    for user in users:
+        items[f"@{user.username if user.username else '--БЕЗ НИКНЕЙМА--'} "
+              + ('💰' if user.user_id in active_subscriber_ids else '')] = user.user_id
+
+    keyboard = create_paginated_keyboard(items, "manage_user_subscription|{}",
+                                         "manage_subscription_paging|{}",
+                                         cancel_callback_data="cancel",
+                                         page=page)
+
+    await call.message.edit_reply_markup(reply_markup=keyboard)
+    await call.answer()
+
+
+@admin_router.callback_query(F.data.startswith("manage_user_subscription|"))
+@is_main_admin
+async def manage_user_subscription(call: types.CallbackQuery, state: FSMContext, bot: Bot):
+    await state.clear()
+    user_id = int(call.data.split("|")[1])
+    subscription = await subscriptions_repository.get_active_subscription_by_user_id(user_id)
+    user = await users_repository.get_user_by_user_id(user_id)
+    keyboard_builder = InlineKeyboardBuilder()
+    text = f"@{user.username if user.username else '--БЕЗ НИКНЕЙМА--'} "
+    if subscription:
+        end_date = subscription.creation_date + timedelta(days=subscription.time_limit_subscription)
+        text += f"- подписка активна до {end_date.strftime('%d.%m.%y')}"
+        keyboard_builder.row(InlineKeyboardButton(text="Лишить подписки",
+                                                  callback_data=f"delete_subscriber|{user_id}"))
+    else:
+        text += "- не подписан"
+
+    keyboard_builder.row(InlineKeyboardButton(text="Активировать промокод",
+                                              callback_data=f"grant_promocode_to_user|{user_id}"))
+    keyboard_builder.row(InlineKeyboardButton(text="Отмена", callback_data="manage_subscription_paging|0"))
+
+    await call.message.answer(
+        text,
+        reply_markup=keyboard_builder.as_markup()
+    )
+
+    await call.message.delete()
 
 
 @admin_router.callback_query(F.data.startswith("delete_subscriber|"))
@@ -95,6 +151,37 @@ async def delete_subscriber(call: types.CallbackQuery, state: FSMContext, bot: B
     await call.message.answer(text="Пользователь лишён подписки."
                                  f" выберите свои дальнейшие действия!", reply_markup=admin_keyboard)
     await call.message.delete()
+
+@admin_router.callback_query(F.data.startswith("grant_promocode_to_user|"))
+@is_main_admin
+async def grant_promocode_to_user(call: types.CallbackQuery, state: FSMContext, bot: Bot):
+    user_id = int(call.data.split("|")[1])
+    keyboard_builder = InlineKeyboardBuilder()
+    keyboard_builder.row(InlineKeyboardButton(text="Отмена", callback_data=f"manage_user_subscription|{user_id}"))
+
+    await call.message.answer(
+        "Введи промокод, который ты хочешь активировать для пользователя",
+        reply_markup=keyboard_builder.as_markup()
+    )
+    await state.set_state(AdminBotStates.enter_promocode)
+    await state.update_data(active_user_id=user_id)
+    await call.message.delete()
+
+
+@admin_router.message(F.text, AdminBotStates.enter_promocode)
+@is_main_admin
+async def user_enter_promo_code(message: types.Message, state: FSMContext, bot: Bot):
+    promo_code = message.text
+    user_id = await state.get_value("active_user_id")
+    keyboard_builder = InlineKeyboardBuilder()
+    keyboard_builder.row(InlineKeyboardButton(text="Назад", callback_data="manage_subscription_paging|0"))
+    await state.clear()
+
+    if await user_entered_promo_code(user_id, promo_code):
+        await message.answer("Промокод был активирован для пользователя!", reply_markup=keyboard_builder.as_markup())
+    else:
+        await message.answer("Промокод не был активирован для пользователя, попробуй другой", reply_markup=keyboard_builder.as_markup())
+
 
 
 @admin_router.message(Command("unsubscribe"))

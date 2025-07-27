@@ -172,7 +172,7 @@ class LLMProvider:
 
     async def process_request(self, input: List | str):
         contents = []
-        system_prompt = "You are an helpful assistant"
+        system_prompt = "You are a helpful assistant"
         for message in input:
             if message.role == "system":
                 system_prompt = message.parts[0].text

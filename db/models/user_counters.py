@@ -10,6 +10,7 @@ class UserCounters(BaseModel, CleanModel):
 
     used_exercises = Column(BigInteger, nullable=False, default=0)
     messages_count = Column(BigInteger, nullable=False, default=0)
+    dialogs_count = Column(BigInteger, nullable=False, default=0)
     recommendations_count = Column(BigInteger, nullable=False, default=0)
     emotions_tracks_count = Column(BigInteger, nullable=False, default=0)
     productivity_tracks_count = Column(BigInteger, nullable=False, default=0)

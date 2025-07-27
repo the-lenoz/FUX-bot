@@ -18,4 +18,4 @@ async def subscribed_callback(user_id: int):
         await send_weekly_checkup_report(user_id, pending_messages.weekly_tracking_date)
     if pending_messages.monthly_tracking_date:
         await send_monthly_checkup_report(user_id, pending_messages.weekly_tracking_date)
-    await pending_messages_repository.update_user_pending_messages(user_id, weekly_tracking_date=None, monthly_tracking_date=None, recommendation_di=None)
+    await pending_messages_repository.update_user_pending_messages(user_id, weekly_tracking_date=None, monthly_tracking_date=None, recommendation_id=None)

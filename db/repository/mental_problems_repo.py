@@ -12,12 +12,14 @@ class MentalProblemsRepository:
         self.session_maker = DatabaseEngine().create_session()
 
     async def add_problem(self,
-                            user_id: int,
-                            problem_summary: str) -> int | None:
+                          user_id: int,
+                          problem_abstract: str,
+                          problem_title: str) -> int | None:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                problem = MentalProblem(user_id=user_id, problem_summary=problem_summary)
+                problem = MentalProblem(user_id=user_id,
+                                        problem_abstract=problem_abstract, problem_title=problem_title)
                 try:
                     session.add(problem)
                     await session.commit()

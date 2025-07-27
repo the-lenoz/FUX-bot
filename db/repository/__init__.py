@@ -12,6 +12,7 @@ from .promo_activations_repo import PromoActivationsRepository
 from .recommendations_repo import RecommendationsRepository
 from .refferal_repo import ReferralSystemRepository
 from .subscriptions_repo import SubscriptionsRepository
+from .user_counters_repo import UserCountersRepository
 from .user_timezone_repo import UserTimezoneRepository
 from .users_repo import UserRepository
 
@@ -32,6 +33,7 @@ recommendations_repository = RecommendationsRepository()
 user_timezone_repository = UserTimezoneRepository()
 limits_repository = LimitsRepository()
 pending_messages_repository = PendingMessagesRepository()
+user_counters_repository = UserCountersRepository()
 
 __all__ = ['users_repository',
            'admin_repository',
@@ -48,5 +50,6 @@ __all__ = ['users_repository',
            'recommendations_repository',
            'user_timezone_repository',
            'limits_repository',
-           'pending_messages_repository'
+           'pending_messages_repository',
+           'user_counters_repository'
           ]
