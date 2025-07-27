@@ -11,15 +11,15 @@ class UserCountersRepository:
         self.session_maker = DatabaseEngine().create_session()
 
     async def create_user_counters(self, user_id: int,
-                                    used_exercises: int,
-                                    messages_count: int,
-                                    dialogs_count: int,
-                                    recommendations_count: int,
-                                    emotions_tracks_count: int,
-                                    productivity_tracks_count: int,
-                                    notified_with_recommendation: int,
-                                    received_weekly_tracking_reports: int,
-                                    received_monthly_tracking_reports: int) -> UserCounters:
+                                    used_exercises: int = 0,
+                                    messages_count: int = 0,
+                                    dialogs_count: int = 0,
+                                    recommendations_count: int = 0,
+                                    emotions_tracks_count: int = 0,
+                                    productivity_tracks_count: int = 0,
+                                    notified_with_recommendation: int = 0,
+                                    received_weekly_tracking_reports: int = 0,
+                                    received_monthly_tracking_reports: int = 0) -> UserCounters:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
