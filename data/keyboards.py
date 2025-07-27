@@ -109,7 +109,7 @@ choice_gender_settings_keyboard.row(InlineKeyboardButton(text="Отменить"
 
 
 exercises_keyboard = InlineKeyboardBuilder()
-exercises_keyboard.row(InlineKeyboardButton(text="Упражнения", callback_data="exercises_by_problem"))
+exercises_keyboard.row(InlineKeyboardButton(text="Упражнения", callback_data="choose_exercise_problem"))
 exercises_keyboard.row(menu_button)
 
 
@@ -137,7 +137,7 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
     if missed_tracking:
         keyboard.row(InlineKeyboardButton(text="⚠️ПРОПУЩЕННЫЕ трекинги", callback_data="missed_tracking"))
 
-    keyboard.row(InlineKeyboardButton(text="📝Упражнения", callback_data="exercises_by_problem"))
+    keyboard.row(InlineKeyboardButton(text="📝Упражнения", callback_data="choose_exercise_problem"))
     keyboard.add(InlineKeyboardButton(text="📉️Трекинги", callback_data="checkups"))
     keyboard.row(InlineKeyboardButton(text="📜О сервисе", callback_data="all_mechanics"))
     keyboard.add(InlineKeyboardButton(text="⚙️Настройки", callback_data="system_settings"))
@@ -250,7 +250,7 @@ notification_keyboard.row(
     InlineKeyboardButton(text="Обсудить проблему", callback_data="start_problem_conversation")
 )
 notification_keyboard.row(
-    InlineKeyboardButton(text="Упражнение", callback_data="exercises_by_problem"),
+    InlineKeyboardButton(text="Упражнение", callback_data="choose_exercise_problem"),
     InlineKeyboardButton(text="Трекинг", callback_data="settings|checkups")
 )
 
@@ -270,5 +270,5 @@ def delete_checkups_keyboard(type_checkup: str, checkup_id: int):
 def create_practice_exercise_recommendation_keyboard(problem_id: int):
     practice_exercise_recommendation_keyboard = InlineKeyboardBuilder()
     practice_exercise_recommendation_keyboard.row(InlineKeyboardButton(text="📝Получить упражнение",
-                                                                       callback_data=f"recommendation_exercise|{problem_id}"))
+                                                                       callback_data=f"exercise_by_problem_id|{problem_id}"))
     return practice_exercise_recommendation_keyboard.as_markup()

@@ -8,7 +8,8 @@ class MentalProblem(BaseModel, CleanModel):
 
     user_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=False)
 
-    problem_summary = Column(String)
+    problem_abstract = Column(String)
+    problem_title = Column(String)
     worked_out = Column(BigInteger, nullable=False, default=0)
 
     @property

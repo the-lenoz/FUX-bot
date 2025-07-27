@@ -20,8 +20,8 @@ from utils.documents import convert_to_pdf
 from utils.gpt_client import BASIC_MODEL, ADVANCED_MODEL, ModelChatThread, LLMProvider
 from utils.photo_recommendation import generate_blurred_image_with_text
 from utils.prompts import RECOMMENDATION_PROMPT, \
-    MENTAL_PROBLEM_SUMMARY_PROMPT, EXERCISE_PROMPT_FORMAT, DIALOG_LATEST_MESSAGE_CHECKER_PROMPT, \
-    DEFAULT_ASSISTANT_PROMPT_ADDON, get_assistant_system_prompt, DIALOG_CHECKER_PROMPT
+    MENTAL_PROBLEM_ABSTRACT_PROMPT, EXERCISE_PROMPT_FORMAT, DIALOG_LATEST_MESSAGE_CHECKER_PROMPT, \
+    DEFAULT_ASSISTANT_PROMPT_ADDON, get_assistant_system_prompt, DIALOG_CHECKER_PROMPT, MENTAL_PROBLEM_TITLE_PROMPT
 from utils.subscription import check_is_subscribed
 from utils.user_properties import get_user_description
 from utils.user_request_types import UserRequest
@@ -422,7 +422,7 @@ class PsyHandler(AIHandler):
                     [
                         await LLMProvider.create_text_content_item(
                             EXERCISE_PROMPT_FORMAT.format(
-                                problem_summary=problem.problem_summary
+                                problem_summary=problem.problem_abstract
                             )
                         )
                     ],
@@ -448,16 +448,26 @@ class PsyHandler(AIHandler):
         if self.active_threads.get(user_id):
             summary_request = UserRequest(
                 user_id=user_id,
-                text=MENTAL_PROBLEM_SUMMARY_PROMPT
+                text=MENTAL_PROBLEM_ABSTRACT_PROMPT
             )
 
             await self.create_message(summary_request)
 
             problem_summary = await self.run_thread(user_id)
 
+            title_request = UserRequest(
+                user_id=user_id,
+                text=MENTAL_PROBLEM_TITLE_PROMPT
+            )
+
+            await self.create_message(title_request)
+
+            problem_title = await self.run_thread(user_id)
+
             return await mental_problems_repository.add_problem(
                 user_id=user_id,
-                problem_summary=problem_summary
+                problem_abstract=problem_summary,
+                problem_title=problem_title
             )
 
         return None
