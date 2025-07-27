@@ -11,7 +11,7 @@ async def trigger_power_mode(user_id: int):
 
     now_date = datetime.datetime.now(datetime.timezone(user_timezone)).date()
 
-    if last_user_event.upd_date.date() != now_date:
+    if not last_user_event or last_user_event.upd_date.date() != now_date:
         await update_power_mode(user_id)
 
 async def interval_skip_trigger(user_id: int):
