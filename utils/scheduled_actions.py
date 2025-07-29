@@ -57,7 +57,7 @@ async def send_checkup():
 
 async def send_recommendations(main_bot: Bot):
     users = await users_repository.select_all_users()
-    now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)  # Можно использовать локальное время, если требуется
+    now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
 
     for user in users:
         user_counters = await user_counters_repository.get_user_counters(user.user_id)

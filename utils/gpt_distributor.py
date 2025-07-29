@@ -400,7 +400,7 @@ class PsyHandler(AIHandler):
 
 
                 await typing_message.delete()
-        if problem_id:
+        if problem_id or from_notification:
             await self.exit(user_id, save=False)
 
     async def generate_exercise(self, user_id: int, problem_id: int | None = None) -> str | None:
