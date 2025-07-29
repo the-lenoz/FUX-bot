@@ -1,4 +1,5 @@
 import datetime
+from typing import List
 
 from pydantic import BaseModel
 
@@ -10,19 +11,32 @@ from settings import messages_dict
 class MainStatistics(BaseModel):
     new_users_per_day: int = 0
     new_users_per_week: int = 0
+    new_users_per_month: int = 0
     all_users: int = 0
+
     current_day_active_users: int = 0
     current_week_active_users: int = 0
+    current_month_active_users: int = 0
 
     payments_per_day: int = 0
     payments_per_week: int = 0
+    payments_per_month: int = 0
     all_payments: int = 0
+
+    promocodes_per_day: int = 0
+    promocodes_per_week: int = 0
+    promocodes_per_month: int = 0
+    all_promocodes: int = 0
 
     new_messages_per_day: int = 0
     new_messages_per_week: int = 0
-    all_messages: int = 0
+    new_messages_per_month: int = 0
 
     active_trackings: int = 0
+
+    top_3_active_users: List[str]
+
+    all_messages: int = 0
 
     @staticmethod
     async def generate():

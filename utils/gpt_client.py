@@ -6,7 +6,8 @@ from asyncio import sleep
 from typing import Literal, Dict, List
 
 from aiogram.types import BufferedInputFile
-from google.cloud import texttospeech, storage
+from google.cloud import texttospeech
+from gcloud.aio import storage
 from google.cloud.texttospeech import SynthesisInput, VoiceSelectionParams, AudioConfig, \
     AudioEncoding
 from google.genai import types, Client, errors
@@ -30,10 +31,6 @@ standard_assistant_id = os.getenv("STANDARD_ASSISTANT_ID")
 logger = logging.getLogger(__name__)
 
 google_genai_client = Client(http_options=HttpOptions(api_version="v1"), location='global')
-
-tts_client = texttospeech.TextToSpeechClient() # TODO - async
-
-storage_client = storage.Client()
 
 class ModelChatMessage(BaseModel):
     role: Literal["user", "assistant", "developer", "system"]
@@ -80,17 +77,18 @@ class ModelChatThread:
 
 
 class LLMProvider:
-    def __init__(self, model_name: str):
+    def __init__(self, model_name: str = BASIC_MODEL):
         self.model_name = model_name
 
     @staticmethod
     async def create_document_content_item(document: UserFile):
+        storage_client = storage.storage.Storage()
 
-        bucket = storage_client.bucket("fuxfiles")
+        bucket = storage_client.get_bucket("fuxfiles")
         name = secrets.token_hex(16) + document.filename
-        blob = bucket.blob(name)
+        blob = bucket.new_blob(name)
 
-        blob.upload_from_string(
+        await blob.upload(
             data=document.file_bytes,
             content_type="application/pdf"
         )
@@ -99,11 +97,13 @@ class LLMProvider:
 
     @staticmethod
     async def create_image_content_item(image: UserFile) -> types.Part:
-        bucket = storage_client.bucket("fuxfiles")
+        storage_client = storage.storage.Storage()
+        
+        bucket = storage_client.get_bucket("fuxfiles")
         name = secrets.token_hex(16) + image.filename
-        blob = bucket.blob(name)
+        blob = bucket.new_blob(name)
 
-        blob.upload_from_string(
+        await blob.upload(
             data=image.file_bytes,
             content_type=mimetypes.guess_type(image.filename)[0]
         )
@@ -112,18 +112,18 @@ class LLMProvider:
 
     @staticmethod
     async def create_voice_content_item(voice: UserFile) -> types.Part:
-        bucket = storage_client.bucket("fuxfiles")
-        name = secrets.token_hex(16) + voice.filename
-        blob = bucket.blob(name)
+        storage_client = storage.storage.Storage()
 
-        blob.upload_from_string(
+        bucket = storage_client.get_bucket("fuxfiles")
+        name = secrets.token_hex(16) + voice.filename
+        blob = bucket.new_blob(name)
+
+        await blob.upload(
             data=voice.file_bytes,
             content_type=mimetypes.guess_type(voice.filename)[0]
         )
 
         return types.Part.from_uri(file_uri=f"gs://fuxfiles/{name}", mime_type=mimetypes.guess_type(voice.filename)[0])
-
-
 
     @staticmethod
     async def create_text_content_item(text: str) -> types.Part:
@@ -131,8 +131,10 @@ class LLMProvider:
             text=text
         )
 
+    # noinspection PyTypeChecker
     @staticmethod
     async def generate_speech(text: str, user_ai_temperature: float = 1) -> BufferedInputFile:
+        tts_client = texttospeech.TextToSpeechAsyncClient()
         synthesis_input = SynthesisInput(text=text)
         voice = VoiceSelectionParams(
             language_code="ru-RU", name=("ru-RU-Chirp3-HD-Fenrir" if user_ai_temperature == 1.3
@@ -141,7 +143,7 @@ class LLMProvider:
         audio_config = AudioConfig(
             audio_encoding=AudioEncoding.OGG_OPUS
         )
-        response = tts_client.synthesize_speech(
+        response = await tts_client.synthesize_speech(
             input=synthesis_input, voice=voice, audio_config=audio_config
         )
 
@@ -152,7 +154,7 @@ class LLMProvider:
 
     @staticmethod
     async def is_text_smalltalk(text: str):
-
+        
         try:
             response = await google_genai_client.aio.models.generate_content(
                 model=BASIC_MODEL,

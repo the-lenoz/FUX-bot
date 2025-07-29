@@ -167,7 +167,10 @@ class AIHandler:
     async def run_thread(self, user_id, save_answer: bool = True) -> str | None:
         if self.active_threads.get(user_id):
             input = self.active_threads[user_id].get_messages()
-            result = await self.basic_model_provider.process_request(input)
+            if await check_is_subscribed(user_id):
+                result = await self.advanced_model_provider.process_request(input)
+            else:
+                result = await self.basic_model_provider.process_request(input)
 
             if save_answer:
                 self.active_threads[user_id].add_message(
@@ -343,7 +346,7 @@ class PsyHandler(AIHandler):
             messages_dict["typing_message_text"]
         )
         problem_id = None
-        if self.thread_locks.get(user_id):
+        if self.thread_locks.get(user_id) and self.active_threads.get(user_id):
             async with self.thread_locks[user_id]:
                 try:
                     await main_bot.send_chat_action(chat_id=user_id, action="typing")
@@ -356,7 +359,7 @@ class PsyHandler(AIHandler):
 
                 problem_id = await self.summarize_dialog_problem(user_id)
 
-                if self.active_threads.get(user_id) and problem_id:
+                if problem_id and self.active_threads.get(user_id):
                     recommendation_request = UserRequest(
                         user_id=user_id,
                         text=RECOMMENDATION_PROMPT
@@ -400,7 +403,7 @@ class PsyHandler(AIHandler):
 
 
                 await typing_message.delete()
-        if problem_id:
+        if problem_id or from_notification:
             await self.exit(user_id, save=False)
 
     async def generate_exercise(self, user_id: int, problem_id: int | None = None) -> str | None:
