@@ -343,7 +343,7 @@ class PsyHandler(AIHandler):
             messages_dict["typing_message_text"]
         )
         problem_id = None
-        if self.thread_locks.get(user_id):
+        if self.thread_locks.get(user_id) and self.active_threads.get(user_id):
             async with self.thread_locks[user_id]:
                 try:
                     await main_bot.send_chat_action(chat_id=user_id, action="typing")
@@ -356,7 +356,7 @@ class PsyHandler(AIHandler):
 
                 problem_id = await self.summarize_dialog_problem(user_id)
 
-                if self.active_threads.get(user_id) and problem_id:
+                if problem_id and self.active_threads.get(user_id):
                     recommendation_request = UserRequest(
                         user_id=user_id,
                         text=RECOMMENDATION_PROMPT
