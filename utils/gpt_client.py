@@ -32,10 +32,6 @@ logger = logging.getLogger(__name__)
 
 google_genai_client = Client(http_options=HttpOptions(api_version="v1"), location='global')
 
-tts_client = texttospeech.TextToSpeechAsyncClient()
-
-storage_client = storage.storage.Storage()
-
 class ModelChatMessage(BaseModel):
     role: Literal["user", "assistant", "developer", "system"]
     content: str | List
@@ -81,11 +77,12 @@ class ModelChatThread:
 
 
 class LLMProvider:
-    def __init__(self, model_name: str):
+    def __init__(self, model_name: str = BASIC_MODEL):
         self.model_name = model_name
 
     @staticmethod
     async def create_document_content_item(document: UserFile):
+        storage_client = storage.storage.Storage()
 
         bucket = storage_client.get_bucket("fuxfiles")
         name = secrets.token_hex(16) + document.filename
@@ -100,6 +97,8 @@ class LLMProvider:
 
     @staticmethod
     async def create_image_content_item(image: UserFile) -> types.Part:
+        storage_client = storage.storage.Storage()
+        
         bucket = storage_client.get_bucket("fuxfiles")
         name = secrets.token_hex(16) + image.filename
         blob = bucket.new_blob(name)
@@ -113,6 +112,8 @@ class LLMProvider:
 
     @staticmethod
     async def create_voice_content_item(voice: UserFile) -> types.Part:
+        storage_client = storage.storage.Storage()
+
         bucket = storage_client.get_bucket("fuxfiles")
         name = secrets.token_hex(16) + voice.filename
         blob = bucket.new_blob(name)
@@ -124,16 +125,16 @@ class LLMProvider:
 
         return types.Part.from_uri(file_uri=f"gs://fuxfiles/{name}", mime_type=mimetypes.guess_type(voice.filename)[0])
 
-
-
     @staticmethod
     async def create_text_content_item(text: str) -> types.Part:
         return types.Part.from_text(
             text=text
         )
 
+    # noinspection PyTypeChecker
     @staticmethod
     async def generate_speech(text: str, user_ai_temperature: float = 1) -> BufferedInputFile:
+        tts_client = texttospeech.TextToSpeechAsyncClient()
         synthesis_input = SynthesisInput(text=text)
         voice = VoiceSelectionParams(
             language_code="ru-RU", name=("ru-RU-Chirp3-HD-Fenrir" if user_ai_temperature == 1.3
@@ -153,7 +154,7 @@ class LLMProvider:
 
     @staticmethod
     async def is_text_smalltalk(text: str):
-
+        
         try:
             response = await google_genai_client.aio.models.generate_content(
                 model=BASIC_MODEL,
