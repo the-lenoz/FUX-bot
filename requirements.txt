@@ -27,3 +27,6 @@ protobuf~=6.31.1
 google-cloud-texttospeech
 google-cloud-storage
 telegramify-markdown
+
+gcloud-aio-storage==9.5.0
+gcloud-aio-auth~=5.4.2

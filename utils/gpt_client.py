@@ -6,7 +6,8 @@ from asyncio import sleep
 from typing import Literal, Dict, List
 
 from aiogram.types import BufferedInputFile
-from google.cloud import texttospeech, storage
+from google.cloud import texttospeech
+from gcloud.aio import storage
 from google.cloud.texttospeech import SynthesisInput, VoiceSelectionParams, AudioConfig, \
     AudioEncoding
 from google.genai import types, Client, errors
@@ -31,9 +32,9 @@ logger = logging.getLogger(__name__)
 
 google_genai_client = Client(http_options=HttpOptions(api_version="v1"), location='global')
 
-tts_client = texttospeech.TextToSpeechClient() # TODO - async
+tts_client = texttospeech.TextToSpeechAsyncClient()
 
-storage_client = storage.Client()
+storage_client = storage.storage.Storage()
 
 class ModelChatMessage(BaseModel):
     role: Literal["user", "assistant", "developer", "system"]
@@ -86,11 +87,11 @@ class LLMProvider:
     @staticmethod
     async def create_document_content_item(document: UserFile):
 
-        bucket = storage_client.bucket("fuxfiles")
+        bucket = storage_client.get_bucket("fuxfiles")
         name = secrets.token_hex(16) + document.filename
-        blob = bucket.blob(name)
+        blob = bucket.new_blob(name)
 
-        blob.upload_from_string(
+        await blob.upload(
             data=document.file_bytes,
             content_type="application/pdf"
         )
@@ -99,11 +100,11 @@ class LLMProvider:
 
     @staticmethod
     async def create_image_content_item(image: UserFile) -> types.Part:
-        bucket = storage_client.bucket("fuxfiles")
+        bucket = storage_client.get_bucket("fuxfiles")
         name = secrets.token_hex(16) + image.filename
-        blob = bucket.blob(name)
+        blob = bucket.new_blob(name)
 
-        blob.upload_from_string(
+        await blob.upload(
             data=image.file_bytes,
             content_type=mimetypes.guess_type(image.filename)[0]
         )
@@ -112,11 +113,11 @@ class LLMProvider:
 
     @staticmethod
     async def create_voice_content_item(voice: UserFile) -> types.Part:
-        bucket = storage_client.bucket("fuxfiles")
+        bucket = storage_client.get_bucket("fuxfiles")
         name = secrets.token_hex(16) + voice.filename
-        blob = bucket.blob(name)
+        blob = bucket.new_blob(name)
 
-        blob.upload_from_string(
+        await blob.upload(
             data=voice.file_bytes,
             content_type=mimetypes.guess_type(voice.filename)[0]
         )
@@ -141,7 +142,7 @@ class LLMProvider:
         audio_config = AudioConfig(
             audio_encoding=AudioEncoding.OGG_OPUS
         )
-        response = tts_client.synthesize_speech(
+        response = await tts_client.synthesize_speech(
             input=synthesis_input, voice=voice, audio_config=audio_config
         )
 
