@@ -17,3 +17,4 @@ class UserCounters(BaseModel, CleanModel):
     notified_with_recommendation = Column(BigInteger, nullable=False, default=0)
     received_weekly_tracking_reports = Column(BigInteger, nullable=False, default=0)
     received_monthly_tracking_reports = Column(BigInteger, nullable=False, default=0)
+    skipped_days = Column(BigInteger, nullable=False, default=0)

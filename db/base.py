@@ -15,7 +15,7 @@ class CleanModel:
     """
     id = Column(Integer, primary_key=True, autoincrement=True, unique=True)
     creation_date = Column(DateTime, nullable=False, default=func.now())
-    upd_date = Column(DateTime, onupdate=func.now())
+    upd_date = Column(DateTime, onupdate=func.now(), nullable=False, default=func.now())
 
     @property
     def no_upd_time(self) -> datetime:

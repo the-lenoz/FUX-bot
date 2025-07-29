@@ -4,6 +4,7 @@ from aiogram import BaseMiddleware
 from aiogram.types import Update
 
 from db.repository import events_repository, users_repository
+from utils.power_mode import trigger_power_mode
 
 
 class EventLoggerMiddleware(BaseMiddleware):
@@ -51,6 +52,8 @@ class EventLoggerMiddleware(BaseMiddleware):
             user = await users_repository.get_user_by_user_id(user_id=user_id)
             if user is not None:
                 await self.events_repo.add_event(user_id=user_id, event_type=event_type)
+
+        await trigger_power_mode(user_id)
 
         # Продолжаем обработку события
         return await handler(event, data)

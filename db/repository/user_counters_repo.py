@@ -19,7 +19,8 @@ class UserCountersRepository:
                                     productivity_tracks_count: int = 0,
                                     notified_with_recommendation: int = 0,
                                     received_weekly_tracking_reports: int = 0,
-                                    received_monthly_tracking_reports: int = 0) -> UserCounters:
+                                    received_monthly_tracking_reports: int = 0,
+                                   skipped_days: int = 0) -> UserCounters:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
@@ -33,7 +34,8 @@ class UserCountersRepository:
                     productivity_tracks_count=productivity_tracks_count,
                     notified_with_recommendation=notified_with_recommendation,
                     received_weekly_tracking_reports=received_weekly_tracking_reports,
-                    received_monthly_tracking_reports=received_monthly_tracking_reports
+                    received_monthly_tracking_reports=received_monthly_tracking_reports,
+                    skipped_days=skipped_days
                 )
                 session.add(limits)
                 await session.commit()
@@ -155,6 +157,17 @@ class UserCountersRepository:
             async with session.begin():
                 sql = update(UserCounters).values({
                     UserCounters.received_monthly_tracking_reports: user_counters.received_monthly_tracking_reports + 1
+                }).where(or_(UserCounters.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
+    async def user_skipped_day(self, user_id: int):
+        user_counters = await self.get_user_counters(user_id)
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(UserCounters).values({
+                    UserCounters.skipped_days: user_counters.skipped_days + 1
                 }).where(or_(UserCounters.user_id == user_id))
                 await session.execute(sql)
                 await session.commit()
