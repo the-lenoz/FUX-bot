@@ -167,7 +167,10 @@ class AIHandler:
     async def run_thread(self, user_id, save_answer: bool = True) -> str | None:
         if self.active_threads.get(user_id):
             input = self.active_threads[user_id].get_messages()
-            result = await self.basic_model_provider.process_request(input)
+            if await check_is_subscribed(user_id):
+                result = await self.advanced_model_provider.process_request(input)
+            else:
+                result = await self.basic_model_provider.process_request(input)
 
             if save_answer:
                 self.active_threads[user_id].add_message(
