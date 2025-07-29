@@ -351,7 +351,7 @@ class PsyHandler(AIHandler):
                     pass
                 await user_counters_repository.user_got_recommendation(user_id)
 
-                user_counters = await user_counters_repository.get_user_counters(user_id)
+                user = await users_repository.get_user_by_user_id(user_id)
                 is_subscribed = await check_is_subscribed(user_id)
 
                 problem_id = await self.summarize_dialog_problem(user_id)
@@ -371,7 +371,7 @@ class PsyHandler(AIHandler):
                         problem_id=problem_id
                     )
 
-                    if not user_counters.used_free_recommendation or is_subscribed:
+                    if not user.used_free_recommendation or is_subscribed:
                         await self.send_recommendation(
                             user_id=user_id,
                             recommendation=recommendation,
