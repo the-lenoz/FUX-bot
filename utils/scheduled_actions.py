@@ -98,7 +98,7 @@ async def notification_reminder(main_bot: Bot):
                 await main_bot.send_photo(
                     photo=how_are_you_photo,
                     chat_id=user.user_id,
-                    caption="> Добрый день, коллеги\.\.\.\n\n\nВы подготовили отчёт\?📙",
+                    caption="> Давай пообщаемся 😌",
                     parse_mode=ParseMode.MARKDOWN_V2,
                     reply_markup=notification_keyboard.as_markup()
                 )
