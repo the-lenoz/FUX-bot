@@ -53,7 +53,8 @@ class EventLoggerMiddleware(BaseMiddleware):
             if user is not None:
                 await self.events_repo.add_event(user_id=user_id, event_type=event_type)
 
-        await trigger_power_mode(user_id)
+            if user:
+                await trigger_power_mode(user_id)
 
         # Продолжаем обработку события
         return await handler(event, data)

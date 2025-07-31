@@ -46,6 +46,7 @@ class MainStatistics(BaseModel):
         events = await events_repository.select_all_events()
         active_trackings = await checkup_repository.select_all_active_checkups()
         users = await users_repository.select_all_users()
+        messages = await ai_requests_repository.select_all_requests()
 
         payments_per_day: int = 0
         payments_per_week: int = 0
