@@ -11,7 +11,7 @@ from data.keyboards import buy_sub_keyboard, notification_keyboard, main_keyboar
 from db.repository import subscriptions_repository, users_repository, checkup_repository, events_repository, \
     admin_repository, limits_repository, days_checkups_repository, user_timezone_repository, user_counters_repository
 from settings import payment_photo, how_are_you_photo, menu_photo, messages_dict
-from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report
+
 from utils.gpt_distributor import user_request_handler
 from utils.messages_provider import send_subscription_end_message
 from utils.power_mode import interval_skip_trigger
@@ -98,7 +98,7 @@ async def notification_reminder(main_bot: Bot):
                 await main_bot.send_photo(
                     photo=how_are_you_photo,
                     chat_id=user.user_id,
-                    caption="> Давай пообщаемся 😌",
+                    caption="> _Давай пообщаемся_ 😌",
                     parse_mode=ParseMode.MARKDOWN_V2,
                     reply_markup=notification_keyboard.as_markup()
                 )
