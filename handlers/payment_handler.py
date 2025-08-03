@@ -29,10 +29,7 @@ async def subscribe(call: types.CallbackQuery, state: FSMContext, bot: Bot):
         mode_type = call_data[1]
     else:
         mode_type = None
-    sub = await subscriptions_repository.get_active_subscription_by_user_id(user.user_id)
-    # if sub:
-    #     await call.message.answer("На данный момент у тебя уже есть подписка",
-    #                               reply_markup=menu_keyboard.as_markup())
+
     if user.email is None:
         await state.set_state(InputMessage.enter_email)
         await state.update_data(mode_type=mode_type)
@@ -43,6 +40,7 @@ async def subscribe(call: types.CallbackQuery, state: FSMContext, bot: Bot):
             await call.message.delete()
         finally:
             return
+
     await call.message.answer_photo(photo=sub_description_photo_before,
                                     reply_markup=generate_sub_keyboard(mode_type=mode_type).as_markup())
     try:

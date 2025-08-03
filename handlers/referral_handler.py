@@ -52,3 +52,11 @@ async def enter_promo_code_message(call: CallbackQuery, state: FSMContext):
                               reply_markup=menu_keyboard.as_markup())
     await state.set_state(InputMessage.enter_promo)
     await state.update_data(message_delete_id = delete_message.message_id, from_referral=True)
+
+@referral_router.callback_query(F.data == "buy_gift")
+async def enter_promo_code_message(call: CallbackQuery, state: FSMContext):
+    await call.message.delete()
+    delete_message = await call.message.answer("🥜Отлично — введи <b>промокод</b>, который тебе передал твой друг!",
+                              reply_markup=menu_keyboard.as_markup())
+    await state.set_state(InputMessage.enter_promo)
+    await state.update_data(message_delete_id = delete_message.message_id, from_referral=True)
