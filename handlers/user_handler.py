@@ -1,9 +1,10 @@
 import asyncio
+import logging
 import traceback
 from datetime import timedelta, datetime
 
 from aiogram import Router, F, Bot
-from aiogram.filters import Command
+from aiogram.filters import Command, CommandStart, CommandObject
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import any_state
 from aiogram.types import Message, CallbackQuery
@@ -24,7 +25,7 @@ from utils.subscription import check_is_subscribed
 user_router = Router()
 
 
-@user_router.callback_query(F.data=="cancel", any_state)
+@user_router.callback_query(F.data == "cancel", any_state)
 @user_router.callback_query(F.data == "start_menu", any_state)
 async def start_menu(call: CallbackQuery, state: FSMContext):
     await state.clear()
@@ -39,24 +40,29 @@ async def start_menu(call: CallbackQuery, state: FSMContext):
     await call.message.delete()
 
 
-
-@user_router.message(F.text == "/menu", any_state)
-@user_router.message(F.text == "/start", any_state)
-async def send_user_message(message: Message, state: FSMContext, bot: Bot):
+@user_router.message(Command("menu"))
+@user_router.message(CommandStart(deep_link=True))
+@user_router.message(CommandStart())
+async def send_user_message(message: Message, command: CommandObject, state: FSMContext, bot: Bot):
     user = await users_repository.get_user_by_user_id(message.from_user.id)
     user_id = message.from_user.id
+    if command.args:
+        try:
+            await user_entered_promo_code(user_id, command.args)
+        except:
+            logging.error(f"Invalid start payload: {command.args}")
+            pass
 
-    if not user or not user.confirm_politic:
-        if user is None:
-            try:
-                await users_repository.add_user(user_id=message.from_user.id, username=message.from_user.username)
-            finally:
-                await message.answer('🐿️📙Для начала работы необходимо согласиться с политикой и правилами'
-                                     ' нашего сервиса. Наш сервис полностью защищён и работает в соответствии с 152-ФЗ.\n\n'
-                                     '<b>Пользовательское соглашение</b> — https://fuhmental.ru/user\n'
-                                     '<b>Соглашение об обработке персональных данных</b> — https://fuhmental.ru/agreement',
-                                     disable_web_page_preview=True,
-                                     reply_markup=next_politic_keyboard.as_markup())
+    if not user:
+        await users_repository.add_user(user_id=message.from_user.id, username=message.from_user.username)
+
+    if not user.confirm_politic:
+        await message.answer('🐿️📙Для начала работы необходимо согласиться с политикой и правилами'
+                                 ' нашего сервиса. Наш сервис полностью защищён и работает в соответствии с 152-ФЗ.\n\n'
+                                 '<b>Пользовательское соглашение</b> — https://fuhmental.ru/user\n'
+                                 '<b>Соглашение об обработке персональных данных</b> — https://fuhmental.ru/agreement',
+                                 disable_web_page_preview=True,
+                                 reply_markup=next_politic_keyboard.as_markup())
     elif not user.full_registration:
         if user.name is None:
             await go_to_enter_initials(bot=bot, call=message, state=state)
@@ -158,6 +164,7 @@ async def user_enter_promo_code(message: Message, state: FSMContext, bot: Bot):
         await state.clear()
     else:
         await go_to_enter_initials(message, state, bot)
+
 
 @user_router.callback_query(F.data == "cancel", InputMessage.enter_initials)
 async def cancel_promo(call: CallbackQuery, state: FSMContext):

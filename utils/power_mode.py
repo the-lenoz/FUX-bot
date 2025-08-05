@@ -10,8 +10,9 @@ async def trigger_power_mode(user_id: int):
     user_timezone = await user_timezone_repository.get_user_timezone_delta(user_id)
 
     now_date = datetime.datetime.now(datetime.timezone(user_timezone)).date()
+    user = await users_repository.get_user_by_user_id(user_id)
 
-    if not last_user_event or last_user_event.upd_date.date() != now_date:
+    if not last_user_event or last_user_event.upd_date.date() != now_date or user.power_mode_days == 0:
         await update_power_mode(user_id)
 
 async def interval_skip_trigger(user_id: int):

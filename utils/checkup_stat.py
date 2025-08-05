@@ -251,7 +251,7 @@ def generate_tracking_calendar(year: int, month: int, checkup_type: Literal["emo
     # Шаблон уже содержит "ПН, ВТ, ...", мы рисуем сетку под ними
     cal = calendar.monthcalendar(year, month)
     top_value = 0
-    top_y = []
+    y_values = []
 
     for week_idx, week in enumerate(cal):
         y = DAYS_GRID_Y_START + week_idx * (CELL_SIZE + CELL_SPACING_VERTICAL)
@@ -323,7 +323,7 @@ def generate_tracking_calendar(year: int, month: int, checkup_type: Literal["emo
             ranking_value = week_avg * 100 + len(week_data)
             if ranking_value >= top_value:
                 top_value = ranking_value
-                top_y.append(y)
+            y_values.append((y, ranking_value))
 
             week_avg_str = str(week_avg) + "/10"
             week_avg_bbox = draw.textbbox((0, 0), week_avg_str, font=font_week_avg)
@@ -331,8 +331,9 @@ def generate_tracking_calendar(year: int, month: int, checkup_type: Literal["emo
                        y + CELL_SIZE / 2 - week_avg_bbox[3] / 2), week_avg_str, font=font_week_avg,
                       fill=BLACK_COLOR)
 
-    for y in top_y:
-        img.paste(trophy_image, (round(1340 - 45), round(y + CELL_SIZE / 2 - 16)), trophy_image)
+    for y, ranking_value in y_values:
+        if ranking_value == top_value:
+            img.paste(trophy_image, (round(1340 - 45), round(y + CELL_SIZE / 2 - 16)), trophy_image)
 
 
     buffer = io.BytesIO()

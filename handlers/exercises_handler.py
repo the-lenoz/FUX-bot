@@ -39,11 +39,14 @@ async def choose_exercise_problem(call: CallbackQuery, state: FSMContext, bot: B
 
     if problems:
         keyboard_builder = InlineKeyboardBuilder()
+        problem_titles = set()
         for problem in problems:
-            keyboard_builder.row(InlineKeyboardButton(
-                text=problem.problem_title,
-                callback_data=f"exercise_by_problem_id|{problem.id}"
-            ))
+            if not problem.problem_title in problem_titles:
+                keyboard_builder.row(InlineKeyboardButton(
+                    text=problem.problem_title,
+                    callback_data=f"exercise_by_problem_id|{problem.id}"
+                ))
+                problem_titles.add(problem.problem_title)
         keyboard_builder.row(InlineKeyboardButton(
             text="🐿 Выбор Фуха", callback_data="choose_exercise_FUX"
         ))

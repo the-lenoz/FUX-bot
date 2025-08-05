@@ -36,6 +36,7 @@ edit_activate_notification_keyboard.row(InlineKeyboardButton(text="в Меню",
 referral_keyboard = InlineKeyboardBuilder()
 referral_keyboard.row(InlineKeyboardButton(text="Выпустить промокод", callback_data="create_promo_code"))
 referral_keyboard.row(InlineKeyboardButton(text="Ввести промокод", callback_data="enter_promo_code"))
+referral_keyboard.row(InlineKeyboardButton(text="Подарить подписку", callback_data="buy_gift"))
 referral_keyboard.row(menu_button)
 
 
