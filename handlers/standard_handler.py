@@ -20,7 +20,10 @@ async def start_problem_conversation(call: CallbackQuery, state: FSMContext, bot
         user_id=call.from_user.id,
         text="Привет"
     )
-    await call.message.delete()
+    try:
+        await call.message.delete()
+    except TelegramBadRequest:
+        pass
     await user_request_handler.handle(request)
 
 

@@ -52,8 +52,6 @@ class EventLoggerMiddleware(BaseMiddleware):
             user = await users_repository.get_user_by_user_id(user_id=user_id)
             if user is not None:
                 await self.events_repo.add_event(user_id=user_id, event_type=event_type)
-
-            if user:
                 await trigger_power_mode(user_id)
 
         # Продолжаем обработку события

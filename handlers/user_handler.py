@@ -42,6 +42,7 @@ async def start_menu(call: CallbackQuery, state: FSMContext):
 
 @user_router.message(Command("menu"))
 @user_router.message(CommandStart(deep_link=True))
+@user_router.message(CommandStart())
 async def send_user_message(message: Message, command: CommandObject, state: FSMContext, bot: Bot):
     user = await users_repository.get_user_by_user_id(message.from_user.id)
     user_id = message.from_user.id
@@ -52,18 +53,16 @@ async def send_user_message(message: Message, command: CommandObject, state: FSM
             logging.error(f"Invalid start payload: {command.args}")
             pass
 
+    if not user:
+        await users_repository.add_user(user_id=message.from_user.id, username=message.from_user.username)
 
-    if not user or not user.confirm_politic:
-        if user is None:
-            try:
-                await users_repository.add_user(user_id=message.from_user.id, username=message.from_user.username)
-            finally:
-                await message.answer('🐿️📙Для начала работы необходимо согласиться с политикой и правилами'
-                                     ' нашего сервиса. Наш сервис полностью защищён и работает в соответствии с 152-ФЗ.\n\n'
-                                     '<b>Пользовательское соглашение</b> — https://fuhmental.ru/user\n'
-                                     '<b>Соглашение об обработке персональных данных</b> — https://fuhmental.ru/agreement',
-                                     disable_web_page_preview=True,
-                                     reply_markup=next_politic_keyboard.as_markup())
+    if not user.confirm_politic:
+        await message.answer('🐿️📙Для начала работы необходимо согласиться с политикой и правилами'
+                                 ' нашего сервиса. Наш сервис полностью защищён и работает в соответствии с 152-ФЗ.\n\n'
+                                 '<b>Пользовательское соглашение</b> — https://fuhmental.ru/user\n'
+                                 '<b>Соглашение об обработке персональных данных</b> — https://fuhmental.ru/agreement',
+                                 disable_web_page_preview=True,
+                                 reply_markup=next_politic_keyboard.as_markup())
     elif not user.full_registration:
         if user.name is None:
             await go_to_enter_initials(bot=bot, call=message, state=state)
