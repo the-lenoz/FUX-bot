@@ -17,6 +17,7 @@ from db.repository import users_repository, referral_system_repository, \
     promo_activations_repository, subscriptions_repository
 from handlers.standard_handler import user_request_handler
 from settings import photos_pages, menu_photo, messages_dict
+from utils.messages_provider import send_main_menu
 from utils.state_models import InputMessage
 from utils.paginator import MechanicsPaginator
 from utils.promocode import user_entered_promo_code
@@ -31,11 +32,7 @@ async def start_menu(call: CallbackQuery, state: FSMContext):
     await state.clear()
     user_id = call.from_user.id
 
-    text = "✍️<i>Для общения - просто </i><b>пиши</b><i>, ничего выбирать не надо</i>"
-    keyboard = await main_keyboard(user_id=user_id)
-    await call.message.answer_photo(photo=menu_photo,
-                                    caption=text,
-                                    reply_markup=keyboard.as_markup())
+    await send_main_menu(user_id)
     await user_request_handler.AI_handler.exit(user_id)
     await call.message.delete()
 
@@ -57,10 +54,7 @@ async def send_user_message(message: Message, command: CommandObject, state: FSM
         await users_repository.add_user(user_id=message.from_user.id, username=message.from_user.username)
 
     if not user.confirm_politic:
-        await message.answer('🐿️📙Для начала работы необходимо согласиться с политикой и правилами'
-                                 ' нашего сервиса. Наш сервис полностью защищён и работает в соответствии с 152-ФЗ.\n\n'
-                                 '<b>Пользовательское соглашение</b> — https://fuhmental.ru/user\n'
-                                 '<b>Соглашение об обработке персональных данных</b> — https://fuhmental.ru/agreement',
+        await message.answer(messages_dict["user_agreement_message_text"],
                                  disable_web_page_preview=True,
                                  reply_markup=next_politic_keyboard.as_markup())
     elif not user.full_registration:
@@ -74,11 +68,7 @@ async def send_user_message(message: Message, command: CommandObject, state: FSM
                 "Какой возрастной диапазон тебе ближе?(Чтобы я мог лучше адаптироваться под твои запросы🧡)",
                 reply_markup=age_keyboard.as_markup())
     else:
-        text = "✍️<i>Для общения - просто </i><b>пиши</b><i>, ничего выбирать не надо</i>"
-        keyboard = await main_keyboard(user_id=user_id)
-        await message.answer_photo(caption=text,
-                                   photo=menu_photo,
-                                   reply_markup=keyboard.as_markup())
+        await send_main_menu(user_id)
 
     await user_request_handler.AI_handler.exit(user_id)
 

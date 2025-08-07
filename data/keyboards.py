@@ -148,7 +148,7 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
         sub_button_text = "💸 Купить подписку"
     else:
         end_date = user_sub.creation_date + timedelta(days=user_sub.time_limit_subscription)
-        sub_button_text = (f"Моя подписка (до"
+        sub_button_text = (f"Моя 🐿 ПОДПИСКА (до"
                 f" {end_date.strftime('%d.%m.%y')})")
     keyboard.row(InlineKeyboardButton(text=sub_button_text, callback_data="sub_management"))
     if user_counters.messages_count == 0:
@@ -167,7 +167,7 @@ def generate_sub_keyboard(mode_type: str | None = None):
 def get_rec_keyboard(mode_type: str):
     keyboard = InlineKeyboardBuilder()
 
-    keyboard.row(InlineKeyboardButton(text="Подписка", callback_data=f"subscribe|{mode_type}"))
+    keyboard.row(InlineKeyboardButton(text="🐿 ПОДПИСКА", callback_data=f"subscribe|{mode_type}"))
     keyboard.row(menu_button)
     return keyboard
 

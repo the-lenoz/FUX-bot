@@ -13,7 +13,7 @@ from db.repository import subscriptions_repository, users_repository, checkup_re
 from settings import payment_photo, how_are_you_photo, menu_photo, messages_dict
 
 from utils.gpt_distributor import user_request_handler
-from utils.messages_provider import send_subscription_end_message
+from utils.messages_provider import send_subscription_end_message, send_main_menu
 from utils.power_mode import interval_skip_trigger
 from utils.statistics import generate_statistics_text
 
@@ -71,12 +71,7 @@ async def send_recommendations(main_bot: Bot):
                 await user_request_handler.AI_handler.provide_recommendations(user.user_id, from_notification=True)
                 await user_counters_repository.notified_with_recommendation(user.user_id)
             else:
-                text = "✍️<i>Для общения - просто </i><b>пиши</b><i>, ничего выбирать не надо</i>"
-                keyboard = await main_keyboard(user_id=user.user_id)
-                await main_bot.send_photo(chat_id=user.user_id,
-                                          photo=menu_photo,
-                                          caption=text,
-                                          reply_markup=keyboard.as_markup())
+                await send_main_menu(user.user_id)
                 await user_request_handler.AI_handler.exit(user.user_id)
 
 

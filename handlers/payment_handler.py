@@ -5,18 +5,15 @@ from aiogram import Router, F, types, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import any_state
 
-from bots import main_bot
 from data.keyboards import cancel_keyboard, menu_keyboard, keyboard_for_pay, generate_sub_keyboard
-from db.repository import users_repository, subscriptions_repository, operation_repository, recommendations_repository
+from db.repository import users_repository, subscriptions_repository, operation_repository
 from settings import sub_description_photo_before, you_fooher_photo, \
     sub_description_photo_after
 from utils.callbacks import subscribed_callback
+from utils.messages_provider import send_invoice
+from utils.payment_for_services import check_payment
 from utils.state_models import InputMessage
 from utils.validators import is_valid_email
-from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report
-from utils.gpt_client import LLMProvider
-from utils.gpt_distributor import user_request_handler
-from utils.payment_for_services import create_payment, check_payment
 
 payment_router = Router()
 
@@ -56,27 +53,13 @@ async def get_choice_of_sub(call: types.CallbackQuery, state: FSMContext, bot: B
     user = await users_repository.get_user_by_user_id(call.from_user.id)
     if user.email is None:
         await state.set_state(InputMessage.enter_email)
-        await state.update_data(mode_type=mode_type)
+        await state.update_data(mode_type=mode_type, days=days, amount=amount)
         await call.message.answer("Для проведения оплаты нам понадобиться адрес электронной почты,"
                                   " чтобы направить чек о покупке 🧾\n\nПожалуйста, введи свой email 🍏",
                                   reply_markup=menu_keyboard.as_markup())
-        try:
-            await call.message.delete()
-        finally:
-            return
-    payment = await create_payment(user.email, amount=amount)
-    await operation_repository.add_operation(operation_id=payment[0], user_id=call.from_user.id, is_paid=False,
-                                             url=payment[1])
-    operation = await operation_repository.get_operation_by_operation_id(payment[0])
-    keyboard = await keyboard_for_pay(operation_id=operation.id, url=payment[1],
-                                      time_limit=int(days), mode_type=mode_type)
-    await call.message.answer(text=f'Для дальнейшей работы ассистента нужно приобрести подписку'
-                                   f' за {amount[:-3]} рублей.\n\nПосле проведения платежа нажми на кнопку "Оплата произведена",'
-                                   ' чтобы подтвердить платеж', reply_markup=keyboard.as_markup())
-    try:
-        await call.message.delete()
-    finally:
-        return
+    else:
+        await send_invoice(user.user_id, amount, days, mode_type)
+    await call.message.delete()
 
 
 @payment_router.message(F.text, InputMessage.enter_email)
@@ -87,10 +70,14 @@ async def enter_user_email(message: types.Message, state: FSMContext, bot: Bot):
         await state.clear()
         await message.answer("Отлично, мы сохранили твой email для следующих покупок")
         await users_repository.update_email_by_user_id(user_id=message.from_user.id, email=message.text)
-        await message.answer_photo(photo=sub_description_photo_before,
-                                   reply_markup=generate_sub_keyboard(mode_type=mode_type).as_markup())
+        await send_invoice(
+            user_id=message.from_user.id,
+            amount=state_data.get("amount"),
+            days=state_data.get("days"),
+            mode_type=mode_type
+        )
     else:
-        del_message = await message.answer("Введеный тобой email некорректен, попробуй еще раз",
+        await message.answer("Введенный тобой email некорректен, попробуй еще раз",
                                            reply_markup=cancel_keyboard.as_markup())
 
 
