@@ -75,23 +75,44 @@ class UserRequestHandler:
                             )
                 else:
                     if request.file.file_type == 'image':
-                        await main_bot.send_message(
-                            request.user_id,
-                            messages_dict["send_photos_subscription_text"],
-                            reply_markup=buy_sub_keyboard.as_markup()
-                        )
+                        if limits.attachments_remaining:
+                            await limits_repository.update_user_limits(
+                                user_id=request.user_id,
+                                attachments_remaining=limits.attachments_remainig - 1
+                            )
+                            await self.AI_handler.handle(request)
+                        else:
+                            await main_bot.send_message(
+                                request.user_id,
+                                messages_dict["send_photos_subscription_text"],
+                                reply_markup=buy_sub_keyboard.as_markup()
+                            )
                     elif request.file.file_type == 'voice':
-                        await main_bot.send_message(
-                            request.user_id,
-                            messages_dict["send_voice_subscription_text"],
-                            reply_markup=buy_sub_keyboard.as_markup()
-                        )
+                        if limits.voices_remaining:
+                            await limits_repository.update_user_limits(
+                                user_id=request.user_id,
+                                voices_remaining=limits.voices_remaining - 1
+                            )
+                            await self.AI_handler.handle(request)
+                        else:
+                            await main_bot.send_message(
+                                request.user_id,
+                                messages_dict["send_voice_subscription_text"],
+                                reply_markup=buy_sub_keyboard.as_markup()
+                            )
                     elif request.file.file_type == 'document':
-                        await main_bot.send_message(
-                            request.user_id,
-                            messages_dict["send_document_subscription_text"],
-                            reply_markup=buy_sub_keyboard.as_markup()
-                        )
+                        if limits.attachments_remaining:
+                            await limits_repository.update_user_limits(
+                                user_id=request.user_id,
+                                attachments_remaining=limits.attachments_remainig - 1
+                            )
+                            await self.AI_handler.handle(request)
+                        else:
+                            await main_bot.send_message(
+                                request.user_id,
+                                messages_dict["send_document_subscription_text"],
+                                reply_markup=buy_sub_keyboard.as_markup()
+                            )
 
 
 class AIHandler:
@@ -292,8 +313,6 @@ class AIHandler:
         self.active_threads[user_id].delete_message(check_message_id)
 
         return result
-
-
 
 class PsyHandler(AIHandler):
     messages_count = {}
