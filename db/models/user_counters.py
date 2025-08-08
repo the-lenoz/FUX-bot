@@ -12,8 +12,6 @@ class UserCounters(BaseModel, CleanModel):
     messages_count = Column(BigInteger, nullable=False, default=0)
     dialogs_count = Column(BigInteger, nullable=False, default=0)
     recommendations_count = Column(BigInteger, nullable=False, default=0)
-    sent_attachment = Column(BigInteger, nullable=False, default=0)
-    sent_voice = Column(BigInteger, nullable=False, default=0)
     emotions_tracks_count = Column(BigInteger, nullable=False, default=0)
     productivity_tracks_count = Column(BigInteger, nullable=False, default=0)
     notified_with_recommendation = Column(BigInteger, nullable=False, default=0)
