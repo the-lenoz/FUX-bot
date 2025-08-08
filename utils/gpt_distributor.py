@@ -78,7 +78,7 @@ class UserRequestHandler:
                         if limits.attachments_remaining:
                             await limits_repository.update_user_limits(
                                 user_id=request.user_id,
-                                attachments_remaining=limits.attachments_remainig - 1
+                                attachments_remaining=limits.attachments_remaining - 1
                             )
                             await self.AI_handler.handle(request)
                         else:
@@ -104,7 +104,7 @@ class UserRequestHandler:
                         if limits.attachments_remaining:
                             await limits_repository.update_user_limits(
                                 user_id=request.user_id,
-                                attachments_remaining=limits.attachments_remainig - 1
+                                attachments_remaining=limits.attachments_remaining - 1
                             )
                             await self.AI_handler.handle(request)
                         else:
