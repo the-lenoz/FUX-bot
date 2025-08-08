@@ -61,7 +61,7 @@ async def send_user_message(message: Message, command: CommandObject, state: FSM
         if user.name is None:
             await go_to_enter_initials(bot=bot, call=message, state=state)
         elif user.gender is None:
-            await message.answer("В каком роде мне к тебе обращаться? 🧡",
+            await message.answer("В каком роде мне к тебе обращаться?",
                                  reply_markup=choice_gender_keyboard.as_markup())
         elif user.age is None:
             await message.answer(
@@ -91,7 +91,7 @@ async def go_to_enter_initials(call: CallbackQuery | Message, state: FSMContext,
     if type(call) is CallbackQuery:
         # if call.from_user.first_name is None:
         await state.set_state(InputMessage.enter_initials)
-        message_delete = await call.message.answer("Давай знакомиться!🐿️\n\nКак мне к тебе лучше обращаться? 🧡",
+        message_delete = await call.message.answer("Давай знакомиться!🐿️\n\nКак мне к тебе лучше обращаться?",
                                                    reply_markup=miss_keyboard.as_markup())
         await state.update_data(message_delete=message_delete.message_id)
         try:
@@ -101,7 +101,7 @@ async def go_to_enter_initials(call: CallbackQuery | Message, state: FSMContext,
     else:
         # if call.from_user.first_name is None:
         await state.set_state(InputMessage.enter_initials)
-        message_delete = await call.answer("Давай знакомиться!🐿️\n\nКак мне к тебе лучше обращаться?🧡",
+        message_delete = await call.answer("Давай знакомиться!🐿️\n\nКак мне к тебе лучше обращаться?",
                                            reply_markup=miss_keyboard.as_markup())
         await state.update_data(message_delete=message_delete.message_id)
         await call.delete()
@@ -162,7 +162,7 @@ async def cancel_promo(call: CallbackQuery, state: FSMContext):
     # await call.message.answer("Какой возрастной диапазон тебе ближе?"
     #                      " (Чтобы я мог лучше адаптироваться под твои запросы🧡)",
     #                      reply_markup=age_keyboard.as_markup())
-    await call.message.answer("В каком роде мне к тебе обращаться? 🧡",
+    await call.message.answer("В каком роде мне к тебе обращаться?",
                               reply_markup=choice_gender_keyboard.as_markup())
     await call.message.delete()
 
@@ -181,7 +181,7 @@ async def user_entered_initials(message: Message, state: FSMContext, bot: Bot):
     await users_repository.update_initials_id_by_user_id(user_id=message.from_user.id,
                                                          first_name=name)
 
-    await message.answer("В каком роде мне к тебе обращаться? 🧡",
+    await message.answer("В каком роде мне к тебе обращаться?",
                          reply_markup=choice_gender_keyboard.as_markup())
 
 
