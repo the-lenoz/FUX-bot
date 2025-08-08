@@ -298,6 +298,7 @@ class AIHandler:
 class PsyHandler(AIHandler):
     messages_count = {}
     MESSAGES_NOTIFICATION_COUNT = {6, 20}
+    VOICE_NOTIFICATION_COUNT = {15}
     DIALOG_NOTIFICATION_COUNT = {1, 3}
 
     async def handle(self, request: UserRequest):
@@ -309,6 +310,9 @@ class PsyHandler(AIHandler):
         if (self.messages_count[request.user_id] + 1 in self.MESSAGES_NOTIFICATION_COUNT
                 and user_counters.dialogs_count + 1 in self.DIALOG_NOTIFICATION_COUNT):
             await main_bot.send_message(request.user_id, messages_dict["recommendation_command_reminder_text"])
+        if (self.messages_count[request.user_id] + 1 in self.VOICE_NOTIFICATION_COUNT
+            and user_counters.dialogs_count + 1 in self.DIALOG_NOTIFICATION_COUNT):
+            await main_bot.send_message(request.user_id, messages_dict["voice_message_reminder_text"])
         await super().handle(request)
 
     @staticmethod
