@@ -105,9 +105,12 @@ async def notification_reminder(main_bot: Bot):
         # Если дневное уведомление уже отправлено, но еще не отправлено недельное, и прошло >= 7 дней
         elif last_event.day_notif_sent and not last_event.week_notif_sent and delta >= datetime.timedelta(days=7):
             try:
-                await main_bot.send_message(
-                    user.user_id,
-                    "Ты не взаимодействовал со мной уже неделю! Жду тебя снова",
+                await main_bot.send_photo(
+                    photo=how_are_you_photo,
+                    chat_id=user.user_id,
+                    caption=f"> {(user.name + ', е') if user.name else 'Е'}сли что-то крутится в голове — **расскажи** 😌."
+                    " Это может быть просто ощущение, мысль или вопрос без ответа.",
+                    parse_mode=ParseMode.MARKDOWN_V2,
                     reply_markup=notification_keyboard.as_markup()
                 )
                 last_event.week_notif_sent = True
@@ -117,9 +120,11 @@ async def notification_reminder(main_bot: Bot):
         # Если недельное уведомление отправлено, но не отправлено уведомление по месячному порогу, и прошло >= 30 дней
         elif last_event.week_notif_sent and not last_event.month_notif_sent and delta >= datetime.timedelta(days=30):
             try:
-                await main_bot.send_message(
-                    user.user_id,
-                    "Ты не взаимодействовал со мной уже месяц! Скучаю и жду тебя снова",
+                await main_bot.send_photo(
+                    photo=how_are_you_photo,
+                    chat_id=user.user_id,
+                    caption="> _Давай пообщаемся_ 😌",
+                    parse_mode=ParseMode.MARKDOWN_V2,
                     reply_markup=notification_keyboard.as_markup()
                 )
                 last_event.month_notif_sent = True

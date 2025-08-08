@@ -48,7 +48,7 @@ async def choose_exercise_problem(call: CallbackQuery, state: FSMContext, bot: B
                 ))
                 problem_titles.add(problem.problem_title)
         keyboard_builder.row(InlineKeyboardButton(
-            text="🐿 Выбор Фуха", callback_data="choose_exercise_FUX"
+            text="🐿 Выбор Фуха - общие упражнения", callback_data="choose_exercise_FUX"
         ))
         keyboard_builder.row(InlineKeyboardButton(
             text="Отмена", callback_data="cancel"
@@ -65,13 +65,10 @@ async def choose_exercise_problem(call: CallbackQuery, state: FSMContext, bot: B
 
 @exercises_router.callback_query(F.data.startswith("choose_exercise_FUX"))
 async def choose_exercise_fux(call: CallbackQuery, state: FSMContext, bot: Bot):
-    problems = await mental_problems_repository.get_problems_by_user_id(user_id=call.from_user.id, worked_out_threshold=4)
+    problems = await mental_problems_repository.get_problems_by_user_id(user_id=0, worked_out_threshold=4)
     if not problems:
-        problems = await mental_problems_repository.get_problems_by_user_id(user_id=call.from_user.id)
-        if not problems:
-            await call.message.answer("Сначала разбери со мной проблему в чате!",
-                                      reply_markup=discuss_problem_keyboard.as_markup())
-            return
+        problems = await mental_problems_repository.get_problems_by_user_id(user_id=0)
+
     problem = choice(problems)
     await send_exercise(call, bot, problem.id)
 
@@ -98,7 +95,7 @@ async def send_exercise(call: CallbackQuery, bot: Bot, problem_id: int):
     else:
         await main_bot.send_message(
             user_id,
-            "Чтобы получить ещё <i>упражнения</i>, нужна <b>подписка</b>!",
+            messages_dict["exercises_subscription_text"],
             reply_markup=buy_sub_keyboard.as_markup()
         )
 

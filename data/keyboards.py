@@ -145,10 +145,10 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
     keyboard.row(InlineKeyboardButton(text="🎁Промокоды", callback_data="referral_system"))
     user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
     if user_sub is None:
-        sub_button_text = "💸 Купить подписку"
+        sub_button_text = "🐿 КУПИТЬ ПОДПИСКУ"
     else:
         end_date = user_sub.creation_date + timedelta(days=user_sub.time_limit_subscription)
-        sub_button_text = (f"Моя 🐿 ПОДПИСКА (до"
+        sub_button_text = (f"🐿 МОЯ ПОДПИСКА (до"
                 f" {end_date.strftime('%d.%m.%y')})")
     keyboard.row(InlineKeyboardButton(text=sub_button_text, callback_data="sub_management"))
     if user_counters.messages_count == 0:
