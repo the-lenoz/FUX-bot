@@ -19,6 +19,7 @@ from utils.generate_promo import generate_single_promo_code
 from utils.get_table_db_to_excel import export_table_to_memory
 from utils.is_main_admin import is_main_admin
 from utils.list_admins_keyboard import AdminsKeyboard
+from utils.statistics import generate_statistics_text
 
 admin_router = Router()
 
@@ -65,7 +66,7 @@ async def new_mailing(message: types.Message, state: FSMContext, bot: Bot):
 @is_main_admin
 async def get_statistics(message: types.Message, state: FSMContext, bot: Bot):
     await state.clear()
-    await message.answer("Выбери раздел, статистику которого ты хочешь посмотреть",
+    await message.answer(await generate_statistics_text(),
                          reply_markup=statistics_keyboard.as_markup())
 
 
