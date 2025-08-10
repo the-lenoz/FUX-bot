@@ -219,8 +219,7 @@ async def user_choice_age(call: CallbackQuery, state: FSMContext):
                 messages_dict["free_account_message"]
             )
         await call.message.answer(
-            chat_id=user.user_id,
-            text=f"> {(user.name + ', е') if user.name else 'Е'}сли что\-то крутится в голове — **расскажи** 😌."
+            f"> {(user.name + ', е') if user.name else 'Е'}сли что\-то крутится в голове — **расскажи** 😌."
                     " Это может быть просто ощущение, мысль или вопрос без ответа.",
             parse_mode=ParseMode.MARKDOWN_V2
         )
