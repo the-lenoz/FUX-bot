@@ -4,11 +4,13 @@ import traceback
 from datetime import timedelta, datetime
 
 from aiogram import Router, F, Bot
+from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandStart, CommandObject
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import any_state
 from aiogram.types import Message, CallbackQuery
 
+from bots import main_bot
 from data.keyboards import next_politic_keyboard, have_promo_keyboard, cancel_keyboard, age_keyboard, \
     main_keyboard, choice_gender_keyboard, menu_keyboard, miss_keyboard, settings_cancel_keyboard
 # from data.keyboards import choice_keyboard
@@ -216,6 +218,12 @@ async def user_choice_age(call: CallbackQuery, state: FSMContext):
             await call.message.answer(
                 messages_dict["free_account_message"]
             )
+        await call.message.answer(
+            chat_id=user.user_id,
+            text=f"> {(user.name + ', е') if user.name else 'Е'}сли что\-то крутится в голове — **расскажи** 😌."
+                    " Это может быть просто ощущение, мысль или вопрос без ответа.",
+            parse_mode=ParseMode.MARKDOWN_V2
+        )
     else:
         await call.message.answer(
             "Возраст сохранён!",
