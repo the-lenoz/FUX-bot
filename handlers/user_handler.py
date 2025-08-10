@@ -38,6 +38,24 @@ async def start_menu(call: CallbackQuery, state: FSMContext):
     await user_request_handler.AI_handler.exit(user_id)
     await call.message.delete()
 
+@user_router.callback_query(F.data == "start_use", any_state)
+async def start_menu(call: CallbackQuery, state: FSMContext):
+    await state.clear()
+    user_id = call.from_user.id
+    user = await users_repository.get_user_by_user_id(user_id)
+    await send_main_menu(user_id)
+    await user_request_handler.AI_handler.exit(user_id)
+    await call.message.delete()
+    if not await check_is_subscribed(user_id):
+        await call.message.answer(
+            messages_dict["free_account_message"]
+        )
+    await asyncio.sleep(2)
+    await call.message.answer(
+        f"{(user.name + ', е') if user.name else 'Е'}сли что\-то крутится в голове — **расскажи** 😌\."
+        " Это может быть просто ощущение, мысль или вопрос без ответа\.",
+        parse_mode=ParseMode.MARKDOWN_V2
+    )
 
 @user_router.message(Command("menu"))
 @user_router.message(CommandStart(deep_link=True))
@@ -212,17 +230,9 @@ async def user_choice_age(call: CallbackQuery, state: FSMContext):
     if not user.full_registration:
         paginator = MechanicsPaginator(page_now=1)
         keyboard = paginator.generate_now_page()
+
         await call.message.answer_photo(photo=photos_pages.get(paginator.page_now),
                                         reply_markup=keyboard)
-        if not await check_is_subscribed(user_id):
-            await call.message.answer(
-                messages_dict["free_account_message"]
-            )
-        await call.message.answer(
-            f"> {(user.name + ', е') if user.name else 'Е'}сли что\-то крутится в голове — **расскажи** 😌\."
-                    " Это может быть просто ощущение, мысль или вопрос без ответа\.",
-            parse_mode=ParseMode.MARKDOWN_V2
-        )
     else:
         await call.message.answer(
             "Возраст сохранён!",
