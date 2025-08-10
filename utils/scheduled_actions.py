@@ -108,7 +108,7 @@ async def notification_reminder(main_bot: Bot):
                 await main_bot.send_photo(
                     photo=how_are_you_photo,
                     chat_id=user.user_id,
-                    caption=f"> {(user.name + ', е') if user.name else 'Е'}сли что-то крутится в голове — **расскажи** 😌."
+                    caption=f"> {(user.name + ', е') if user.name else 'Е'}сли что\-то крутится в голове — **расскажи** 😌."
                     " Это может быть просто ощущение, мысль или вопрос без ответа.",
                     parse_mode=ParseMode.MARKDOWN_V2,
                     reply_markup=notification_keyboard.as_markup()

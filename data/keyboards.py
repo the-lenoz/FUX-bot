@@ -172,7 +172,7 @@ def get_rec_keyboard(mode_type: str):
     return keyboard
 
 buy_sub_keyboard = InlineKeyboardBuilder()
-buy_sub_keyboard.row(InlineKeyboardButton(text="Подписка", callback_data=f"subscribe"))
+buy_sub_keyboard.row(InlineKeyboardButton(text="<b>🐿 ПОДПИСКА</b>", callback_data=f"subscribe"))
 buy_sub_keyboard.row(menu_button)
 
 
