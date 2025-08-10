@@ -212,7 +212,7 @@ async def user_choice_age(call: CallbackQuery, state: FSMContext):
         keyboard = paginator.generate_now_page()
         await call.message.answer_photo(photo=photos_pages.get(paginator.page_now),
                                         reply_markup=keyboard)
-        if not check_is_subscribed(user_id):
+        if not await check_is_subscribed(user_id):
             await call.message.answer(
                 messages_dict["free_account_message"]
             )
