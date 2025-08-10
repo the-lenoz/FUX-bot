@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import traceback
-from datetime import timedelta, datetime
 
 from aiogram import Router, F, Bot
 from aiogram.enums import ParseMode
@@ -10,19 +9,16 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import any_state
 from aiogram.types import Message, CallbackQuery
 
-from bots import main_bot
-from data.keyboards import next_politic_keyboard, have_promo_keyboard, cancel_keyboard, age_keyboard, \
-    main_keyboard, choice_gender_keyboard, menu_keyboard, miss_keyboard, settings_cancel_keyboard
-# from data.keyboards import choice_keyboard
-# from data.messages import start_message, wait_manager, update_language
-from db.repository import users_repository, referral_system_repository, \
-    promo_activations_repository, subscriptions_repository
+from data.keyboards import next_politic_keyboard, have_promo_keyboard, age_keyboard, \
+    main_keyboard, choice_gender_keyboard, miss_keyboard, settings_cancel_keyboard
+
+from db.repository import users_repository
 from handlers.standard_handler import user_request_handler
 from settings import photos_pages, menu_photo, messages_dict
 from utils.messages_provider import send_main_menu
-from utils.state_models import InputMessage
 from utils.paginator import MechanicsPaginator
 from utils.promocode import user_entered_promo_code
+from utils.state_models import InputMessage
 from utils.subscription import check_is_subscribed
 
 user_router = Router()
@@ -50,11 +46,11 @@ async def start_menu(call: CallbackQuery, state: FSMContext):
         await call.message.answer(
             messages_dict["free_account_message"]
         )
-    await asyncio.sleep(2)
+    await asyncio.sleep(5)
     await call.message.answer(
         f"{(user.name + ', е') if user.name else 'Е'}сли что\-то крутится в голове — **расскажи** 😌\."
         " Это может быть просто ощущение, мысль или вопрос без ответа\.",
-        parse_mode=ParseMode.MARKDOWN_V2
+        parse_mode=ParseMode.MARKDOWN
     )
 
 @user_router.message(Command("menu"))
