@@ -27,17 +27,6 @@ async def subscribe(call: types.CallbackQuery, state: FSMContext, bot: Bot):
     else:
         mode_type = None
 
-    if user.email is None:
-        await state.set_state(InputMessage.enter_email)
-        await state.update_data(mode_type=mode_type)
-        await call.message.answer("Для проведения оплаты нам понадобиться адрес электронной почты,"
-                                  " чтобы направить чек о покупке 🧾\n\nПожалуйста, введи свой email 🍏",
-                                  reply_markup=menu_keyboard.as_markup())
-        try:
-            await call.message.delete()
-        finally:
-            return
-
     await call.message.answer_photo(photo=sub_description_photo_before,
                                     reply_markup=generate_sub_keyboard(mode_type=mode_type).as_markup())
     try:
