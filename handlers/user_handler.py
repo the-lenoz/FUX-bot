@@ -50,7 +50,7 @@ async def start_menu(call: CallbackQuery, state: FSMContext):
     await call.message.answer(
         f"{(user.name + ', е') if user.name else 'Е'}сли что\-то крутится в голове — **расскажи** 😌\."
         " Это может быть просто ощущение, мысль или вопрос без ответа\.",
-        parse_mode=ParseMode.MARKDOWN_V2
+        parse_mode=ParseMode.MARKDOWN
     )
 
 @user_router.message(Command("menu"))
