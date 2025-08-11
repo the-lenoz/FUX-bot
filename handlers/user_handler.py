@@ -42,16 +42,15 @@ async def start_menu(call: CallbackQuery, state: FSMContext):
     await send_main_menu(user_id)
     await user_request_handler.AI_handler.exit(user_id)
     await call.message.delete()
-    await asyncio.sleep(5)
+    await asyncio.sleep(10)
     if not await check_is_subscribed(user_id):
         await call.message.answer(
             messages_dict["free_account_message"]
         )
-    await asyncio.sleep(5)
+    await asyncio.sleep(10)
     await call.message.answer(
-        f"{(user.name + ', е') if user.name else 'Е'}сли что\-то крутится в голове — **расскажи** 😌\."
-        " Это может быть просто ощущение, мысль или вопрос без ответа\.",
-        parse_mode=ParseMode.MARKDOWN_V2
+        f"{(user.name + ', е') if user.name else 'Е'}сли что-то крутится в голове — <b>расскажи</b> 😌."
+        " Это может быть просто ощущение, мысль или вопрос без ответа.",
     )
 
 @user_router.message(Command("menu"))
