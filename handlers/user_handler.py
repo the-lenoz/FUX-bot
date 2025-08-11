@@ -35,7 +35,7 @@ async def start_menu(call: CallbackQuery, state: FSMContext):
     await call.message.delete()
 
 @user_router.callback_query(F.data == "start_use", any_state)
-async def start_menu(call: CallbackQuery, state: FSMContext):
+async def start_use(call: CallbackQuery, state: FSMContext):
     await state.clear()
     user_id = call.from_user.id
     user = await users_repository.get_user_by_user_id(user_id)
