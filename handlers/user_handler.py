@@ -68,6 +68,7 @@ async def send_user_message(message: Message, command: CommandObject, state: FSM
 
     if not user:
         await users_repository.add_user(user_id=message.from_user.id, username=message.from_user.username)
+        user = await users_repository.get_user_by_user_id(message.from_user.id)
 
     if not user.confirm_politic:
         await message.answer(messages_dict["user_agreement_message_text"],
