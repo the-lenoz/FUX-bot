@@ -18,23 +18,6 @@ from utils.validators import is_valid_email
 payment_router = Router()
 
 
-@payment_router.callback_query(F.data.startswith("subscribe"), any_state)
-async def subscribe(call: types.CallbackQuery, state: FSMContext, bot: Bot):
-    user = await users_repository.get_user_by_user_id(call.from_user.id)
-    call_data = call.data.split("|")
-    if len(call_data) > 1:
-        mode_type = call_data[1]
-    else:
-        mode_type = None
-
-    await call.message.answer_photo(photo=sub_description_photo_before,
-                                    reply_markup=generate_sub_keyboard(mode_type=mode_type).as_markup())
-    try:
-        await call.message.delete()
-    finally:
-        return
-
-
 @payment_router.callback_query(F.data.startswith("choice_sub"), any_state)
 async def get_choice_of_sub(call: types.CallbackQuery, state: FSMContext, bot: Bot):
     call_data = call.data.split("|")
