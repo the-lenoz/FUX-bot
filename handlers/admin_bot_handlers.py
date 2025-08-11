@@ -66,7 +66,8 @@ async def new_mailing(message: types.Message, state: FSMContext, bot: Bot):
 @is_main_admin
 async def get_statistics(message: types.Message, state: FSMContext, bot: Bot):
     await state.clear()
-    await message.answer(await generate_statistics_text())
+    await message.answer("Выбери раздел, статистику которого ты хочешь посмотреть",
+                         reply_markup=statistics_keyboard.as_markup())
 
 
 @admin_router.message(F.text=="Управление подписками")
