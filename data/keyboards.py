@@ -151,8 +151,6 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
         sub_button_text = (f"🐿 МОЯ ПОДПИСКА (до"
                 f" {end_date.strftime('%d.%m.%y')})")
     keyboard.row(InlineKeyboardButton(text=sub_button_text, callback_data="sub_management"))
-    if user_counters.messages_count == 0:
-        keyboard.row(InlineKeyboardButton(text="👉НАЧАТЬ ОБЩЕНИЕ", callback_data="start_problem_conversation"))
     return keyboard
 
 
