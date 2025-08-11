@@ -166,9 +166,6 @@ def generate_sub_keyboard(mode_type: str | None = None):
 
 def generate_sub_management_keyboard(mode_type: str | None = None):
     subscriptions_keyboard = InlineKeyboardBuilder()
-    subscriptions_keyboard.row(InlineKeyboardButton(text="249р/неделя", callback_data=f"choice_sub|7|249.00|{mode_type}"))
-    subscriptions_keyboard.row(InlineKeyboardButton(text="490р/месяц", callback_data=f"choice_sub|30|490.00|{mode_type}"))
-    subscriptions_keyboard.row(InlineKeyboardButton(text="990р/3 месяца", callback_data=f"choice_sub|90|990.00|{mode_type}"))
     subscriptions_keyboard.row(
         InlineKeyboardButton(text="Отменить подписку", callback_data=f"cancel_sub"))
     subscriptions_keyboard.row(menu_button)
