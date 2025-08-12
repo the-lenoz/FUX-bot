@@ -22,8 +22,9 @@ async def interval_skip_trigger(user_id: int):
     now_date = datetime.datetime.now(datetime.timezone(user_timezone)).date()
     yesterday_date = (datetime.datetime.now(datetime.timezone(user_timezone)) - datetime.timedelta(days=1)).date()
 
-    if last_user_event.upd_date.date() != now_date and last_user_event.upd_date.date() != yesterday_date:
+    if last_user_event.upd_date.date() != now_date and last_user_event.creation_date.date() != yesterday_date:
         await trigger_skipped_day(user_id)
+        await events_repository.update_event(last_user_event)
 
 async def update_power_mode(user_id: int):
     user = await users_repository.get_user_by_user_id(user_id)
