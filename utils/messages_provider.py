@@ -7,13 +7,35 @@ from aiogram.types import BufferedInputFile
 from telegramify_markdown import InterpreterChain, TextInterpreter, FileInterpreter, MermaidInterpreter, ContentTypes
 
 from bots import main_bot
-from data.keyboards import buy_sub_keyboard
-from db.repository import users_repository, user_counters_repository
-from settings import payment_photo, messages_dict
+from data.keyboards import buy_sub_keyboard, main_keyboard, keyboard_for_pay
+from db.repository import users_repository, user_counters_repository, operation_repository
+from settings import payment_photo, messages_dict, menu_photo
 from utils.gpt_client import LLMProvider, BASIC_MODEL, ADVANCED_MODEL
+from utils.payment_for_services import create_payment
 from utils.prompts import TRACKING_REPORT_COMMENT_PROMPT
 from utils.user_request_types import UserFile
 
+
+async def send_main_menu(user_id: int):
+    text = messages_dict["main_menu_text"]
+    keyboard = await main_keyboard(user_id=user_id)
+    await main_bot.send_photo(chat_id=user_id,
+                              photo=menu_photo,
+                              caption=text,
+                              reply_markup=keyboard.as_markup())
+
+async def send_invoice(user_id: int, amount: str, days: str, mode_type: str):
+    user = await users_repository.get_user_by_user_id(user_id)
+    payment = await create_payment(user.email, amount=amount)
+    await operation_repository.add_operation(operation_id=payment[0], user_id=user_id, is_paid=False,
+                                             url=payment[1])
+    operation = await operation_repository.get_operation_by_operation_id(payment[0])
+    keyboard = await keyboard_for_pay(operation_id=operation.id, url=payment[1],
+                                      time_limit=int(days), mode_type=mode_type)
+    await main_bot.send_message(
+        user_id,
+        text=f'Оплати счёт в {amount[:-3]} рублей.\n\nПосле проведения платежа нажми на кнопку "Оплата произведена",'
+             ' чтобы подтвердить платеж', reply_markup=keyboard.as_markup())
 
 async def send_subscription_end_message(user_id: int):
     user = await users_repository.get_user_by_user_id(user_id)

@@ -6,7 +6,7 @@ from db.base import BaseModel, CleanModel
 class MentalProblem(BaseModel, CleanModel):
     __tablename__ = 'mental_problems'
 
-    user_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=False)
+    user_id = Column(BigInteger, nullable=False)
 
     problem_abstract = Column(String)
     problem_title = Column(String)

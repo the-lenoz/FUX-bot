@@ -108,7 +108,7 @@ async def edit_profile(call: CallbackQuery, state: FSMContext):
                                   reply_markup=menu_age_keyboard.as_markup())
         await state.set_state(AccountSettingsStates.edit_age)
     elif edit_type == 'gender':
-        await call.message.answer("В каком роде мне к тебе обращаться?🧡",
+        await call.message.answer("В каком роде мне к тебе обращаться?",
                              reply_markup=choice_gender_settings_keyboard.as_markup())
         await state.set_state(AccountSettingsStates.edit_gender)
     elif edit_type == 'timezone':

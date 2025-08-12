@@ -75,23 +75,44 @@ class UserRequestHandler:
                             )
                 else:
                     if request.file.file_type == 'image':
-                        await main_bot.send_message(
-                            request.user_id,
-                            messages_dict["send_photos_subscription_text"],
-                            reply_markup=buy_sub_keyboard.as_markup()
-                        )
+                        if limits.attachments_remaining:
+                            await limits_repository.update_user_limits(
+                                user_id=request.user_id,
+                                attachments_remaining=limits.attachments_remaining - 1
+                            )
+                            await self.AI_handler.handle(request)
+                        else:
+                            await main_bot.send_message(
+                                request.user_id,
+                                messages_dict["send_photos_subscription_text"],
+                                reply_markup=buy_sub_keyboard.as_markup()
+                            )
                     elif request.file.file_type == 'voice':
-                        await main_bot.send_message(
-                            request.user_id,
-                            messages_dict["send_voice_subscription_text"],
-                            reply_markup=buy_sub_keyboard.as_markup()
-                        )
+                        if limits.voices_remaining:
+                            await limits_repository.update_user_limits(
+                                user_id=request.user_id,
+                                voices_remaining=limits.voices_remaining - 1
+                            )
+                            await self.AI_handler.handle(request)
+                        else:
+                            await main_bot.send_message(
+                                request.user_id,
+                                messages_dict["send_voice_subscription_text"],
+                                reply_markup=buy_sub_keyboard.as_markup()
+                            )
                     elif request.file.file_type == 'document':
-                        await main_bot.send_message(
-                            request.user_id,
-                            messages_dict["send_document_subscription_text"],
-                            reply_markup=buy_sub_keyboard.as_markup()
-                        )
+                        if limits.attachments_remaining:
+                            await limits_repository.update_user_limits(
+                                user_id=request.user_id,
+                                attachments_remaining=limits.attachments_remaining - 1
+                            )
+                            await self.AI_handler.handle(request)
+                        else:
+                            await main_bot.send_message(
+                                request.user_id,
+                                messages_dict["send_document_subscription_text"],
+                                reply_markup=buy_sub_keyboard.as_markup()
+                            )
 
 
 class AIHandler:
@@ -293,11 +314,10 @@ class AIHandler:
 
         return result
 
-
-
 class PsyHandler(AIHandler):
     messages_count = {}
     MESSAGES_NOTIFICATION_COUNT = {6, 20}
+    VOICE_NOTIFICATION_COUNT = {15}
     DIALOG_NOTIFICATION_COUNT = {1, 3}
 
     async def handle(self, request: UserRequest):
@@ -309,6 +329,10 @@ class PsyHandler(AIHandler):
         if (self.messages_count[request.user_id] + 1 in self.MESSAGES_NOTIFICATION_COUNT
                 and user_counters.dialogs_count + 1 in self.DIALOG_NOTIFICATION_COUNT):
             await main_bot.send_message(request.user_id, messages_dict["recommendation_command_reminder_text"])
+        if (self.messages_count[request.user_id] + 1 in self.VOICE_NOTIFICATION_COUNT
+            and user_counters.dialogs_count + 1 in self.DIALOG_NOTIFICATION_COUNT
+            and await check_is_subscribed(request.user_id)):
+            await main_bot.send_message(request.user_id, messages_dict["voice_message_reminder_text"])
         await super().handle(request)
 
     @staticmethod
@@ -406,16 +430,8 @@ class PsyHandler(AIHandler):
         if problem_id or from_notification:
             await self.exit(user_id, save=False)
 
-    async def generate_exercise(self, user_id: int, problem_id: int | None = None) -> str | None:
-        if problem_id is None:
-            problems = await mental_problems_repository.get_problems_by_user_id(user_id=user_id, worked_out_threshold=4)
-            if not problems:
-                problems = await mental_problems_repository.get_problems_by_user_id(user_id=user_id)
-                if not problems:
-                    return None
-            problem = choice(problems)
-        else:
-            problem = await mental_problems_repository.get_problem_by_id(problem_id=problem_id)
+    async def generate_exercise(self, user_id: int, problem_id: int) -> str | None:
+        problem = await mental_problems_repository.get_problem_by_id(problem_id=problem_id)
 
         await user_counters_repository.used_exercises(user_id)
 

@@ -19,6 +19,7 @@ from utils.generate_promo import generate_single_promo_code
 from utils.get_table_db_to_excel import export_table_to_memory
 from utils.is_main_admin import is_main_admin
 from utils.list_admins_keyboard import AdminsKeyboard
+from utils.statistics import generate_statistics_text
 
 admin_router = Router()
 

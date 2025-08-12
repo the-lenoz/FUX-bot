@@ -13,7 +13,7 @@ from db.repository import subscriptions_repository, users_repository, checkup_re
 from settings import payment_photo, how_are_you_photo, menu_photo, messages_dict
 
 from utils.gpt_distributor import user_request_handler
-from utils.messages_provider import send_subscription_end_message
+from utils.messages_provider import send_subscription_end_message, send_main_menu
 from utils.power_mode import interval_skip_trigger
 from utils.statistics import generate_statistics_text
 
@@ -71,12 +71,7 @@ async def send_recommendations(main_bot: Bot):
                 await user_request_handler.AI_handler.provide_recommendations(user.user_id, from_notification=True)
                 await user_counters_repository.notified_with_recommendation(user.user_id)
             else:
-                text = "✍️<i>Для общения - просто </i><b>пиши</b><i>, ничего выбирать не надо</i>"
-                keyboard = await main_keyboard(user_id=user.user_id)
-                await main_bot.send_photo(chat_id=user.user_id,
-                                          photo=menu_photo,
-                                          caption=text,
-                                          reply_markup=keyboard.as_markup())
+                await send_main_menu(user.user_id)
                 await user_request_handler.AI_handler.exit(user.user_id)
 
 
@@ -110,9 +105,12 @@ async def notification_reminder(main_bot: Bot):
         # Если дневное уведомление уже отправлено, но еще не отправлено недельное, и прошло >= 7 дней
         elif last_event.day_notif_sent and not last_event.week_notif_sent and delta >= datetime.timedelta(days=7):
             try:
-                await main_bot.send_message(
-                    user.user_id,
-                    "Ты не взаимодействовал со мной уже неделю! Жду тебя снова",
+                await main_bot.send_photo(
+                    photo=how_are_you_photo,
+                    chat_id=user.user_id,
+                    caption=f"> {(user.name + ', е') if user.name else 'Е'}сли что\-то крутится в голове — **расскажи** 😌\."
+                    " Это может быть просто ощущение, мысль или вопрос без ответа\.",
+                    parse_mode=ParseMode.MARKDOWN_V2,
                     reply_markup=notification_keyboard.as_markup()
                 )
                 last_event.week_notif_sent = True
@@ -122,9 +120,11 @@ async def notification_reminder(main_bot: Bot):
         # Если недельное уведомление отправлено, но не отправлено уведомление по месячному порогу, и прошло >= 30 дней
         elif last_event.week_notif_sent and not last_event.month_notif_sent and delta >= datetime.timedelta(days=30):
             try:
-                await main_bot.send_message(
-                    user.user_id,
-                    "Ты не взаимодействовал со мной уже месяц! Скучаю и жду тебя снова",
+                await main_bot.send_photo(
+                    photo=how_are_you_photo,
+                    chat_id=user.user_id,
+                    caption="> _Давай пообщаемся_ 😌",
+                    parse_mode=ParseMode.MARKDOWN_V2,
                     reply_markup=notification_keyboard.as_markup()
                 )
                 last_event.month_notif_sent = True
