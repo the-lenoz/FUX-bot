@@ -11,7 +11,8 @@ class SubscriptionsRepository:
     def __init__(self):
         self.session_maker = DatabaseEngine().create_session()
 
-    async def add_subscription(self, user_id: int, time_limit_subscription: int, active: bool = True):
+    async def add_subscription(self, user_id: int, time_limit_subscription: int,
+                               active: bool = True, recurrent: bool = False):
         """    user_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=False)
                 user: Mapped[Users] = relationship("User", backref=__tablename__, cascade='all', lazy='subquery')
                 start_subscription_date = Column(DateTime, nullable=False)
@@ -21,7 +22,7 @@ class SubscriptionsRepository:
             session: AsyncSession
             async with session.begin():
                 user = Subscriptions(user_id=user_id, time_limit_subscription=time_limit_subscription,
-                                     active=active)
+                                     active=active, recurrent=recurrent)
                 try:
                     session.add(user)
                     await session.commit()
@@ -100,8 +101,6 @@ class SubscriptionsRepository:
                 await session.execute(sql)
                 await session.commit()
 
-
-
     async def get_active_subscriptions_count(self) -> int:
         """
         Возвращает количество активных подписок (active = True).
@@ -113,6 +112,3 @@ class SubscriptionsRepository:
                 result = await session.execute(query)
                 count_active = result.scalar() or 0
                 return count_active
-
-
-

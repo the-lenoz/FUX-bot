@@ -495,7 +495,7 @@ class PsyHandler(AIHandler):
         if self.thread_locks.get(user_id):
             async with self.thread_locks[user_id]:
                 if self.active_threads.get(user_id):
-                    if save and await self.check_is_dialog_psy(user_id):
+                    if save and self.messages_count.get(user_id) >= 3 and await self.check_is_dialog_psy(user_id):
                         problem_id = await self.summarize_dialog_problem(user_id)
                     else:
                         problem_id = None
