@@ -17,7 +17,8 @@ from utils.user_request_types import UserFile
 
 
 async def send_main_menu(user_id: int):
-    text = messages_dict["main_menu_text"]
+    user = await users_repository.get_user_by_user_id(user_id)
+    text = messages_dict["main_menu_text"] + str(user.power_mode_days)
     keyboard = await main_keyboard(user_id=user_id)
     await main_bot.send_photo(chat_id=user_id,
                               photo=menu_photo,

@@ -16,6 +16,7 @@ class Subscriptions(BaseModel, CleanModel):
     start_date = Column(DateTime, nullable=False, default=func.now())
     time_limit_subscription = Column(Integer, nullable=False)
     active = Column(Boolean, nullable=False, default=True)
+    recurrent = Column(Boolean, nullable=False, default=False)
     send_notification = Column(Boolean, nullable=False, default=False, unique=False)
 
     @property
