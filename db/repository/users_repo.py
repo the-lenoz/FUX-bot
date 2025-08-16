@@ -162,6 +162,16 @@ class UserRepository:
                 await session.execute(sql)
                 await session.commit()
 
+    async def used_free_recommendation(self, user_id: int):
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(User).values({
+                    User.used_free_recommendation: True
+                }).where(or_(User.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
+
     async def delete_user_by_id(self, user_id: int):
         async with self.session_maker() as session:
             session: AsyncSession
