@@ -15,7 +15,7 @@ from settings import temperature_ai_photo, checkup_emotions_photo, checkup_produ
 from utils.state_models import InputMessage, AccountSettingsStates
 from utils.gpt_distributor import user_request_handler
 from utils.timezone_matcher import calculate_timezone
-from utils.user_properties import delete_user
+from utils.account_manager import delete_user
 from utils.validators import is_valid_email, is_valid_time
 
 system_settings_router = Router()
@@ -63,6 +63,7 @@ async def send_system_settings(user_id: int):
     for checkup in user_checkups:
         text = ("Время трекинга эмоций🤩" if checkup.type_checkup == "emotions" else "Время трекинга продуктивности🚀") + f": {(datetime.combine(datetime.today(), checkup.time_checkup) + timezone_delta).time().strftime('%H:%M')}"
         keyboard.row(InlineKeyboardButton(text=text, callback_data=f"edit_checkup|{checkup.id}"))
+    keyboard.row(InlineKeyboardButton(text="🗑 Удалить все данные", callback_data=f"delete_account|0"))
     keyboard.row(menu_button)
     await main_bot.send_message(chat_id=user_id,
                                 text="Здесь ты можешь <b>менять</b> <u>настройки</u>",
@@ -233,17 +234,17 @@ async def enter_new_checkup_time(message: Message, state: FSMContext):
 
 
 
-@system_settings_router.callback_query(F.data.startswith("account|delete"), any_state) # DO NOT USE
+@system_settings_router.callback_query(F.data.startswith("delete_account"), any_state) # DO NOT USE
 async def delete_account(call: CallbackQuery, state: FSMContext):
     confirm = int(call.data.split('|')[-1])
     if confirm:
         await delete_user(call.from_user.id)
-        await call.message.answer("Аккаунт успешно удалён!\nЧтобы начать общение, нажми /start")
+        await call.message.answer("Ты удалил всю информацию, теперь я ничего про тебя не помню.\nЧтобы начать общение, нажми /start")
     else:
         keyboard = InlineKeyboardBuilder()
         keyboard.row(InlineKeyboardButton(text="Отмена", callback_data="settings|account"))
-        keyboard.row(InlineKeyboardButton(text="Да, удалить", callback_data="account|delete|1"))
+        keyboard.row(InlineKeyboardButton(text="Да, удалить", callback_data="delete_account|1"))
         await call.message.answer(
-            "Ты точно хочешь удалить аккаунт?",
+            "Ты точно хочешь всё удалить? (это безвозвратно!)",
             reply_markup=keyboard.as_markup()
         )

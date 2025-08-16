@@ -1,7 +1,7 @@
 from datetime import timedelta, datetime, timezone
 from typing import Sequence, Optional
 
-from sqlalchemy import select, or_, func, case
+from sqlalchemy import select, or_, func, case, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.engine import DatabaseEngine
@@ -81,125 +81,10 @@ class AiRequestsRepository:
                 query = await session.execute(sql)
                 return query.scalars().all()
 
-    async def get_ai_requests_statistics(self) -> dict[str, dict[str, int]]:
-        """
-        Возвращает статистику по запросам к GPT (AiRequests) за различные периоды:
-          - за последний день
-          - за последнюю неделю
-          - за последний месяц (30 дней, упрощённо)
-          - за последний квартал (90 дней, упрощённо)
-          - за всё время
-
-        Для каждого периода считаются только запросы без аудио (has_audio=False) и среди них:
-          - total        (всего запросов без аудио)
-          - with_photo   (из них с фото)
-          - with_files   (из них с файлом)
-        """
-        now = datetime.now(timezone.utc).replace(tzinfo=None)
-        day_ago = now - timedelta(days=1)
-        week_ago = now - timedelta(weeks=1)
-        month_ago = now - timedelta(days=30)  # упрощённый вариант "месяц"
-        quarter_ago = now - timedelta(days=90)  # упрощённый вариант "квартал"
-
+    async def delete_requests_by_user_id(self, user_id: int):
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():
-                # 1) За последний день (без аудио)
-                day_query = select(
-                    func.count(AiRequests.id).label('total'),
-                    func.sum(case((AiRequests.has_photo == True, 1), else_=0)).label('with_photo'),
-                    func.sum(case((AiRequests.has_files == True, 1), else_=0)).label('with_files'),
-                ).where(
-                    AiRequests.creation_date >= day_ago,
-                    AiRequests.has_audio == False
-                )
-                day_result = await session.execute(day_query)
-                day_row = day_result.first()  # вернётся кортеж или объект Row
-
-                day_stats = {
-                    'total': day_row.total or 0,
-                    'with_photo': day_row.with_photo or 0,
-                    'with_files': day_row.with_files or 0
-                }
-
-                # 2) За последнюю неделю (без аудио)
-                week_query = select(
-                    func.count(AiRequests.id).label('total'),
-                    func.sum(case((AiRequests.has_photo == True, 1), else_=0)).label('with_photo'),
-                    func.sum(case((AiRequests.has_files == True, 1), else_=0)).label('with_files'),
-                ).where(
-                    AiRequests.creation_date >= week_ago,
-                    AiRequests.has_audio == False
-                )
-                week_result = await session.execute(week_query)
-                week_row = week_result.first()
-
-                week_stats = {
-                    'total': week_row.total or 0,
-                    'with_photo': week_row.with_photo or 0,
-                    'with_files': week_row.with_files or 0
-                }
-
-                # 3) За последний месяц (30 дней, без аудио)
-                month_query = select(
-                    func.count(AiRequests.id).label('total'),
-                    func.sum(case((AiRequests.has_photo == True, 1), else_=0)).label('with_photo'),
-                    func.sum(case((AiRequests.has_files == True, 1), else_=0)).label('with_files'),
-                ).where(
-                    AiRequests.creation_date >= month_ago,
-                    AiRequests.has_audio == False
-                )
-                month_result = await session.execute(month_query)
-                month_row = month_result.first()
-
-                month_stats = {
-                    'total': month_row.total or 0,
-                    'with_photo': month_row.with_photo or 0,
-                    'with_files': month_row.with_files or 0
-                }
-
-                # 4) За последний квартал (90 дней, без аудио)
-                quarter_query = select(
-                    func.count(AiRequests.id).label('total'),
-                    func.sum(case((AiRequests.has_photo == True, 1), else_=0)).label('with_photo'),
-                    func.sum(case((AiRequests.has_files == True, 1), else_=0)).label('with_files'),
-                ).where(
-                    AiRequests.creation_date >= quarter_ago,
-                    AiRequests.has_audio == False
-                )
-                quarter_result = await session.execute(quarter_query)
-                quarter_row = quarter_result.first()
-
-                quarter_stats = {
-                    'total': quarter_row.total or 0,
-                    'with_photo': quarter_row.with_photo or 0,
-                    'with_files': quarter_row.with_files or 0
-                }
-
-                # 5) За всё время (без аудио)
-                all_time_query = select(
-                    func.count(AiRequests.id).label('total'),
-                    func.sum(case((AiRequests.has_photo == True, 1), else_=0)).label('with_photo'),
-                    func.sum(case((AiRequests.has_files == True, 1), else_=0)).label('with_files'),
-                ).where(
-                    AiRequests.has_audio == False
-                )
-                all_time_result = await session.execute(all_time_query)
-                all_time_row = all_time_result.first()
-
-                all_time_stats = {
-                    'total': all_time_row.total or 0,
-                    'with_photo': all_time_row.with_photo or 0,
-                    'with_files': all_time_row.with_files or 0
-                }
-
-                # Возвращаем итоговый словарь со статистикой
-                return {
-                    'day': day_stats,
-                    'week': week_stats,
-                    'month': month_stats,
-                    'quarter': quarter_stats,
-                    'all_time': all_time_stats
-                }
-
-
+                sql = delete(AiRequests).where(or_(AiRequests.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
