@@ -14,7 +14,6 @@ class Operations(BaseModel, CleanModel):
     url = Column(String, nullable=False)
 
     user_id = Column(BigInteger, nullable=False)
-    user: Mapped[User] = relationship("User", backref=__tablename__, cascade='all', lazy='subquery')
 
     @property
     def stats(self) -> str:
