@@ -12,8 +12,6 @@ async def delete_user(user_id: int):
 
     await exercises_user_repository.delete_exercises_by_user_id(user_id)
 
-    await mental_problems_repository.delete_problems_by_user_id(user_id)
-
     await payment_methods_repository.delete_payment_method_by_user_id(user_id)
 
     await pending_messages_repository.delete_pending_messages_by_user_id(user_id)
@@ -23,5 +21,7 @@ async def delete_user(user_id: int):
     await subscriptions_repository.delete_subscriptions_by_user_id(user_id)
 
     await user_timezone_repository.delete_user_timezone_by_user_id(user_id)
+
+    await mental_problems_repository.delete_problems_by_user_id(user_id)
 
     await users_repository.delete_user_by_id(user_id)
