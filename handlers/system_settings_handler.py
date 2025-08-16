@@ -69,26 +69,6 @@ async def send_system_settings(user_id: int):
                                 text="Здесь ты можешь <b>менять</b> <u>настройки</u>",
                                 reply_markup=keyboard.as_markup())
 
-@system_settings_router.callback_query(F.data.startswith("settings|account"), any_state)
-async def account_settings(call: CallbackQuery, state: FSMContext):
-    await state.clear()
-    user = await users_repository.get_user_by_user_id(call.from_user.id)
-
-    keyboard = InlineKeyboardBuilder()
-
-    #keyboard.row(
-    #    InlineKeyboardButton(text="Удалить аккаунт", callback_data="account|delete|0")
-    #)
-    keyboard.row(
-        InlineKeyboardButton(text="в Меню", callback_data="start_menu")
-    )
-    await call.message.answer(
-        text="Здесь можно менять свои данные",
-        reply_markup=keyboard.as_markup()
-    )
-
-    await call.message.delete()
-
 @system_settings_router.callback_query(F.data.startswith("settings|edit"), any_state)
 async def edit_profile(call: CallbackQuery, state: FSMContext):
     edit_type = call.data.split('|')[-1]
@@ -242,7 +222,7 @@ async def delete_account(call: CallbackQuery, state: FSMContext):
         await call.message.answer("Ты удалил всю информацию, теперь я ничего про тебя не помню.\nЧтобы начать общение, нажми /start")
     else:
         keyboard = InlineKeyboardBuilder()
-        keyboard.row(InlineKeyboardButton(text="Отмена", callback_data="settings|account"))
+        keyboard.row(InlineKeyboardButton(text="Отмена", callback_data="system_settings"))
         keyboard.row(InlineKeyboardButton(text="Да, удалить", callback_data="delete_account|1"))
         await call.message.answer(
             "Ты точно хочешь всё удалить? (это безвозвратно!)",

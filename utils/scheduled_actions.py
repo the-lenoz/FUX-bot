@@ -21,23 +21,33 @@ async def edit_activation_sub(main_bot: Bot):
     subs = await subscriptions_repository.select_all_active_subscriptions()
     now_date = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
     for sub in subs:
-        if now_date - sub.creation_date.replace(tzinfo=None) >= datetime.timedelta(hours=24 * sub.time_limit_subscription):
-            try:
-                await subscriptions_repository.deactivate_subscription(sub.id)
-                await send_subscription_end_message(sub.user_id)
-            except Exception as e:
-                print(e)
-                continue
-        elif (now_date - sub.creation_date >= datetime.timedelta(hours=24 * (sub.time_limit_subscription - 3))) and not sub.send_notification:
-            try:
-                await subscriptions_repository.update_send_notification_subscription(subscription_id=sub.id)
-                await main_bot.send_photo(
-                    caption="Твоя подписка закончится через 3 дня. Ты можешь продлить её:",
-                    photo=sub_description_photo_before,
-                    chat_id=sub.user_id,
-                    reply_markup=buy_sub_keyboard.as_markup())
-            except Exception as e:
-                print(f"\n\nВОЗНИКЛА ОШИБКА ОТПРАВКИ ПОЛЬЗОВАТЕЛЮ {sub.user_id}" + traceback.format_exc() + "\n\n")
+        if sub.recurrent:
+            if now_date - sub.creation_date.replace(tzinfo=None) >= datetime.timedelta(hours=24 * sub.time_limit_subscription):
+                try:
+
+                    await subscriptions_repository.deactivate_subscription(sub.id)
+                    await send_subscription_end_message(sub.user_id)
+                except Exception as e:
+                    print(e)
+                    continue
+        else:
+            if now_date - sub.creation_date.replace(tzinfo=None) >= datetime.timedelta(hours=24 * sub.time_limit_subscription):
+                try:
+                    await subscriptions_repository.deactivate_subscription(sub.id)
+                    await send_subscription_end_message(sub.user_id)
+                except Exception as e:
+                    print(e)
+                    continue
+            elif (now_date - sub.creation_date >= datetime.timedelta(hours=24 * (sub.time_limit_subscription - 3))) and not sub.send_notification:
+                try:
+                    await subscriptions_repository.update_send_notification_subscription(subscription_id=sub.id)
+                    await main_bot.send_photo(
+                        caption="Твоя подписка закончится через 3 дня. Ты можешь продлить её:",
+                        photo=sub_description_photo_before,
+                        chat_id=sub.user_id,
+                        reply_markup=buy_sub_keyboard.as_markup())
+                except Exception as e:
+                    print(f"\n\nВОЗНИКЛА ОШИБКА ОТПРАВКИ ПОЛЬЗОВАТЕЛЮ {sub.user_id}" + traceback.format_exc() + "\n\n")
 
 async def send_checkup():
     checkups = await checkup_repository.select_all_active_checkups()
