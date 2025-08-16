@@ -25,6 +25,7 @@ async def create_payment(email: str,
             },
             "capture": True,
             "description": description,
+            "save_payment_method": True,
             "receipt": {
                 "customer": {
                     "email": email
@@ -55,3 +56,10 @@ async def create_payment(email: str,
 async def check_payment(payment_id):
     payment = Payment.find_one(payment_id)
     return payment.status == 'succeeded'
+
+async def get_payment_method_id(payment_id):
+    payment = Payment.find_one(payment_id)
+    if payment.payment_method.saved:
+        return payment.payment_method.id
+    else:
+        return None

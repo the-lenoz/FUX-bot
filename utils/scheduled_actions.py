@@ -7,11 +7,10 @@ from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramForbiddenError
 
 import utils.checkups
-from data.keyboards import buy_sub_keyboard, notification_keyboard, main_keyboard
+from data.keyboards import buy_sub_keyboard, notification_keyboard
 from db.repository import subscriptions_repository, users_repository, checkup_repository, events_repository, \
     admin_repository, limits_repository, days_checkups_repository, user_timezone_repository, user_counters_repository
-from settings import payment_photo, how_are_you_photo, menu_photo, messages_dict
-
+from settings import how_are_you_photo, messages_dict, sub_description_photo_before
 from utils.gpt_distributor import user_request_handler
 from utils.messages_provider import send_subscription_end_message, send_main_menu
 from utils.power_mode import interval_skip_trigger
@@ -34,7 +33,7 @@ async def edit_activation_sub(main_bot: Bot):
                 await subscriptions_repository.update_send_notification_subscription(subscription_id=sub.id)
                 await main_bot.send_photo(
                     caption="Твоя подписка закончится через 3 дня. Ты можешь продлить её:",
-                    photo=payment_photo,
+                    photo=sub_description_photo_before,
                     chat_id=sub.user_id,
                     reply_markup=buy_sub_keyboard.as_markup())
             except Exception as e:

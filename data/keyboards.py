@@ -231,6 +231,7 @@ type_users_mailing_keyboard = InlineKeyboardBuilder()
 type_users_mailing_keyboard.row(InlineKeyboardButton(text='Всем пользователям', callback_data="type_users_mailing|all"))
 type_users_mailing_keyboard.row(InlineKeyboardButton(text='С подпиской', callback_data="type_users_mailing|sub"))
 type_users_mailing_keyboard.row(InlineKeyboardButton(text='Без подписки', callback_data="type_users_mailing|not_sub"))
+type_users_mailing_keyboard.row(InlineKeyboardButton(text='Пассивным (пользовался меньше 24ч)', callback_data="type_users_mailing|passive"))
 type_users_mailing_keyboard.row(InlineKeyboardButton(text="Отмена", callback_data="cancel"))
 
 
@@ -241,7 +242,7 @@ account_keyboard.row(InlineKeyboardButton(text="в Меню", callback_data="sta
 statistics_keyboard = InlineKeyboardBuilder()
 statistics_keyboard.row(InlineKeyboardButton(text="Количество новых пользователей", callback_data="statistics|users"))
 statistics_keyboard.row(InlineKeyboardButton(text="Количество пользователей с активной подпиской", callback_data="statistics|active_subs"))
-statistics_keyboard.row(InlineKeyboardButton(text="Количество запросов в GPT", callback_data="statistics|gpt"))
+statistics_keyboard.row(InlineKeyboardButton(text="Количество платящих пользователей", callback_data="statistics|paid_users"))
 
 
 notification_keyboard = InlineKeyboardBuilder()

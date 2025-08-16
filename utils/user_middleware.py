@@ -51,7 +51,8 @@ class EventLoggerMiddleware(BaseMiddleware):
         if user_id and event_type:
             user = await users_repository.get_user_by_user_id(user_id=user_id)
             if user is not None:
-                await trigger_power_mode(user_id)
+                if event_type.startswith("message") or event_type.startswith("callback"):
+                    await trigger_power_mode(user_id)
                 await self.events_repo.add_event(user_id=user_id, event_type=event_type)
 
         # Продолжаем обработку события

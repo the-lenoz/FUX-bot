@@ -57,7 +57,8 @@ async def go_missed_tracking(call: CallbackQuery):
     for checkup in user_checkups:
         active_days = await days_checkups_repository.get_active_day_checkups_by_checkup_id(checkup_id=checkup.id)
         for active_day in active_days:
-            if active_day and active_day.creation_date.date() != datetime.now(timezone.utc).date() and datetime.now(timezone(user_timezone_delta)).date() - active_day.creation_date.date() < timedelta(days=4):
+            if (active_day and active_day.creation_date.date() != datetime.now(timezone(user_timezone_delta)).date() and
+                    datetime.now(timezone(user_timezone_delta)).date() - active_day.creation_date.date() < timedelta(days=4)):
                 have_checkups = True
                 button_text = ("🤩Трекинг эмоций" if checkup.type_checkup == "emotions" else "🚀Трекинг продуктивности") +\
                               f" {active_day.creation_date.strftime('%d.%m.%Y')}"
