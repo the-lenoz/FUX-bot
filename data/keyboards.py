@@ -95,13 +95,16 @@ choice_bot_send.row(InlineKeyboardButton(text="Отмена", callback_data="can
 cancel_keyboard = InlineKeyboardBuilder()
 cancel_keyboard.row(InlineKeyboardButton(text="Отмена", callback_data="cancel"))
 
-miss_keyboard = InlineKeyboardBuilder()
-miss_keyboard.row(InlineKeyboardButton(text="Пропустить", callback_data="cancel"))
+skip_enter_name_keyboard = InlineKeyboardBuilder()
+skip_enter_name_keyboard.row(InlineKeyboardButton(text="Пропустить", callback_data="skip_enter_name"))
+
+skip_enter_promocode_keyboard = InlineKeyboardBuilder()
+skip_enter_promocode_keyboard.row(InlineKeyboardButton(text="Пропустить", callback_data="skip_enter_promo"))
 
 choice_gender_keyboard = InlineKeyboardBuilder()
 choice_gender_keyboard.row(InlineKeyboardButton(text="В женском роде♀️", callback_data="gender|female"))
 choice_gender_keyboard.row(InlineKeyboardButton(text="В мужском роде♂️", callback_data="gender|male"))
-choice_gender_keyboard.row(InlineKeyboardButton(text="Пропустить", callback_data="gender|No"))
+choice_gender_keyboard.row(InlineKeyboardButton(text="Пропустить", callback_data="gender|not given"))
 
 choice_gender_settings_keyboard = InlineKeyboardBuilder()
 choice_gender_settings_keyboard.row(InlineKeyboardButton(text="В женском роде♀️", callback_data="gender|female"))
