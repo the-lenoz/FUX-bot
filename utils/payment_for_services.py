@@ -65,12 +65,17 @@ async def get_payment_method_id(payment_id):
         return None
 
 async def charge_subscriber(payment_method_id: str, amount: int):
-    payment = Payment.create({
-        "amount": {
-            "value": "%.2f" % amount,
-            "currency": "RUB"
-        },
-        "capture": True,
-        "payment_method_id": payment_method_id,
-        "description": "Оплата подписки на ai ассистента по ментальному состоянию"
-    })
+    try:
+        payment = Payment.create({
+            "amount": {
+                "value": "%.2f" % amount,
+                "currency": "RUB"
+            },
+            "capture": True,
+            "payment_method_id": payment_method_id,
+            "description": "Оплата подписки на ai ассистента по ментальному состоянию"
+        })
+        return payment.id
+    except HTTPError as e:
+        print(e.response.text)
+
