@@ -7,6 +7,7 @@ from .exercises_user_repo import ExercisesUserRepository
 from .limits_repo import LimitsRepository
 from .mental_problems_repo import MentalProblemsRepository
 from .operations_repo import OperationRepository
+from .payment_methods_repo import PaymentMethodsRepository
 from .pending_messages_repo import PendingMessagesRepository
 from .promo_activations_repo import PromoActivationsRepository
 from .recommendations_repo import RecommendationsRepository
@@ -34,6 +35,7 @@ user_timezone_repository = UserTimezoneRepository()
 limits_repository = LimitsRepository()
 pending_messages_repository = PendingMessagesRepository()
 user_counters_repository = UserCountersRepository()
+payment_methods_repository = PaymentMethodsRepository()
 
 __all__ = ['users_repository',
            'admin_repository',
@@ -51,5 +53,6 @@ __all__ = ['users_repository',
            'user_timezone_repository',
            'limits_repository',
            'pending_messages_repository',
-           'user_counters_repository'
+           'user_counters_repository',
+           'payment_methods_repository'
           ]

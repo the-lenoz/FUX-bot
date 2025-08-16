@@ -52,16 +52,6 @@ class UserCountersRepository:
                 result = query.scalars().one_or_none()
                 return result if result else await self.create_user_counters(user_id)
 
-    async def used_free_recommendation(self, user_id: int):
-        async with self.session_maker() as session:
-            session: AsyncSession
-            async with session.begin():
-                sql = update(UserCounters).values({
-                    UserCounters.used_free_recommendation: True
-                }).where(or_(UserCounters.user_id == user_id))
-                await session.execute(sql)
-                await session.commit()
-
     async def used_exercises(self, user_id: int):
         user_counters = await self.get_user_counters(user_id)
         async with self.session_maker() as session:

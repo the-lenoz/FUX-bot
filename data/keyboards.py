@@ -95,13 +95,16 @@ choice_bot_send.row(InlineKeyboardButton(text="Отмена", callback_data="can
 cancel_keyboard = InlineKeyboardBuilder()
 cancel_keyboard.row(InlineKeyboardButton(text="Отмена", callback_data="cancel"))
 
-miss_keyboard = InlineKeyboardBuilder()
-miss_keyboard.row(InlineKeyboardButton(text="Пропустить", callback_data="cancel"))
+skip_enter_name_keyboard = InlineKeyboardBuilder()
+skip_enter_name_keyboard.row(InlineKeyboardButton(text="Пропустить", callback_data="skip_enter_name"))
+
+skip_enter_promocode_keyboard = InlineKeyboardBuilder()
+skip_enter_promocode_keyboard.row(InlineKeyboardButton(text="Пропустить", callback_data="skip_enter_promo"))
 
 choice_gender_keyboard = InlineKeyboardBuilder()
 choice_gender_keyboard.row(InlineKeyboardButton(text="В женском роде♀️", callback_data="gender|female"))
 choice_gender_keyboard.row(InlineKeyboardButton(text="В мужском роде♂️", callback_data="gender|male"))
-choice_gender_keyboard.row(InlineKeyboardButton(text="Пропустить", callback_data="gender|No"))
+choice_gender_keyboard.row(InlineKeyboardButton(text="Пропустить", callback_data="gender|not given"))
 
 choice_gender_settings_keyboard = InlineKeyboardBuilder()
 choice_gender_settings_keyboard.row(InlineKeyboardButton(text="В женском роде♀️", callback_data="gender|female"))
@@ -231,6 +234,7 @@ type_users_mailing_keyboard = InlineKeyboardBuilder()
 type_users_mailing_keyboard.row(InlineKeyboardButton(text='Всем пользователям', callback_data="type_users_mailing|all"))
 type_users_mailing_keyboard.row(InlineKeyboardButton(text='С подпиской', callback_data="type_users_mailing|sub"))
 type_users_mailing_keyboard.row(InlineKeyboardButton(text='Без подписки', callback_data="type_users_mailing|not_sub"))
+type_users_mailing_keyboard.row(InlineKeyboardButton(text='Пассивным (пользовался меньше 24ч)', callback_data="type_users_mailing|passive"))
 type_users_mailing_keyboard.row(InlineKeyboardButton(text="Отмена", callback_data="cancel"))
 
 
@@ -241,7 +245,7 @@ account_keyboard.row(InlineKeyboardButton(text="в Меню", callback_data="sta
 statistics_keyboard = InlineKeyboardBuilder()
 statistics_keyboard.row(InlineKeyboardButton(text="Количество новых пользователей", callback_data="statistics|users"))
 statistics_keyboard.row(InlineKeyboardButton(text="Количество пользователей с активной подпиской", callback_data="statistics|active_subs"))
-statistics_keyboard.row(InlineKeyboardButton(text="Количество запросов в GPT", callback_data="statistics|gpt"))
+statistics_keyboard.row(InlineKeyboardButton(text="Количество платящих пользователей", callback_data="statistics|paid_users"))
 
 
 notification_keyboard = InlineKeyboardBuilder()

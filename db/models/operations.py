@@ -13,8 +13,7 @@ class Operations(BaseModel, CleanModel):
     is_paid = Column(Boolean, default=False, nullable=False)
     url = Column(String, nullable=False)
 
-    user_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=False)
-    user: Mapped[User] = relationship("User", backref=__tablename__, cascade='all', lazy='subquery')
+    user_id = Column(BigInteger, nullable=False)
 
     @property
     def stats(self) -> str:

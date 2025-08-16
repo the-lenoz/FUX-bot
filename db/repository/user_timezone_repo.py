@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from sqlalchemy import select
+from sqlalchemy import select, delete, or_
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -36,3 +36,11 @@ class UserTimezoneRepository:
                 else:
                     await self.set_user_timezone_delta(user_id, DEFAULT_TIMEZONE)
                     return DEFAULT_TIMEZONE
+
+    async def delete_user_timezone_by_user_id(self, user_id: int):
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = delete(UserTimezone).where(or_(UserTimezone.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()

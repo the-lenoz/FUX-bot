@@ -1,6 +1,6 @@
 from typing import Sequence, Optional
 
-from sqlalchemy import select, or_, update
+from sqlalchemy import select, or_, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.engine import DatabaseEngine
@@ -76,6 +76,14 @@ class OperationRepository:
                 sql = update(Operations).values({
                     Operations.is_paid: True
                 }).where(or_(Operations.operation_id == operation_id))
+                await session.execute(sql)
+                await session.commit()
+
+    async def delete_operations_by_user_id(self, user_id: int):
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = delete(Operations).where(or_(Operations.user_id == user_id))
                 await session.execute(sql)
                 await session.commit()
 

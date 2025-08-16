@@ -8,7 +8,7 @@ class PromoActivations(BaseModel, CleanModel):
     __tablename__ = 'promo_activations'
 
     promo_id = Column(BigInteger, ForeignKey('referral_system.id'), primary_key=True, unique=False)
-    activate_user_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=False, unique=False)
+    activate_user_id = Column(BigInteger, nullable=False, unique=False)
 
     @property
     def stats(self) -> str:

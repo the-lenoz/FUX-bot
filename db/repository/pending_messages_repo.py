@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.expression import update
 
@@ -52,4 +52,12 @@ class PendingMessagesRepository:
                     }.items() if v is not False}).where(PendingMessages.user_id == user_id)
                     await session.execute(sql)
                     await session.commit()
+
+    async def delete_pending_messages_by_user_id(self, user_id: int):
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = delete(PendingMessages).where(or_(PendingMessages.user_id == user_id))
+                await session.execute(sql)
+                await session.commit()
 

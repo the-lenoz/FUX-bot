@@ -9,7 +9,7 @@ from telegramify_markdown import InterpreterChain, TextInterpreter, FileInterpre
 from bots import main_bot
 from data.keyboards import buy_sub_keyboard, main_keyboard, keyboard_for_pay
 from db.repository import users_repository, user_counters_repository, operation_repository
-from settings import payment_photo, messages_dict, menu_photo
+from settings import payment_photo, messages_dict, menu_photo, sub_description_photo_before
 from utils.gpt_client import LLMProvider, BASIC_MODEL, ADVANCED_MODEL
 from utils.payment_for_services import create_payment
 from utils.prompts import TRACKING_REPORT_COMMENT_PROMPT
@@ -108,7 +108,7 @@ async def send_subscription_end_message(user_id: int):
                 f"5. <i>Получил <b>{user_counters.used_exercises}</b> {exercises_str} для самопомощи</i>\n\n"
                 "Надеюсь, я был для тебя полезен!\n"
                 "Ты всегда можешь продлить подписку, если захочешь",
-        photo=payment_photo,
+        photo=sub_description_photo_before,
         chat_id=user_id,
         reply_markup=buy_sub_keyboard.as_markup())
 

@@ -152,3 +152,8 @@ class CheckupRepository:
                     delete(Checkup).where(Checkup.id == checkup_id)
                 )
                 await session.commit()
+
+    async def delete_checkups_by_user_id(self, user_id: int):
+        checkups = await self.get_checkups_by_user_id(user_id)
+        for checkup in checkups:
+            await self.delete_checkup_by_checkup_id(checkup.id)
