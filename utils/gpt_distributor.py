@@ -22,7 +22,7 @@ from utils.photo_recommendation import generate_blurred_image_with_text
 from utils.prompts import RECOMMENDATION_PROMPT, \
     MENTAL_PROBLEM_ABSTRACT_PROMPT, EXERCISE_PROMPT_FORMAT, DIALOG_LATEST_MESSAGE_CHECKER_PROMPT, \
     DEFAULT_ASSISTANT_PROMPT_ADDON, get_assistant_system_prompt, DIALOG_CHECKER_PROMPT, MENTAL_PROBLEM_TITLE_PROMPT
-from utils.subscription import check_is_subscribed
+from utils.subscription import get_user_subscription
 from utils.user_properties import get_user_description
 from utils.user_request_types import UserRequest
 
@@ -43,7 +43,7 @@ class UserRequestHandler:
         if not self.AI_handler.thread_locks.get(request.user_id):
             self.AI_handler.thread_locks[request.user_id] = Lock()
         async with self.AI_handler.thread_locks[request.user_id]:
-            if await check_is_subscribed(request.user_id):
+            if await get_user_subscription(request.user_id):
                 await self.AI_handler.handle(request)
             else:
                 await asyncio.sleep(2)
@@ -188,7 +188,7 @@ class AIHandler:
     async def run_thread(self, user_id, save_answer: bool = True) -> str | None:
         if self.active_threads.get(user_id):
             input = self.active_threads[user_id].get_messages()
-            if await check_is_subscribed(user_id):
+            if await get_user_subscription(user_id):
                 result = await self.advanced_model_provider.process_request(input)
             else:
                 result = await self.basic_model_provider.process_request(input)
@@ -331,7 +331,7 @@ class PsyHandler(AIHandler):
             await main_bot.send_message(request.user_id, messages_dict["recommendation_command_reminder_text"])
         if (self.messages_count[request.user_id] + 1 in self.VOICE_NOTIFICATION_COUNT
             and user_counters.dialogs_count + 1 in self.DIALOG_NOTIFICATION_COUNT
-            and await check_is_subscribed(request.user_id)):
+            and await get_user_subscription(request.user_id)):
             await main_bot.send_message(request.user_id, messages_dict["voice_message_reminder_text"])
         await super().handle(request)
 
@@ -379,7 +379,7 @@ class PsyHandler(AIHandler):
                 await user_counters_repository.user_got_recommendation(user_id)
 
                 user = await users_repository.get_user_by_user_id(user_id)
-                is_subscribed = await check_is_subscribed(user_id)
+                is_subscribed = await get_user_subscription(user_id)
 
                 problem_id = await self.summarize_dialog_problem(user_id)
 
@@ -427,6 +427,12 @@ class PsyHandler(AIHandler):
 
 
                 await typing_message.delete()
+        else:
+            await typing_message.delete()
+            await main_bot.send_message(
+                user_id,
+                messages_dict["discuss_problem_for_recommendation_text"]
+            )
         if problem_id or from_notification:
             await self.exit(user_id, save=False)
 

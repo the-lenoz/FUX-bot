@@ -14,7 +14,7 @@ from data.keyboards import menu_keyboard, buy_sub_keyboard, discuss_problem_keyb
 from db.repository import limits_repository, user_counters_repository, mental_problems_repository
 from settings import exercises_photo, messages_dict
 from utils.gpt_distributor import user_request_handler
-from utils.subscription import check_is_subscribed
+from utils.subscription import get_user_subscription
 
 exercises_router = Router()
 
@@ -82,7 +82,7 @@ async def send_exercise(call: CallbackQuery, bot: Bot, problem_id: int):
     user_id = call.from_user.id
 
     limits = await limits_repository.get_user_limits(user_id)
-    if limits.exercises_remaining or await check_is_subscribed(user_id):
+    if limits.exercises_remaining or await get_user_subscription(user_id):
         delete_message = await call.message.answer(
             "✍️Генерирую <b>упражнение</b>…")
         exercise = await user_request_handler.AI_handler.generate_exercise(user_id, problem_id)

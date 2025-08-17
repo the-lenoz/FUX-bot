@@ -18,7 +18,7 @@ from db.repository import days_checkups_repository, pending_messages_repository,
     user_counters_repository
 from settings import calendar_template_photo
 from utils.messages_provider import send_motivation_weekly_message, send_monthly_tracking_report_comment
-from utils.subscription import check_is_subscribed
+from utils.subscription import get_user_subscription
 
 # Цвета
 ORANGE_COLOR = (254, 110, 0)
@@ -367,7 +367,7 @@ async def send_weekly_checkup_report(user_id: int, last_date = None):
             graphic = generate_weekly_tracking_report(emotion_data=checkups_report,
                                                       dates=["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"],
                                                       checkup_type=checkup_type)
-            if user_counters.received_weekly_tracking_reports < 3 or await check_is_subscribed(user_id):
+            if user_counters.received_weekly_tracking_reports < 3 or await get_user_subscription(user_id):
                 await main_bot.send_photo(
                     photo=BufferedInputFile(file=graphic, filename="graphic.png"),
                     chat_id=user_id,
@@ -409,6 +409,8 @@ async def send_weekly_checkup_report(user_id: int, last_date = None):
 async def send_monthly_checkup_report(user_id: int, last_date = None):
     last_date = last_date or datetime.now(timezone.utc).replace(tzinfo=None)
 
+    user_counters = await user_counters_repository.get_user_counters(user_id)
+
     checkup_type: Literal["emotions", "productivity"]
     for checkup_type in ("emotions", "productivity"):
         try:
@@ -431,7 +433,7 @@ async def send_monthly_checkup_report(user_id: int, last_date = None):
                 graphic = generate_tracking_calendar(year=last_date.year, month=last_date.month,
                                                      data=checkups_report,
                                                     checkup_type=checkup_type)
-                if await check_is_subscribed(user_id):
+                if not user_counters.received_monthly_tracking_reports or await get_user_subscription(user_id):
                     await main_bot.send_photo(
                         photo=BufferedInputFile(file=graphic, filename="graphic.png"),
                         chat_id=user_id,

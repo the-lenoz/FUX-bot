@@ -22,6 +22,14 @@ MAX_DAYS_FREEZE = 3
 
 DEFAULT_TIMEZONE = timedelta(hours=3)
 
+
+SUBSCRIPTION_PLANS = {
+    7: 249,
+    30: 490,
+    90: 990
+}
+
+
 with open("messages.json") as messages_file:
     messages_dict = json.load(messages_file)
 

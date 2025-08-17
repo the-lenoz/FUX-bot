@@ -4,11 +4,11 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils.deep_linking import create_start_link
 
-from data.keyboards import referral_keyboard, menu_keyboard, buy_sub_keyboard, get_rec_keyboard, generate_sub_keyboard
+from data.keyboards import referral_keyboard, menu_keyboard, generate_gift_keyboard
 from db.repository import referral_system_repository
 from settings import messages_dict
-from utils.state_models import InputMessage
 from utils.generate_promo import generate_single_promo_code
+from utils.state_models import InputMessage
 
 referral_router = Router()
 
@@ -57,7 +57,7 @@ async def enter_promo_code_message(call: CallbackQuery, state: FSMContext):
 async def enter_promo_code_message(call: CallbackQuery, state: FSMContext):
     await call.message.answer(
         text="Выбери, что подаришь другу!",
-        reply_markup=generate_sub_keyboard("gift").as_markup()
+        reply_markup=generate_gift_keyboard().as_markup()
     )
     await call.message.delete()
 

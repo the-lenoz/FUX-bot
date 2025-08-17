@@ -5,7 +5,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from db.repository import checkup_repository, days_checkups_repository, subscriptions_repository, users_repository, \
     user_timezone_repository, user_counters_repository
-from settings import emoji_dict, speed_dict, table_names
+from settings import emoji_dict, speed_dict, table_names, SUBSCRIPTION_PLANS
 from utils.checkups_sent import sent_today
 
 admin_kb = [
@@ -156,21 +156,44 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
     keyboard.row(InlineKeyboardButton(text=sub_button_text, callback_data="sub_management"))
     return keyboard
 
-
-def generate_sub_keyboard(mode_type: str | None = None):
+def generate_gift_keyboard():
     subscriptions_keyboard = InlineKeyboardBuilder()
-    subscriptions_keyboard.row(InlineKeyboardButton(text="249р/неделя", callback_data=f"choice_sub|7|249.00|{mode_type}"))
-    subscriptions_keyboard.row(InlineKeyboardButton(text="490р/месяц", callback_data=f"choice_sub|30|490.00|{mode_type}"))
-    subscriptions_keyboard.row(InlineKeyboardButton(text="990р/3 месяца", callback_data=f"choice_sub|90|990.00|{mode_type}"))
+    subscriptions_keyboard.row(
+        InlineKeyboardButton(text=f"{SUBSCRIPTION_PLANS[7]}р/неделя", callback_data=f"choice_sub|7|gift"))
+    subscriptions_keyboard.row(
+        InlineKeyboardButton(text=f"{SUBSCRIPTION_PLANS[30]}р/месяц", callback_data=f"choice_sub|30|gift"))
+    subscriptions_keyboard.row(
+        InlineKeyboardButton(text=f"{SUBSCRIPTION_PLANS[90]}р/3 месяца", callback_data=f"choice_sub|90|gift"))
     subscriptions_keyboard.row(menu_button)
     return subscriptions_keyboard
 
-def get_rec_keyboard(mode_type: str):
-    keyboard = InlineKeyboardBuilder()
+def generate_sub_keyboard():
+    subscriptions_keyboard = InlineKeyboardBuilder()
+    subscriptions_keyboard.row(
+        InlineKeyboardButton(text=f"{SUBSCRIPTION_PLANS[7]}р/неделя", callback_data=f"choice_sub|7|"))
+    subscriptions_keyboard.row(
+        InlineKeyboardButton(text=f"{SUBSCRIPTION_PLANS[30]}р/месяц", callback_data=f"choice_sub|30|"))
+    subscriptions_keyboard.row(
+        InlineKeyboardButton(text=f"{SUBSCRIPTION_PLANS[90]}р/3 месяца", callback_data=f"choice_sub|90|"))
+    subscriptions_keyboard.row(menu_button)
+    return subscriptions_keyboard
 
-    keyboard.row(InlineKeyboardButton(text="🐿 ПОДПИСКА", callback_data=f"subscribe|{mode_type}"))
-    keyboard.row(menu_button)
-    return keyboard
+def generate_change_plan_keyboard(current_plan: int):
+    subscriptions_keyboard = InlineKeyboardBuilder()
+    if current_plan != 7:
+        subscriptions_keyboard.row(
+            InlineKeyboardButton(text=f"{SUBSCRIPTION_PLANS[7]}р/неделя", callback_data=f"choice_sub|7|gift"))
+    if current_plan != 30:
+        subscriptions_keyboard.row(
+            InlineKeyboardButton(text=f"{SUBSCRIPTION_PLANS[30]}р/месяц", callback_data=f"choice_sub|30|gift"))
+    if current_plan != 90:
+        subscriptions_keyboard.row(
+            InlineKeyboardButton(text=f"{SUBSCRIPTION_PLANS[90]}р/3 месяца", callback_data=f"choice_sub|90|gift"))
+    subscriptions_keyboard.row(
+        InlineKeyboardButton(text="❌ Отменить подписку", callback_data="cancel_subscription|0")
+    )
+    subscriptions_keyboard.row(menu_button)
+    return subscriptions_keyboard
 
 buy_sub_keyboard = InlineKeyboardBuilder()
 buy_sub_keyboard.row(InlineKeyboardButton(text="🐿 ПОДПИСКА", callback_data=f"subscribe"))
@@ -243,9 +266,9 @@ account_keyboard.row(InlineKeyboardButton(text="Настройки", callback_da
 account_keyboard.row(InlineKeyboardButton(text="в Меню", callback_data="start_menu"))
 
 statistics_keyboard = InlineKeyboardBuilder()
-statistics_keyboard.row(InlineKeyboardButton(text="Количество новых пользователей", callback_data="statistics|users"))
-statistics_keyboard.row(InlineKeyboardButton(text="Количество пользователей с активной подпиской", callback_data="statistics|active_subs"))
-statistics_keyboard.row(InlineKeyboardButton(text="Количество платящих пользователей", callback_data="statistics|paid_users"))
+statistics_keyboard.row(InlineKeyboardButton(text="Новые Users", callback_data="statistics|users"))
+statistics_keyboard.row(InlineKeyboardButton(text="Users с подпиской (any)", callback_data="statistics|active_subs"))
+statistics_keyboard.row(InlineKeyboardButton(text="Users (who pays) 💰", callback_data="statistics|paid_users"))
 
 
 notification_keyboard = InlineKeyboardBuilder()
