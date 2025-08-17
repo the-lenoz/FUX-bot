@@ -427,6 +427,11 @@ class PsyHandler(AIHandler):
 
 
                 await typing_message.delete()
+        else:
+            await main_bot.send_message(
+                user_id,
+                messages_dict["discuss_problem_for_recommendation_text"]
+            )
         if problem_id or from_notification:
             await self.exit(user_id, save=False)
 
