@@ -243,9 +243,9 @@ account_keyboard.row(InlineKeyboardButton(text="Настройки", callback_da
 account_keyboard.row(InlineKeyboardButton(text="в Меню", callback_data="start_menu"))
 
 statistics_keyboard = InlineKeyboardBuilder()
-statistics_keyboard.row(InlineKeyboardButton(text="Количество новых пользователей", callback_data="statistics|users"))
-statistics_keyboard.row(InlineKeyboardButton(text="Количество пользователей с активной подпиской", callback_data="statistics|active_subs"))
-statistics_keyboard.row(InlineKeyboardButton(text="Количество платящих пользователей", callback_data="statistics|paid_users"))
+statistics_keyboard.row(InlineKeyboardButton(text="Новые Users", callback_data="statistics|users"))
+statistics_keyboard.row(InlineKeyboardButton(text="Users с подпиской (any)", callback_data="statistics|active_subs"))
+statistics_keyboard.row(InlineKeyboardButton(text="Users (who pays) 💰", callback_data="statistics|paid_users"))
 
 
 notification_keyboard = InlineKeyboardBuilder()
