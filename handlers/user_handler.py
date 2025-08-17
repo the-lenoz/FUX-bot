@@ -20,7 +20,7 @@ from utils.messages_provider import send_main_menu
 from utils.paginator import MechanicsPaginator
 from utils.promocode import user_entered_promo_code
 from utils.state_models import InputMessage
-from utils.subscription import check_is_subscribed
+from utils.subscription import get_user_subscription
 
 user_router = Router()
 
@@ -44,7 +44,7 @@ async def start_use(call: CallbackQuery, state: FSMContext):
     await user_request_handler.AI_handler.exit(user_id)
     await call.message.delete()
     await asyncio.sleep(10)
-    if not await check_is_subscribed(user_id):
+    if not await get_user_subscription(user_id):
         await call.message.answer(
             messages_dict["free_account_message"]
         )

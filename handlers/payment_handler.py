@@ -9,7 +9,7 @@ from aiogram.utils.deep_linking import create_start_link
 from data.keyboards import cancel_keyboard, menu_keyboard, keyboard_for_pay
 from db.repository import users_repository, subscriptions_repository, operation_repository, payment_methods_repository, \
     referral_system_repository
-from settings import you_fooher_photo, sub_description_photo_after
+from settings import you_fooher_photo, sub_description_photo_after, SUBSCRIPTION_PLANS
 from utils.callbacks import subscribed_callback
 from utils.generate_promo import generate_single_promo_code
 from utils.messages_provider import send_invoice
@@ -23,16 +23,17 @@ payment_router = Router()
 @payment_router.callback_query(F.data.startswith("choice_sub"), any_state)
 async def get_choice_of_sub(call: types.CallbackQuery, state: FSMContext, bot: Bot):
     call_data = call.data.split("|")
-    days, amount, mode_type = call_data[1], call_data[2], call_data[3]
+    days, mode_type = call_data[1], call_data[2]
     user = await users_repository.get_user_by_user_id(call.from_user.id)
     if user.email is None:
         await state.set_state(InputMessage.enter_email)
-        await state.update_data(mode_type=mode_type, days=days, amount=amount)
+        await state.update_data(mode_type=mode_type, days=days)
         await call.message.answer("Для проведения оплаты нам понадобиться адрес электронной почты,"
                                   " чтобы направить чек о покупке 🧾\n\nПожалуйста, введи свой email 🍏",
                                   reply_markup=menu_keyboard.as_markup())
     else:
-        await send_invoice(user.user_id, amount, days, mode_type)
+        amount = SUBSCRIPTION_PLANS[days]
+        await send_invoice(user.user_id, days, mode_type, amount)
     await call.message.delete()
 
 

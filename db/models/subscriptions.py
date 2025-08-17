@@ -31,3 +31,6 @@ class Subscriptions(BaseModel, CleanModel):
 
     def __repr__(self):
         return self.__str__()
+
+    def __bool__(self):
+        return True
