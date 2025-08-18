@@ -83,6 +83,26 @@ class SubscriptionsRepository:
                 await session.execute(sql)
                 await session.commit()
 
+    async def update_recurrent(self, subscription_id: int, recurrent: bool = False):
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(Subscriptions).values({
+                    Subscriptions.recurrent: recurrent
+                }).where(or_(Subscriptions.id == subscription_id))
+                await session.execute(sql)
+                await session.commit()
+
+    async def update_plan(self, subscription_id: int, new_plan: int = 7):
+        async with self.session_maker() as session:
+            session: AsyncSession
+            async with session.begin():
+                sql = update(Subscriptions).values({
+                    Subscriptions.plan: new_plan
+                }).where(or_(Subscriptions.id == subscription_id))
+                await session.execute(sql)
+                await session.commit()
+
     async def update_send_notification_subscription(self, subscription_id: int):
         async with self.session_maker() as session:
             session: AsyncSession

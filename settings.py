@@ -18,8 +18,6 @@ business_connection_id = getenv("BUSINESS_CONNECTION_ID")
 openai_api_key = getenv("GPT_TOKEN")
 gemini_api_key = getenv("GEMINI_API_KEY")
 
-MAX_DAYS_FREEZE = 3
-
 DEFAULT_TIMEZONE = timedelta(hours=3)
 
 
@@ -28,6 +26,10 @@ SUBSCRIPTION_PLANS = {
     30: 490,
     90: 990
 }
+
+POWER_MODE_DAY_DISCOUNT = 0.015
+
+MAX_DAYS_FREEZE = 3
 
 
 with open("messages.json") as messages_file:

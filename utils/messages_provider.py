@@ -7,11 +7,11 @@ from aiogram.types import BufferedInputFile
 from telegramify_markdown import InterpreterChain, TextInterpreter, FileInterpreter, MermaidInterpreter, ContentTypes
 
 from bots import main_bot
-from data.keyboards import buy_sub_keyboard, main_keyboard, keyboard_for_pay, generate_sub_keyboard
-from db.models import Subscriptions
+from data.keyboards import buy_sub_keyboard, main_keyboard, keyboard_for_pay, generate_sub_keyboard, \
+    generate_change_plan_keyboard
 from db.repository import users_repository, user_counters_repository, operation_repository
-from settings import payment_photo, messages_dict, menu_photo, sub_description_photo_before, premium_sub_photo
-from utils.gpt_client import LLMProvider, BASIC_MODEL, ADVANCED_MODEL
+from settings import messages_dict, menu_photo, sub_description_photo_before, premium_sub_photo
+from utils.gpt_client import LLMProvider, ADVANCED_MODEL
 from utils.payment_for_services import create_payment
 from utils.prompts import TRACKING_REPORT_COMMENT_PROMPT
 from utils.subscription import get_user_subscription
@@ -203,16 +203,16 @@ async def send_subscription_management_menu(user_id: int):
     if bool(sub):
         if sub.recurrent:
             await main_bot.send_photo(user_id,
-                                      caption=messages_dict["your_sub_photo_description"],
+                                      caption=messages_dict["your_paid_sub_photo_description"],
                                       photo=premium_sub_photo,
-                                      reply_markup=generate_sub_keyboard().as_markup())
+                                      reply_markup=(await generate_change_plan_keyboard(user_id, sub.plan)).as_markup())
         else:
             await main_bot.send_photo(user_id,
-                                  caption=messages_dict["your_sub_photo_description"],
+                                  caption=messages_dict["your_free_sub_photo_description"],
                                   photo=premium_sub_photo,
-                                  reply_markup=generate_sub_keyboard().as_markup())
+                                  reply_markup=(await generate_sub_keyboard(user_id)).as_markup())
     else:
         await main_bot.send_photo(user_id,
                                   caption=messages_dict["buy_sub_photo_description"],
                                   photo=premium_sub_photo,
-                                  reply_markup=generate_sub_keyboard().as_markup())
+                                  reply_markup=(await generate_sub_keyboard(user_id)).as_markup())

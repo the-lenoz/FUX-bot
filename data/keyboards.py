@@ -7,15 +7,16 @@ from db.repository import checkup_repository, days_checkups_repository, subscrip
     user_timezone_repository, user_counters_repository
 from settings import emoji_dict, speed_dict, table_names, SUBSCRIPTION_PLANS
 from utils.checkups_sent import sent_today
+from utils.price_provider import get_user_price_string
 
 admin_kb = [
-        [KeyboardButton(text='Статистика')],
-        [KeyboardButton(text='Выгрузка таблиц')],
-        [KeyboardButton(text="Сделать рассылку")],
-        [KeyboardButton(text="Добавить / удалить админа")],
-        [KeyboardButton(text="Управление подписками")],
-        [KeyboardButton(text="Сгенерировать промокод")]
-    ]
+    [KeyboardButton(text='Статистика')],
+    [KeyboardButton(text='Выгрузка таблиц')],
+    [KeyboardButton(text="Сделать рассылку")],
+    [KeyboardButton(text="Добавить / удалить админа")],
+    [KeyboardButton(text="Управление подписками")],
+    [KeyboardButton(text="Сгенерировать промокод")]
+]
 admin_keyboard = ReplyKeyboardMarkup(keyboard=admin_kb, resize_keyboard=True)
 
 menu_button = InlineKeyboardButton(text="в Меню", callback_data="start_menu")
@@ -27,10 +28,9 @@ edit_delete_notification_keyboard.row(InlineKeyboardButton(text="Отключи�
                                                            callback_data="delete_notification"))
 edit_delete_notification_keyboard.row(InlineKeyboardButton(text="Отмена", callback_data="cancel"))
 
-
 edit_activate_notification_keyboard = InlineKeyboardBuilder()
 edit_activate_notification_keyboard.row(InlineKeyboardButton(text="Включить автоматическую отправку отчета",
-                                                           callback_data="activate_notification"))
+                                                             callback_data="activate_notification"))
 edit_activate_notification_keyboard.row(InlineKeyboardButton(text="в Меню", callback_data="start_menu"))
 
 referral_keyboard = InlineKeyboardBuilder()
@@ -38,7 +38,6 @@ referral_keyboard.row(InlineKeyboardButton(text="Ввести промокод",
 referral_keyboard.row(InlineKeyboardButton(text="Выпустить промокод", callback_data="create_promo_code"))
 referral_keyboard.row(InlineKeyboardButton(text="Подарить подписку", callback_data="buy_gift"))
 referral_keyboard.row(menu_button)
-
 
 price_keyboard = InlineKeyboardBuilder()
 price_keyboard.row(InlineKeyboardButton(text="249р/Неделя", callback_data="week"))
@@ -58,7 +57,6 @@ next_politic_keyboard.row(InlineKeyboardButton(text="Далее", callback_data=
 have_promo_keyboard = InlineKeyboardBuilder()
 have_promo_keyboard.row(InlineKeyboardButton(text="Да", callback_data="have_promo|yes"))
 have_promo_keyboard.row(InlineKeyboardButton(text="Нет", callback_data="have_promo|no"))
-
 
 add_delete_admin = InlineKeyboardBuilder()
 add_delete_admin.row(InlineKeyboardButton(text="Добавить админа", callback_data="add_admin"))
@@ -84,7 +82,8 @@ settings_cancel_keyboard.row(InlineKeyboardButton(text="Отмена", callback_
 choice_bot_stat = InlineKeyboardBuilder()
 choice_bot_stat.row(InlineKeyboardButton(text="Количество новых пользователей", callback_data="statistic|new_users"))
 choice_bot_stat.row(InlineKeyboardButton(text="Количество всех запросов в GPT", callback_data="statistic|ai_requests"))
-choice_bot_stat.row(InlineKeyboardButton(text="Количество запросов с фото в GPT", callback_data="statistic|photo_ai_requests"))
+choice_bot_stat.row(
+    InlineKeyboardButton(text="Количество запросов с фото в GPT", callback_data="statistic|photo_ai_requests"))
 choice_bot_stat.row(InlineKeyboardButton(text="Количество операций по оплате", callback_data="statistic|operations"))
 choice_bot_stat.row(InlineKeyboardButton(text="Отмена", callback_data="cancel"))
 
@@ -111,7 +110,6 @@ choice_gender_settings_keyboard.row(InlineKeyboardButton(text="В женском
 choice_gender_settings_keyboard.row(InlineKeyboardButton(text="В мужском роде♂️", callback_data="gender|male"))
 choice_gender_settings_keyboard.row(InlineKeyboardButton(text="Отменить", callback_data="system_settings"))
 
-
 exercises_keyboard = InlineKeyboardBuilder()
 exercises_keyboard.row(InlineKeyboardButton(text="Упражнения", callback_data="choose_exercise_problem"))
 exercises_keyboard.row(menu_button)
@@ -130,7 +128,8 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
             if active_day.creation_date.date() == datetime.now(timezone(user_timezone_delta)).date():
                 if not await sent_today(checkup.id):
                     today_tracking = True
-            elif datetime.now(timezone(user_timezone_delta)).date() - active_day.creation_date.date() < timedelta(days=4):
+            elif datetime.now(timezone(user_timezone_delta)).date() - active_day.creation_date.date() < timedelta(
+                    days=4):
                 missed_tracking = True
 
         if datetime.now(timezone.utc).time() < checkup.time_checkup and not await sent_today(checkup.id):
@@ -152,48 +151,59 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
     else:
         end_date = user_sub.creation_date + timedelta(days=user_sub.time_limit_subscription)
         sub_button_text = (f"🐿 МОЯ ПОДПИСКА (до"
-                f" {end_date.strftime('%d.%m.%y')})")
+                           f" {end_date.strftime('%d.%m.%y')})")
     keyboard.row(InlineKeyboardButton(text=sub_button_text, callback_data="sub_management"))
     return keyboard
 
-def generate_gift_keyboard():
+
+async def generate_gift_keyboard(user_id: int):
     subscriptions_keyboard = InlineKeyboardBuilder()
     subscriptions_keyboard.row(
-        InlineKeyboardButton(text=f"{SUBSCRIPTION_PLANS[7]}р/неделя", callback_data=f"choice_sub|7|gift"))
+        InlineKeyboardButton(text=f"{await get_user_price_string(user_id, 7)}/неделя",
+                             callback_data=f"choice_sub|7|gift"))
     subscriptions_keyboard.row(
-        InlineKeyboardButton(text=f"{SUBSCRIPTION_PLANS[30]}р/месяц", callback_data=f"choice_sub|30|gift"))
+        InlineKeyboardButton(text=f"{await get_user_price_string(user_id, 7)}/месяц",
+                             callback_data=f"choice_sub|30|gift"))
     subscriptions_keyboard.row(
-        InlineKeyboardButton(text=f"{SUBSCRIPTION_PLANS[90]}р/3 месяца", callback_data=f"choice_sub|90|gift"))
+        InlineKeyboardButton(text=f"{await get_user_price_string(user_id, 7)}/3 месяца",
+                             callback_data=f"choice_sub|90|gift"))
     subscriptions_keyboard.row(menu_button)
     return subscriptions_keyboard
 
-def generate_sub_keyboard():
+
+async def generate_sub_keyboard(user_id: int):
     subscriptions_keyboard = InlineKeyboardBuilder()
     subscriptions_keyboard.row(
-        InlineKeyboardButton(text=f"{SUBSCRIPTION_PLANS[7]}р/неделя", callback_data=f"choice_sub|7|"))
+        InlineKeyboardButton(text=f"{await get_user_price_string(user_id, 7)}/неделя", callback_data=f"choice_sub|7|"))
     subscriptions_keyboard.row(
-        InlineKeyboardButton(text=f"{SUBSCRIPTION_PLANS[30]}р/месяц", callback_data=f"choice_sub|30|"))
+        InlineKeyboardButton(text=f"{await get_user_price_string(user_id, 30)}/месяц", callback_data=f"choice_sub|30|"))
     subscriptions_keyboard.row(
-        InlineKeyboardButton(text=f"{SUBSCRIPTION_PLANS[90]}р/3 месяца", callback_data=f"choice_sub|90|"))
+        InlineKeyboardButton(text=f"{await get_user_price_string(user_id, 90)}/3 месяца",
+                             callback_data=f"choice_sub|90|"))
     subscriptions_keyboard.row(menu_button)
     return subscriptions_keyboard
 
-def generate_change_plan_keyboard(current_plan: int):
+
+async def generate_change_plan_keyboard(user_id: int, current_plan: int):
     subscriptions_keyboard = InlineKeyboardBuilder()
     if current_plan != 7:
         subscriptions_keyboard.row(
-            InlineKeyboardButton(text=f"{SUBSCRIPTION_PLANS[7]}р/неделя", callback_data=f"choice_sub|7|gift"))
+            InlineKeyboardButton(text=f"{await get_user_price_string(user_id, 7)}/неделя",
+                                 callback_data=f"choice_sub|7|gift"))
     if current_plan != 30:
         subscriptions_keyboard.row(
-            InlineKeyboardButton(text=f"{SUBSCRIPTION_PLANS[30]}р/месяц", callback_data=f"choice_sub|30|gift"))
+            InlineKeyboardButton(text=f"{await get_user_price_string(user_id, 30)}/месяц",
+                                 callback_data=f"choice_sub|30|gift"))
     if current_plan != 90:
         subscriptions_keyboard.row(
-            InlineKeyboardButton(text=f"{SUBSCRIPTION_PLANS[90]}р/3 месяца", callback_data=f"choice_sub|90|gift"))
+            InlineKeyboardButton(text=f"{await get_user_price_string(user_id, 90)}/3 месяца",
+                                 callback_data=f"choice_sub|90|gift"))
     subscriptions_keyboard.row(
         InlineKeyboardButton(text="❌ Отменить подписку", callback_data="cancel_subscription|0")
     )
     subscriptions_keyboard.row(menu_button)
     return subscriptions_keyboard
+
 
 buy_sub_keyboard = InlineKeyboardBuilder()
 buy_sub_keyboard.row(InlineKeyboardButton(text="🐿 ПОДПИСКА", callback_data=f"subscribe"))
@@ -219,24 +229,33 @@ checkup_type_keyboard.row(InlineKeyboardButton(text="🤩Трекинг эмоц
 checkup_type_keyboard.row(InlineKeyboardButton(text="🚀Трекинг продуктивности", callback_data="checkups|productivity"))
 checkup_type_keyboard.row(menu_button)
 
+
 def emotions_keyboard(check_data: str):
     keyboard = InlineKeyboardBuilder()
     for emoji in emoji_dict.keys():
-        keyboard.add(InlineKeyboardButton(text=emoji_dict.get(emoji), callback_data=f"enter_emoji|{emoji}|{check_data}"))
+        keyboard.add(
+            InlineKeyboardButton(text=emoji_dict.get(emoji), callback_data=f"enter_emoji|{emoji}|{check_data}"))
     keyboard.row(menu_button)
     return keyboard
+
 
 def productivity_keyboard(check_data: str):
     keyboard = InlineKeyboardBuilder()
     for emoji in speed_dict.keys():
-        keyboard.add(InlineKeyboardButton(text=speed_dict.get(emoji), callback_data=f"enter_emoji|{emoji}|{check_data}"))
+        keyboard.add(
+            InlineKeyboardButton(text=speed_dict.get(emoji), callback_data=f"enter_emoji|{emoji}|{check_data}"))
     keyboard.row(menu_button)
     return keyboard
 
+
 def get_ai_temperature_keyboard(user_ai_temperature: int):
     ai_temperature_keyboard = InlineKeyboardBuilder()
-    ai_temperature_keyboard.row(InlineKeyboardButton(text=f"Прямолинейная версия{' ✅' if user_ai_temperature == 0.6 else ''}", callback_data="ai_temperature|0.6"))
-    ai_temperature_keyboard.row(InlineKeyboardButton(text=f"Нейтральная версия{' ✅' if user_ai_temperature != 0.6 else ''}", callback_data="ai_temperature|1"))
+    ai_temperature_keyboard.row(
+        InlineKeyboardButton(text=f"Прямолинейная версия{' ✅' if user_ai_temperature == 0.6 else ''}",
+                             callback_data="ai_temperature|0.6"))
+    ai_temperature_keyboard.row(
+        InlineKeyboardButton(text=f"Нейтральная версия{' ✅' if user_ai_temperature != 0.6 else ''}",
+                             callback_data="ai_temperature|1"))
     ai_temperature_keyboard.row(menu_button)
     return ai_temperature_keyboard
 
@@ -252,14 +271,13 @@ for table_name in table_names:
         row_to_kb = 1
 db_tables_keyboard.row(InlineKeyboardButton(text="Отмена", callback_data="cancel"))
 
-
 type_users_mailing_keyboard = InlineKeyboardBuilder()
 type_users_mailing_keyboard.row(InlineKeyboardButton(text='Всем пользователям', callback_data="type_users_mailing|all"))
 type_users_mailing_keyboard.row(InlineKeyboardButton(text='С подпиской', callback_data="type_users_mailing|sub"))
 type_users_mailing_keyboard.row(InlineKeyboardButton(text='Без подписки', callback_data="type_users_mailing|not_sub"))
-type_users_mailing_keyboard.row(InlineKeyboardButton(text='Пассивным (пользовался меньше 24ч)', callback_data="type_users_mailing|passive"))
+type_users_mailing_keyboard.row(
+    InlineKeyboardButton(text='Пассивным (пользовался меньше 24ч)', callback_data="type_users_mailing|passive"))
 type_users_mailing_keyboard.row(InlineKeyboardButton(text="Отмена", callback_data="cancel"))
-
 
 account_keyboard = InlineKeyboardBuilder()
 account_keyboard.row(InlineKeyboardButton(text="Настройки", callback_data="system_settings"))
@@ -269,7 +287,6 @@ statistics_keyboard = InlineKeyboardBuilder()
 statistics_keyboard.row(InlineKeyboardButton(text="Новые Users", callback_data="statistics|users"))
 statistics_keyboard.row(InlineKeyboardButton(text="Users с подпиской (any)", callback_data="statistics|active_subs"))
 statistics_keyboard.row(InlineKeyboardButton(text="Users (who pays) 💰", callback_data="statistics|paid_users"))
-
 
 notification_keyboard = InlineKeyboardBuilder()
 notification_keyboard.row(
@@ -284,10 +301,12 @@ notification_keyboard.row(
 def delete_checkups_keyboard(type_checkup: str, checkup_id: int):
     keyboard = InlineKeyboardBuilder()
     if type_checkup == "emotions":
-        keyboard.row(InlineKeyboardButton(text="❌Приостановить трекинг", callback_data=f"delete_checkups|emotions|{checkup_id}"))
+        keyboard.row(
+            InlineKeyboardButton(text="❌Приостановить трекинг", callback_data=f"delete_checkups|emotions|{checkup_id}"))
         keyboard.row(InlineKeyboardButton(text="🚀Трекинг продуктивности", callback_data="checkups|productivity"))
     else:
-        keyboard.row(InlineKeyboardButton(text="❌Приостановить трекинг", callback_data=f"delete_checkups|productivity|{checkup_id}"))
+        keyboard.row(InlineKeyboardButton(text="❌Приостановить трекинг",
+                                          callback_data=f"delete_checkups|productivity|{checkup_id}"))
         keyboard.row(InlineKeyboardButton(text="🤩Трекинг эмоций", callback_data="checkups|emotions"))
     keyboard.row(menu_button)
     return keyboard
