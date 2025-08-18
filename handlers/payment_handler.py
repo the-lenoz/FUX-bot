@@ -26,7 +26,7 @@ async def get_choice_of_sub(call: types.CallbackQuery, state: FSMContext, bot: B
     call_data = call.data.split("|")
     days, mode_type = call_data[1], call_data[2]
     user = await users_repository.get_user_by_user_id(call.from_user.id)
-    amount = await get_price_for_user(user_id=user.user_id)
+    amount = await get_price_for_user(user_id=user.user_id, plan=int(days))
     if user.email is None:
         await state.set_state(InputMessage.enter_email)
         await state.update_data(mode_type=mode_type, days=days, amount=amount)
