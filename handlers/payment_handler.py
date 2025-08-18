@@ -95,14 +95,16 @@ async def check_payment_callback(message: types.CallbackQuery, state: FSMContext
                 await subscriptions_repository.add_subscription(user_id=user_id,
                                                                 time_limit_subscription=days,
                                                                 active=True,
-                                                                recurrent=True)
+                                                                recurrent=True,
+                                                                plan=days)
             else:
                 last_sub_date_end = user_sub.creation_date + datetime.timedelta(days=user_sub.time_limit_subscription)
                 difference = last_sub_date_end - date_now
                 await subscriptions_repository.deactivate_subscription(subscription_id=user_sub.id)
                 await subscriptions_repository.add_subscription(user_id=user_id,
                                                                 time_limit_subscription=days + difference.days,
-                                                                recurrent=True)
+                                                                recurrent=True,
+                                                                plan=days)
                 date_end = date_end + datetime.timedelta(days=user_sub.time_limit_subscription)
             await message.message.delete()
 

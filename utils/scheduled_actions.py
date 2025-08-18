@@ -5,15 +5,21 @@ from datetime import timezone
 from aiogram import Bot
 from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramForbiddenError
+from anyio import sleep
+from yookassa import Payment
+from yookassa.domain.response import PaymentResponse
 
 import utils.checkups
 from data.keyboards import notification_keyboard, generate_sub_keyboard
 from db.repository import subscriptions_repository, users_repository, checkup_repository, events_repository, \
-    admin_repository, limits_repository, days_checkups_repository, user_timezone_repository, user_counters_repository
+    admin_repository, limits_repository, days_checkups_repository, user_timezone_repository, user_counters_repository, \
+    payment_methods_repository
 from settings import how_are_you_photo, messages_dict, premium_sub_photo
 from utils.gpt_distributor import user_request_handler
 from utils.messages_provider import send_subscription_end_message, send_main_menu
+from utils.payment_for_services import charge_subscriber, get_payment
 from utils.power_mode import interval_skip_trigger
+from utils.price_provider import get_price_for_user
 from utils.statistics import generate_statistics_text
 
 
@@ -24,8 +30,33 @@ async def edit_activation_sub(main_bot: Bot):
         if sub.recurrent:
             if now_date - sub.creation_date.replace(tzinfo=None) >= datetime.timedelta(hours=24 * sub.time_limit_subscription):
                 try:
-                    #TODO - charge user
-                    pass
+                    date_now = datetime.datetime.now(datetime.timezone(await user_timezone_repository.get_user_timezone_delta(sub.user_id)))
+                    amount = await get_price_for_user(sub.user_id, sub.plan)
+                    payment_method_id = await payment_methods_repository.get_payment_method_by_user_id(sub.user_id)
+                    if payment_method_id:
+                        payment_id = await charge_subscriber(payment_method_id, amount)
+                        if payment_id:
+                            payment_response: PaymentResponse | None = None
+                            while not payment_response or payment_response.status not in ("succeeded", "canceled"):
+                                await sleep(2)
+                                payment_response = await get_payment(payment_id)
+                            if payment_response.status == "succeeded":
+                                last_sub_date_end = sub.creation_date + datetime.timedelta(days=sub.time_limit_subscription)
+                                difference = last_sub_date_end - date_now
+                                await subscriptions_repository.deactivate_subscription(subscription_id=sub.id)
+                                await subscriptions_repository.add_subscription(user_id=sub.user_id,
+                                                                                time_limit_subscription=sub.plan + difference.days,
+                                                                                recurrent=True,
+                                                                                plan=sub.plan)
+                                date_end = date_end + datetime.timedelta(days=sub.time_limit_subscription)
+                                await main_bot.send_message(
+                                    sub.user_id,
+                                    f"✅ Твоя подписка была <b>продлена</b> на <u>{sub.plan} дней</u>! Теперь ты с нами до <b>{date_end.strftime('%d.%m.%y')}</b> 💛"
+                                )
+                            else:
+                                await subscriptions_repository.deactivate_subscription(sub.id)
+                                pass # TODO canceled обработку
+
                 except Exception as e:
                     print(e)
                     continue
