@@ -26,14 +26,14 @@ async def get_choice_of_sub(call: types.CallbackQuery, state: FSMContext, bot: B
     call_data = call.data.split("|")
     days, mode_type = call_data[1], call_data[2]
     user = await users_repository.get_user_by_user_id(call.from_user.id)
+    amount = await get_price_for_user(user_id=user.user_id)
     if user.email is None:
         await state.set_state(InputMessage.enter_email)
-        await state.update_data(mode_type=mode_type, days=days)
+        await state.update_data(mode_type=mode_type, days=days, amount=amount)
         await call.message.answer("Для проведения оплаты нам понадобиться адрес электронной почты,"
                                   " чтобы направить чек о покупке 🧾\n\nПожалуйста, введи свой email 🍏",
                                   reply_markup=menu_keyboard.as_markup())
     else:
-        amount = await get_price_for_user(user_id=user.user_id)
         await send_invoice(user.user_id, days, mode_type, amount)
     await call.message.delete()
 
