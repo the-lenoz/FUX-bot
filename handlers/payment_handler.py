@@ -14,6 +14,7 @@ from utils.callbacks import subscribed_callback
 from utils.generate_promo import generate_single_promo_code
 from utils.messages_provider import send_invoice
 from utils.payment_for_services import check_payment, get_payment_method_id
+from utils.price_provider import get_price_for_user
 from utils.state_models import InputMessage
 from utils.validators import is_valid_email
 
@@ -32,7 +33,7 @@ async def get_choice_of_sub(call: types.CallbackQuery, state: FSMContext, bot: B
                                   " чтобы направить чек о покупке 🧾\n\nПожалуйста, введи свой email 🍏",
                                   reply_markup=menu_keyboard.as_markup())
     else:
-        amount = SUBSCRIPTION_PLANS[days]
+        amount = await get_price_for_user(user_id=user.user_id)
         await send_invoice(user.user_id, days, mode_type, amount)
     await call.message.delete()
 
