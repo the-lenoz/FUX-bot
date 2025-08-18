@@ -9,7 +9,7 @@ from aiogram.utils.deep_linking import create_start_link
 from data.keyboards import cancel_keyboard, menu_keyboard, keyboard_for_pay
 from db.repository import users_repository, subscriptions_repository, operation_repository, payment_methods_repository, \
     referral_system_repository
-from settings import you_fooher_photo, sub_description_photo_after, SUBSCRIPTION_PLANS
+from settings import you_fooher_photo, sub_description_photo_after
 from utils.callbacks import subscribed_callback
 from utils.generate_promo import generate_single_promo_code
 from utils.messages_provider import send_invoice
