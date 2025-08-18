@@ -9,11 +9,12 @@ from aiogram.utils.deep_linking import create_start_link
 from data.keyboards import cancel_keyboard, menu_keyboard, keyboard_for_pay
 from db.repository import users_repository, subscriptions_repository, operation_repository, payment_methods_repository, \
     referral_system_repository
-from settings import you_fooher_photo, sub_description_photo_after, SUBSCRIPTION_PLANS
+from settings import you_fooher_photo, sub_description_photo_after
 from utils.callbacks import subscribed_callback
 from utils.generate_promo import generate_single_promo_code
 from utils.messages_provider import send_invoice
 from utils.payment_for_services import check_payment, get_payment_method_id
+from utils.price_provider import get_price_for_user
 from utils.state_models import InputMessage
 from utils.validators import is_valid_email
 
@@ -25,14 +26,14 @@ async def get_choice_of_sub(call: types.CallbackQuery, state: FSMContext, bot: B
     call_data = call.data.split("|")
     days, mode_type = call_data[1], call_data[2]
     user = await users_repository.get_user_by_user_id(call.from_user.id)
+    amount = await get_price_for_user(user_id=user.user_id, plan=int(days))
     if user.email is None:
         await state.set_state(InputMessage.enter_email)
-        await state.update_data(mode_type=mode_type, days=days)
+        await state.update_data(mode_type=mode_type, days=days, amount=amount)
         await call.message.answer("Для проведения оплаты нам понадобиться адрес электронной почты,"
                                   " чтобы направить чек о покупке 🧾\n\nПожалуйста, введи свой email 🍏",
                                   reply_markup=menu_keyboard.as_markup())
     else:
-        amount = SUBSCRIPTION_PLANS[days]
         await send_invoice(user.user_id, days, mode_type, amount)
     await call.message.delete()
 

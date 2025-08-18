@@ -57,7 +57,7 @@ async def enter_promo_code_message(call: CallbackQuery, state: FSMContext):
 async def enter_promo_code_message(call: CallbackQuery, state: FSMContext):
     await call.message.answer(
         text="Выбери, что подаришь другу!",
-        reply_markup=generate_gift_keyboard().as_markup()
+        reply_markup=(await generate_gift_keyboard(call.from_user.id)).as_markup()
     )
     await call.message.delete()
 
