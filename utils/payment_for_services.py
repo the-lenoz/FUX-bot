@@ -68,7 +68,7 @@ async def get_payment_method_id(payment_id):
 
 
 
-async def charge_subscriber(payment_method_id: str, amount: int):
+async def charge_subscriber(payment_method_id: str, amount: int, email: str):
     try:
         payment = Payment.create({
             "amount": {
@@ -77,7 +77,26 @@ async def charge_subscriber(payment_method_id: str, amount: int):
             },
             "capture": True,
             "payment_method_id": payment_method_id,
-            "description": "Оплата подписки на ai ассистента по ментальному состоянию"
+            "description": "Оплата подписки на ai ассистента по ментальному состоянию",
+            "receipt": {
+                "customer": {
+                    "email": email
+                },
+                "items": [
+                    {
+                        "description": "Оплата подписки на ai ассистента по ментальному состоянию",
+                        "quantity": "1.00",
+                        "amount": {
+                            "value": amount,
+                            "currency": "RUB"
+                        },
+                        "vat_code": "4",
+                        "payment_subject": "service",
+                        "payment_mode": "full_payment"
+                    }
+
+                ]
+            }
         })
         return payment.id
     except HTTPError as e:
