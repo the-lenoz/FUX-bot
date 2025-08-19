@@ -15,7 +15,7 @@ from data.keyboards import next_politic_keyboard, have_promo_keyboard, age_keybo
     skip_enter_promocode_keyboard
 
 from db.repository import users_repository
-from utils.gpt_distributor import user_request_handler
+from handlers.standard_handler import user_request_handler
 from settings import photos_pages, menu_photo, messages_dict
 from utils.messages_provider import send_main_menu
 from utils.paginator import MechanicsPaginator
@@ -78,7 +78,7 @@ async def send_user_message(message: Message, command: CommandObject, state: FSM
                                  reply_markup=next_politic_keyboard.as_markup())
     elif not user.full_registration:
         if user.name is None:
-            await go_to_enter_initials(bot=bot, call=message.from_user.id, state=state)
+            await go_to_enter_initials(bot=bot, call=message, state=state)
         elif user.gender is None:
             await message.answer("В каком роде мне к тебе обращаться?",
                                  reply_markup=choice_gender_keyboard.as_markup())
@@ -99,8 +99,8 @@ async def confirm_politic(call: CallbackQuery):
     await users_repository.update_confirm_politic_by_user_id(user_id=call.from_user.id)
 
 
-async def go_to_enter_initials(call: CallbackQuery | int, state: FSMContext | None, bot: Bot):
-    state_data = await state.get_data() if state else {}
+async def go_to_enter_initials(call: CallbackQuery | Message, state: FSMContext, bot: Bot):
+    state_data = await state.get_data()
     message_delete = state_data.get("message_delete")
     if message_delete:
         try:
@@ -108,23 +108,19 @@ async def go_to_enter_initials(call: CallbackQuery | int, state: FSMContext | No
         except:
             print(traceback.format_exc())
     if type(call) is CallbackQuery:
-        if state:
-            await state.set_state(InputMessage.enter_initials)
+        await state.set_state(InputMessage.enter_initials)
         message_delete = await call.message.answer("Давай знакомиться!🐿️\n\nКак мне к тебе лучше обращаться?",
                                                    reply_markup=skip_enter_name_keyboard.as_markup())
-        if state:
-            await state.update_data(message_delete=message_delete.message_id)
+        await state.update_data(message_delete=message_delete.message_id)
         try:
             await call.message.delete()
         finally:
             return
     else:
-        if state:
-            await state.set_state(InputMessage.enter_initials)
-        message_delete = await main_bot.send_message(call, "Давай знакомиться!🐿️\n\nКак мне к тебе лучше обращаться?",
+        await state.set_state(InputMessage.enter_initials)
+        message_delete = await call.answer("Давай знакомиться!🐿️\n\nКак мне к тебе лучше обращаться?",
                                            reply_markup=skip_enter_name_keyboard.as_markup())
-        if state:
-            await state.update_data(message_delete=message_delete.message_id)
+        await state.update_data(message_delete=message_delete.message_id)
         await call.delete()
 
 
@@ -174,7 +170,7 @@ async def user_enter_promo_code(message: Message, state: FSMContext, bot: Bot):
     if from_referral:
         await state.clear()
     else:
-        await go_to_enter_initials(message.from_user.id, state, bot)
+        await go_to_enter_initials(message, state, bot)
 
 
 @user_router.callback_query(F.data == "skip_enter_name", InputMessage.enter_initials)

@@ -1,7 +1,7 @@
 from aiogram.fsm.context import FSMContext
 
 from bots import main_bot
-from data.keyboards import next_politic_keyboard, choice_gender_keyboard, age_keyboard
+from data.keyboards import next_politic_keyboard, choice_gender_keyboard, age_keyboard, have_promo_keyboard
 from db.repository import ai_requests_repository, checkup_repository, events_repository, exercises_user_repository, \
     mental_problems_repository, payment_methods_repository, recommendations_repository, \
     subscriptions_repository, user_timezone_repository, users_repository, pending_messages_repository
@@ -39,7 +39,7 @@ async def continue_registration(user_id: int):
                              disable_web_page_preview=True,
                              reply_markup=next_politic_keyboard.as_markup())
     elif not user.name:
-        await go_to_enter_initials(bot=main_bot, call=user_id, state=None)
+        await main_bot.send_message(user_id, "У тебя есть промокод?🥜", reply_markup=have_promo_keyboard.as_markup())
     elif not user.gender:
         await main_bot.send_message(user_id, "В каком роде мне к тебе обращаться?",
                             reply_markup=choice_gender_keyboard.as_markup())
