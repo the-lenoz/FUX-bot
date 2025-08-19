@@ -34,7 +34,7 @@ async def get_choice_of_sub(call: types.CallbackQuery, state: FSMContext, bot: B
                                   " чтобы направить чек о покупке 🧾\n\nПожалуйста, введи свой email 🍏",
                                   reply_markup=menu_keyboard.as_markup())
     else:
-        await send_invoice(user.user_id, days, mode_type, amount)
+        await send_invoice(user.user_id, amount, days, mode_type)
     await call.message.delete()
 
 

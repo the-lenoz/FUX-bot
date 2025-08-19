@@ -9,7 +9,7 @@ Configuration.account_id = getenv("SHOP_ID")
 Configuration.secret_key = getenv("SECRET_KEY")
 
 async def create_payment(email: str,
-                         amount: str,
+                         amount: int,
                          currency: str = "RUB",
                          description: str = "Оплата подписки на ai ассистента по ментальному состоянию",
                          return_url: str = "https://t.me/FuhMentalBot"):
