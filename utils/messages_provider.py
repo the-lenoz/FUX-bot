@@ -37,7 +37,7 @@ async def send_invoice(user_id: int, amount: str, days: str, mode_type: str):
                                       time_limit=int(days), mode_type=mode_type)
     await main_bot.send_message(
         user_id,
-        text=f'Оплати счёт в {amount[:-3]} рублей.\n\nПосле проведения платежа нажми на кнопку "Оплата произведена",'
+        text=f'Оплати счёт в {amount} рублей.\n\nПосле проведения платежа нажми на кнопку "Оплата произведена",'
              ' чтобы подтвердить платеж', reply_markup=keyboard.as_markup())
 
 async def send_subscription_end_message(user_id: int):

@@ -12,7 +12,7 @@ class SubscriptionsRepository:
         self.session_maker = DatabaseEngine().create_session()
 
     async def add_subscription(self, user_id: int, time_limit_subscription: int,
-                               active: bool = True, recurrent: bool = False):
+                               active: bool = True, recurrent: bool = False, plan: int = 7):
         """    user_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=False)
                 user: Mapped[Users] = relationship("User", backref=__tablename__, cascade='all', lazy='subquery')
                 start_subscription_date = Column(DateTime, nullable=False)
@@ -22,7 +22,7 @@ class SubscriptionsRepository:
             session: AsyncSession
             async with session.begin():
                 user = Subscriptions(user_id=user_id, time_limit_subscription=time_limit_subscription,
-                                     active=active, recurrent=recurrent)
+                                     active=active, recurrent=recurrent, plan=plan)
                 try:
                     session.add(user)
                     await session.commit()

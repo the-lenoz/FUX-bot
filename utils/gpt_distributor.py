@@ -1,7 +1,6 @@
 import asyncio
 import logging
 from asyncio import Lock
-from random import choice
 from typing import Dict
 
 import telegramify_markdown
@@ -16,6 +15,7 @@ from db.repository import users_repository, ai_requests_repository, mental_probl
     exercises_user_repository, recommendations_repository, limits_repository, pending_messages_repository, \
     user_counters_repository
 from settings import messages_dict
+from utils.account_manager import continue_registration
 from utils.documents import convert_to_pdf
 from utils.gpt_client import BASIC_MODEL, ADVANCED_MODEL, ModelChatThread, LLMProvider
 from utils.photo_recommendation import generate_blurred_image_with_text
@@ -34,6 +34,11 @@ class UserRequestHandler:
         self.AI_handler = PsyHandler()
 
     async def handle(self, request: UserRequest):
+        user = await users_repository.get_user_by_user_id(request.user_id)
+        if not user.full_registration or not user.confirm_politic:
+            await continue_registration(request.user_id)
+            return
+
         await user_counters_repository.user_sent_message(request.user_id)
 
         if request.file is not None and request.file.file_type == 'document':

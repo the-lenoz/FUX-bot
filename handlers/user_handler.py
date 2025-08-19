@@ -9,6 +9,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import any_state
 from aiogram.types import Message, CallbackQuery
 
+from bots import main_bot
 from data.keyboards import next_politic_keyboard, have_promo_keyboard, age_keyboard, \
     main_keyboard, choice_gender_keyboard, settings_cancel_keyboard, skip_enter_name_keyboard, \
     skip_enter_promocode_keyboard

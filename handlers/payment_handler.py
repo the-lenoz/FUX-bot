@@ -34,7 +34,7 @@ async def get_choice_of_sub(call: types.CallbackQuery, state: FSMContext, bot: B
                                   " чтобы направить чек о покупке 🧾\n\nПожалуйста, введи свой email 🍏",
                                   reply_markup=menu_keyboard.as_markup())
     else:
-        await send_invoice(user.user_id, days, mode_type, amount)
+        await send_invoice(user.user_id, amount, days, mode_type)
     await call.message.delete()
 
 
@@ -58,13 +58,13 @@ async def enter_user_email(message: types.Message, state: FSMContext, bot: Bot):
 
 
 @payment_router.callback_query(F.data.startswith("is_paid|"), any_state)
-async def check_payment_callback(message: types.CallbackQuery, state: FSMContext, bot: Bot):
-    data = message.data.split("|")
+async def check_payment_callback(call: types.CallbackQuery, state: FSMContext, bot: Bot):
+    data = call.data.split("|")
     operation_id = data[1]
     days = int(data[2])
     mode_type = data[3]
 
-    user_id = message.from_user.id
+    user_id = call.from_user.id
     operation = await operation_repository.get_operation_info_by_id(int(operation_id))
     payment_id = operation.operation_id
     if await check_payment(payment_id):
@@ -83,8 +83,8 @@ async def check_payment_callback(message: types.CallbackQuery, state: FSMContext
                                                        max_days=days,
                                                        max_activations=1,
                                                        type_promo="from_admin")
-            link = await create_start_link(message.bot, promo_code)
-            await message.answer(
+            link = await create_start_link(call.bot, promo_code)
+            await call.message.answer(
                 f"Отлично, этот промокод даёт подписку на {days} дней: <code>{promo_code}</code>. Твоему другу достаточно"
                 f" ввести этот промокод, либо нажать на ссылку: {link}, чтобы получить свои бонусы твой подарок!",
                 reply_markup=menu_keyboard.as_markup())
@@ -95,25 +95,29 @@ async def check_payment_callback(message: types.CallbackQuery, state: FSMContext
                 await subscriptions_repository.add_subscription(user_id=user_id,
                                                                 time_limit_subscription=days,
                                                                 active=True,
-                                                                recurrent=True)
+                                                                recurrent=True,
+                                                                plan=days)
+                formatted_date = date_end.strftime('%d.%m.%y, %H:%M')
+                await call.message.answer_photo(photo=you_fooher_photo)
+
+                await call.message.answer_photo(
+                    photo=sub_description_photo_after,
+                    caption=f"Поздравляю! Твоя подписка активна до {formatted_date} +GMT3",
+                    reply_markup=menu_keyboard.as_markup()
+                )
             else:
                 last_sub_date_end = user_sub.creation_date + datetime.timedelta(days=user_sub.time_limit_subscription)
                 difference = last_sub_date_end - date_now
                 await subscriptions_repository.deactivate_subscription(subscription_id=user_sub.id)
                 await subscriptions_repository.add_subscription(user_id=user_id,
                                                                 time_limit_subscription=days + difference.days,
-                                                                recurrent=True)
+                                                                recurrent=True,
+                                                                plan=days)
                 date_end = date_end + datetime.timedelta(days=user_sub.time_limit_subscription)
-            await message.message.delete()
-
-            formatted_date = date_end.strftime('%d.%m.%y, %H:%M')
-            await message.message.answer_photo(photo=you_fooher_photo)
-
-            await message.message.answer_photo(
-                photo=sub_description_photo_after,
-                caption=f"Поздравляю! Твоя подписка активна до {formatted_date} +GMT3",
-                reply_markup=menu_keyboard.as_markup()
-            )
+                await call.message.answer(
+                    f"✅ Твоя подписка была <b>продлена</b> на <u>{days} дней</u>! Теперь ты с нами до <b>{date_end.strftime('%d.%m.%y')}</b> 💛"
+                )
+            await call.message.delete()
             await subscribed_callback(user_id)
 
     else:
@@ -121,9 +125,9 @@ async def check_payment_callback(message: types.CallbackQuery, state: FSMContext
             payment = await operation_repository.get_operation_by_operation_id(payment_id)
             keyboard = await keyboard_for_pay(operation_id=operation_id, url=payment.url,
                                               time_limit=30, mode_type=mode_type)
-            await message.message.edit_text("Пока мы не видим, чтобы оплата была произведена( Погоди"
+            await call.message.edit_text("Пока мы не видим, чтобы оплата была произведена( Погоди"
                                             " еще немного времени и убедись,"
                                             " что ты действительно произвел оплату(",
-                                            reply_markup=keyboard.as_markup())
+                                         reply_markup=keyboard.as_markup())
         finally:
             return

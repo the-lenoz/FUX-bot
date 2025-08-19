@@ -9,7 +9,7 @@ Configuration.account_id = getenv("SHOP_ID")
 Configuration.secret_key = getenv("SECRET_KEY")
 
 async def create_payment(email: str,
-                         amount: str,
+                         amount: int,
                          currency: str = "RUB",
                          description: str = "Оплата подписки на ai ассистента по ментальному состоянию",
                          return_url: str = "https://t.me/FuhMentalBot"):
@@ -52,6 +52,8 @@ async def create_payment(email: str,
     except HTTPError as e:
         print(e.response.text)
 
+async def get_payment(payment_id):
+    return Payment.find_one(payment_id)
 
 async def check_payment(payment_id):
     payment = Payment.find_one(payment_id)
@@ -63,6 +65,8 @@ async def get_payment_method_id(payment_id):
         return payment.payment_method.id
     else:
         return None
+
+
 
 async def charge_subscriber(payment_method_id: str, amount: int):
     try:
