@@ -14,7 +14,7 @@ async def get_price_for_user(user_id: int, plan: int):
 
 async def get_user_price_string(user_id: int, plan: int):
     personal_price = await get_price_for_user(user_id, plan)
-    return f"{strike(str(SUBSCRIPTION_PLANS[plan]) + 'р')}  {personal_price}р"
+    return f"{strike(str(SUBSCRIPTION_PLANS[plan]) + 'р')}  {personal_price}р" if personal_price != SUBSCRIPTION_PLANS[plan] else str(personal_price) + "р"
 
 
 def calculate_discounted_price_multiplier(power_mode_days: int):
