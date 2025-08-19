@@ -8,7 +8,7 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 import utils.checkups
-from data.keyboards import checkup_type_keyboard, buy_sub_keyboard, menu_keyboard, menu_button, \
+from data.keyboards import generate_checkup_type_keyboard, buy_sub_keyboard, menu_keyboard, menu_button, \
     delete_checkups_keyboard
 from db.repository import users_repository, subscriptions_repository, checkup_repository, days_checkups_repository, \
     user_timezone_repository, user_counters_repository
@@ -129,7 +129,7 @@ async def start_checkup(call: CallbackQuery, state: FSMContext):
     user_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id=call.from_user.id)
     await call.message.answer_photo(photo=checkups_types_photo,
                                     caption=messages_dict["tracking_mechanic_text"] + (messages_dict["tracking_mechanic_start_text"] if not user_checkups else ''),
-                                    reply_markup=checkup_type_keyboard.as_markup())
+                                    reply_markup=(await generate_checkup_type_keyboard(call.from_user.id)).as_markup())
 
 
 @checkup_router.callback_query(F.data.startswith("checkups|"), any_state)

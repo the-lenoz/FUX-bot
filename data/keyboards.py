@@ -34,7 +34,7 @@ edit_activate_notification_keyboard.row(InlineKeyboardButton(text="Включи�
 edit_activate_notification_keyboard.row(InlineKeyboardButton(text="в Меню", callback_data="start_menu"))
 
 referral_keyboard = InlineKeyboardBuilder()
-referral_keyboard.row(InlineKeyboardButton(text="Ввести промокод", callback_data="enter_promo_code"))
+referral_keyboard.row(InlineKeyboardButton(text="✍️ Ввести промокод", callback_data="enter_promo_code"))
 referral_keyboard.row(InlineKeyboardButton(text="Выпустить промокод", callback_data="create_promo_code"))
 referral_keyboard.row(InlineKeyboardButton(text="Подарить подписку", callback_data="buy_gift"))
 referral_keyboard.row(menu_button)
@@ -223,12 +223,20 @@ def get_go_deeper_rec_keyboard(go_deeper_id: int):
     keyboard.row(InlineKeyboardButton(text="Получить рекомендации", callback_data=f"get_go_deeper_rec|{go_deeper_id}"))
     return keyboard
 
-
-checkup_type_keyboard = InlineKeyboardBuilder()
-checkup_type_keyboard.row(InlineKeyboardButton(text="🤩Трекинг эмоций", callback_data="checkups|emotions"))
-checkup_type_keyboard.row(InlineKeyboardButton(text="🚀Трекинг продуктивности", callback_data="checkups|productivity"))
-checkup_type_keyboard.row(menu_button)
-
+async def generate_checkup_type_keyboard(user_id: int):
+    user_active_trackings = await checkup_repository.get_active_checkups_by_user_id(user_id)
+    active_tracking_types = [tracking.type_checkup for tracking in user_active_trackings]
+    checkup_type_keyboard = InlineKeyboardBuilder()
+    checkup_type_keyboard.row(
+        InlineKeyboardButton(
+            text="🤩Трекинг эмоций" + (" ✅" if "emotions" in active_tracking_types else ""),
+            callback_data="checkups|emotions"))
+    checkup_type_keyboard.row(
+        InlineKeyboardButton(
+            text="🚀Трекинг продуктивности" + (" ✅" if "productivity" in active_tracking_types else ""),
+            callback_data="checkups|productivity"))
+    checkup_type_keyboard.row(menu_button)
+    return checkup_type_keyboard
 
 def emotions_keyboard(check_data: str):
     keyboard = InlineKeyboardBuilder()

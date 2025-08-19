@@ -196,7 +196,7 @@ async def reset_limits(main_bot: Bot):
     users = await users_repository.select_all_users()
     for user in users:
         user_timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id=user.user_id)
-        if datetime.datetime.now(timezone(user_timezone_delta)).weekday() == 1 and datetime.datetime.now(timezone(user_timezone_delta)).hour == 8:
+        if datetime.datetime.now(timezone(user_timezone_delta)).weekday() == 0 and datetime.datetime.now(timezone(user_timezone_delta)).hour == 8:
             await limits_repository.update_user_limits(
                 user_id=user.user_id,
                 exercises_remaining=2,
