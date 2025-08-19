@@ -1,11 +1,8 @@
-from aiogram.fsm.context import FSMContext
-
 from bots import main_bot
 from data.keyboards import next_politic_keyboard, choice_gender_keyboard, age_keyboard, have_promo_keyboard
 from db.repository import ai_requests_repository, checkup_repository, events_repository, exercises_user_repository, \
     mental_problems_repository, payment_methods_repository, recommendations_repository, \
     subscriptions_repository, user_timezone_repository, users_repository, pending_messages_repository
-from handlers.user_handler import go_to_enter_initials
 from settings import messages_dict
 
 
