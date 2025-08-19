@@ -1,6 +1,12 @@
+from aiogram.fsm.context import FSMContext
+
+from bots import main_bot
+from data.keyboards import next_politic_keyboard, choice_gender_keyboard, age_keyboard
 from db.repository import ai_requests_repository, checkup_repository, events_repository, exercises_user_repository, \
     mental_problems_repository, payment_methods_repository, recommendations_repository, \
     subscriptions_repository, user_timezone_repository, users_repository, pending_messages_repository
+from handlers.user_handler import go_to_enter_initials
+from settings import messages_dict
 
 
 async def delete_user(user_id: int):
@@ -25,3 +31,19 @@ async def delete_user(user_id: int):
     await mental_problems_repository.delete_problems_by_user_id(user_id)
 
     await users_repository.delete_user_by_id(user_id)
+
+async def continue_registration(user_id: int):
+    user = await users_repository.get_user_by_user_id(user_id)
+    if not user.confirm_politic:
+        await main_bot.send_message(user_id, messages_dict["user_agreement_message_text"],
+                             disable_web_page_preview=True,
+                             reply_markup=next_politic_keyboard.as_markup())
+    elif not user.name:
+        await go_to_enter_initials(bot=main_bot, call=user_id, state=None)
+    elif not user.gender:
+        await main_bot.send_message(user_id, "В каком роде мне к тебе обращаться?",
+                            reply_markup=choice_gender_keyboard.as_markup())
+    elif not user.age:
+        await main_bot.send_message(user_id,
+            "Какой возрастной диапазон тебе ближе?(Чтобы я мог лучше адаптироваться под твои запросы 🧡)",
+            reply_markup=age_keyboard.as_markup())
