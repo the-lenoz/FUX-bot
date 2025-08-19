@@ -35,12 +35,12 @@ async def continue_registration(user_id: int):
         await main_bot.send_message(user_id, messages_dict["user_agreement_message_text"],
                              disable_web_page_preview=True,
                              reply_markup=next_politic_keyboard.as_markup())
-    elif not user.name:
+    elif user.name is None:
         await main_bot.send_message(user_id, "У тебя есть промокод?🥜", reply_markup=have_promo_keyboard.as_markup())
-    elif not user.gender:
+    elif user.gender is None:
         await main_bot.send_message(user_id, "В каком роде мне к тебе обращаться?",
                             reply_markup=choice_gender_keyboard.as_markup())
-    elif not user.age:
+    elif user.age is None:
         await main_bot.send_message(user_id,
             "Какой возрастной диапазон тебе ближе?(Чтобы я мог лучше адаптироваться под твои запросы 🧡)",
             reply_markup=age_keyboard.as_markup())
