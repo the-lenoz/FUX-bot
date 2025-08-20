@@ -114,6 +114,9 @@ exercises_keyboard = InlineKeyboardBuilder()
 exercises_keyboard.row(InlineKeyboardButton(text="Упражнения", callback_data="choose_exercise_problem"))
 exercises_keyboard.row(menu_button)
 
+recommendation_keyboard = InlineKeyboardBuilder()
+recommendation_keyboard.row(InlineKeyboardButton(text="Получить рекомендацию", callback_data="recommendation"))
+
 
 async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
     keyboard = InlineKeyboardBuilder()
