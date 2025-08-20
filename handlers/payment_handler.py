@@ -12,7 +12,7 @@ from db.repository import users_repository, subscriptions_repository, operation_
 from settings import you_fooher_photo, sub_description_photo_after
 from utils.callbacks import subscribed_callback
 from utils.generate_promo import generate_single_promo_code
-from utils.messages_provider import send_invoice
+from utils.messages_provider import send_invoice, send_subscription_management_menu
 from utils.payment_for_services import check_payment, get_payment_method_id
 from utils.price_provider import get_price_for_user
 from utils.state_models import InputMessage
@@ -100,12 +100,7 @@ async def check_payment_callback(call: types.CallbackQuery, state: FSMContext, b
                 formatted_date = date_end.strftime('%d.%m.%y, %H:%M')
                 await call.message.answer_photo(photo=you_fooher_photo)
 
-                await call.message.answer_photo(
-                    photo=sub_description_photo_after,
-                    caption=f"Поздравляю! Твоя подписка активна до {formatted_date} +GMT3",
-                    reply_markup=menu_keyboard.as_markup()
-                )
-            else:
+                await send_subscription_management_menu(user_id)
                 last_sub_date_end = user_sub.creation_date + datetime.timedelta(days=user_sub.time_limit_subscription)
                 difference = last_sub_date_end - date_now
                 await subscriptions_repository.deactivate_subscription(subscription_id=user_sub.id)
