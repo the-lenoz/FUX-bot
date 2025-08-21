@@ -35,7 +35,7 @@ async def update_power_mode(user_id: int):
     user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id)
     keyboard = InlineKeyboardBuilder()
     keyboard.row(
-        InlineKeyboardButton(text="🐿 КУПИТЬ ПОДПИСКУ" if not user_sub else "🐿 ПОДПИСКА")
+        InlineKeyboardButton(text="🐿 КУПИТЬ ПОДПИСКУ" if not user_sub else "🐿 ПОДПИСКА", callback_data="subscribe")
     )
     if user.power_mode_days:
         await main_bot.send_message(
