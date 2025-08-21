@@ -31,7 +31,7 @@ async def delete_user(user_id: int):
 
 async def continue_registration(user_id: int):
     user = await users_repository.get_user_by_user_id(user_id)
-    if not user.confirm_politic:
+    if not user or not user.confirm_politic:
         await main_bot.send_message(user_id, messages_dict["user_agreement_message_text"],
                              disable_web_page_preview=True,
                              reply_markup=next_politic_keyboard.as_markup())

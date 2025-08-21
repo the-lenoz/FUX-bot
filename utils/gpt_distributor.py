@@ -35,7 +35,7 @@ class UserRequestHandler:
 
     async def handle(self, request: UserRequest):
         user = await users_repository.get_user_by_user_id(request.user_id)
-        if not user.full_registration or not user.confirm_politic:
+        if not user or user.full_registration or not user.confirm_politic:
             await continue_registration(request.user_id)
             return
 
