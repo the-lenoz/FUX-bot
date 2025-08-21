@@ -172,10 +172,14 @@ async def skip_enter_name(call: CallbackQuery, state: FSMContext):
     await call.message.delete()
 
 
-@user_router.message(F.text, InputMessage.enter_initials)
+@user_router.message(F.text, InputMessage.enter_initials) #TODO
 async def user_entered_initials(message: Message, state: FSMContext, bot: Bot):
     state_data = await state.get_data()
     message_delete = state_data.get("message_delete")
+    user = await users_repository.get_user_by_user_id(message.from_user.id)
+    if not user or not user.full_registration or not user.confirm_politic:
+        await continue_registration(message.from_user.id)
+        return
     if message_delete:
         try:
             await bot.delete_message(chat_id=message.from_user.id, message_id=message_delete)
@@ -183,6 +187,7 @@ async def user_entered_initials(message: Message, state: FSMContext, bot: Bot):
             print(traceback.format_exc())
     data = message.text.split()
     name = data[0]
+    await state.clear()
     await users_repository.update_initials_id_by_user_id(user_id=message.from_user.id,
                                                          first_name=name)
 
