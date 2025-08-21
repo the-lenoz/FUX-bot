@@ -94,10 +94,10 @@ async def send_user_message(message: Message, command: CommandObject, state: FSM
 
 @user_router.callback_query(F.data == "confirm_politic")
 async def confirm_politic(call: CallbackQuery):
-    user = await users_repository.get_user_by_user_id(message.from_user.id)
+    user = await users_repository.get_user_by_user_id(call.from_user.id)
     if not user:
-        await users_repository.add_user(user_id=message.from_user.id, username=message.from_user.username)
-        user = await users_repository.get_user_by_user_id(message.from_user.id)
+        await users_repository.add_user(user_id=call.from_user.id, username=call.from_user.username)
+        user = await users_repository.get_user_by_user_id(call.from_user.id)
     await call.message.delete()
     await call.message.answer("У тебя есть промокод?🥜", reply_markup=have_promo_keyboard.as_markup())
     await users_repository.update_confirm_politic_by_user_id(user_id=call.from_user.id)
