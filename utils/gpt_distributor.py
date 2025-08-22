@@ -10,7 +10,7 @@ from aiogram.types import BufferedInputFile
 from telegramify_markdown import ContentTypes, InterpreterChain, TextInterpreter, FileInterpreter, MermaidInterpreter
 
 from bots import main_bot
-from data.keyboards import buy_sub_keyboard, create_practice_exercise_recommendation_keyboard
+from data.keyboards import buy_sub_keyboard, create_practice_exercise_recommendation_keyboard, recommendation_keyboard
 from db.repository import users_repository, ai_requests_repository, mental_problems_repository, \
     exercises_user_repository, recommendations_repository, limits_repository, pending_messages_repository, \
     user_counters_repository
@@ -35,7 +35,7 @@ class UserRequestHandler:
 
     async def handle(self, request: UserRequest):
         user = await users_repository.get_user_by_user_id(request.user_id)
-        if not user.full_registration or not user.confirm_politic:
+        if not user or not user.full_registration or not user.confirm_politic:
             await continue_registration(request.user_id)
             return
 
@@ -331,14 +331,14 @@ class PsyHandler(AIHandler):
         self.messages_count[request.user_id] += 1
 
         user_counters = await user_counters_repository.get_user_counters(request.user_id)
+        await super().handle(request)
         if (self.messages_count[request.user_id] + 1 in self.MESSAGES_NOTIFICATION_COUNT
                 and user_counters.dialogs_count + 1 in self.DIALOG_NOTIFICATION_COUNT):
-            await main_bot.send_message(request.user_id, messages_dict["recommendation_command_reminder_text"])
+            await main_bot.send_message(request.user_id, messages_dict["recommendation_command_reminder_text"], reply_markup=recommendation_keyboard.as_markup())
         if (self.messages_count[request.user_id] + 1 in self.VOICE_NOTIFICATION_COUNT
             and user_counters.dialogs_count + 1 in self.DIALOG_NOTIFICATION_COUNT
             and await get_user_subscription(request.user_id)):
             await main_bot.send_message(request.user_id, messages_dict["voice_message_reminder_text"])
-        await super().handle(request)
 
     @staticmethod
     async def send_recommendation(user_id: int, recommendation, problem_id: int, from_notification: bool = False):

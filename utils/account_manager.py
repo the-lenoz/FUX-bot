@@ -1,3 +1,5 @@
+import logging
+
 from bots import main_bot
 from data.keyboards import next_politic_keyboard, choice_gender_keyboard, age_keyboard, have_promo_keyboard
 from db.repository import ai_requests_repository, checkup_repository, events_repository, exercises_user_repository, \
@@ -5,6 +7,8 @@ from db.repository import ai_requests_repository, checkup_repository, events_rep
     subscriptions_repository, user_timezone_repository, users_repository, pending_messages_repository
 from settings import messages_dict
 
+
+logger = logging.getLogger(__name__)
 
 async def delete_user(user_id: int):
     await ai_requests_repository.delete_requests_by_user_id(user_id)
@@ -31,10 +35,12 @@ async def delete_user(user_id: int):
 
 async def continue_registration(user_id: int):
     user = await users_repository.get_user_by_user_id(user_id)
-    if not user.confirm_politic:
+
+    if not user or not user.confirm_politic:
         await main_bot.send_message(user_id, messages_dict["user_agreement_message_text"],
                              disable_web_page_preview=True,
                              reply_markup=next_politic_keyboard.as_markup())
+        return
     elif user.name is None:
         await main_bot.send_message(user_id, "У тебя есть промокод?🥜", reply_markup=have_promo_keyboard.as_markup())
     elif user.gender is None:
@@ -44,3 +50,4 @@ async def continue_registration(user_id: int):
         await main_bot.send_message(user_id,
             "Какой возрастной диапазон тебе ближе?(Чтобы я мог лучше адаптироваться под твои запросы 🧡)",
             reply_markup=age_keyboard.as_markup())
+    logger.info(f"User(confirm_politic={user.confirm_politic}, name={user.name}, gender={user.gender}, age={user.age})")

@@ -33,8 +33,9 @@ async def edit_activation_sub(main_bot: Bot):
                     date_now = datetime.datetime.now(datetime.timezone(await user_timezone_repository.get_user_timezone_delta(sub.user_id)))
                     amount = await get_price_for_user(sub.user_id, sub.plan)
                     payment_method_id = await payment_methods_repository.get_payment_method_by_user_id(sub.user_id)
+                    user = await users_repository.get_user_by_user_id(sub.user_id)
                     if payment_method_id:
-                        payment_id = await charge_subscriber(payment_method_id, amount)
+                        payment_id = await charge_subscriber(payment_method_id, amount, user.email)
                         if payment_id:
                             payment_response: PaymentResponse | None = None
                             while not payment_response or payment_response.status not in ("succeeded", "canceled"):

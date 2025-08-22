@@ -1,7 +1,11 @@
 import datetime
 
+from aiogram.types import InlineKeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+
 from bots import main_bot
-from db.repository import user_counters_repository, events_repository, user_timezone_repository, users_repository
+from db.repository import user_counters_repository, events_repository, user_timezone_repository, users_repository, \
+    subscriptions_repository
 from settings import MAX_DAYS_FREEZE, messages_dict
 
 
@@ -28,10 +32,16 @@ async def interval_skip_trigger(user_id: int):
 
 async def update_power_mode(user_id: int):
     user = await users_repository.get_user_by_user_id(user_id)
+    user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id)
+    keyboard = InlineKeyboardBuilder()
+    keyboard.row(
+        InlineKeyboardButton(text="🐿 КУПИТЬ ПОДПИСКУ" if not user_sub else "🐿 ПОДПИСКА", callback_data="subscribe")
+    )
     if user.power_mode_days:
         await main_bot.send_message(
             user_id,
-            messages_dict["new_nut_format"].format(user.power_mode_days + 1)
+            messages_dict["new_nut_format"].format(user.power_mode_days + 1),
+            reply_markup=keyboard.as_markup()
         )
 
     await users_repository.update_power_mode_days_by_user_id(user_id, user.power_mode_days + 1)
@@ -48,7 +58,13 @@ async def break_power_mode(user_id: int):
     user = await users_repository.get_user_by_user_id(user_id)
     if user.power_mode_days:
         await users_repository.update_power_mode_days_by_user_id(user_id, 0)
+        user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id)
+        keyboard = InlineKeyboardBuilder()
+        keyboard.row(
+            InlineKeyboardButton(text="🐿 КУПИТЬ ПОДПИСКУ" if not user_sub else "🐿 ПОДПИСКА")
+        )
         await main_bot.send_message(
             user_id,
-            messages_dict["break_power_mode"]
+            messages_dict["break_power_mode"],
+            reply_markup=keyboard.as_markup()
         )

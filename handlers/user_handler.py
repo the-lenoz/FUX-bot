@@ -17,6 +17,7 @@ from data.keyboards import next_politic_keyboard, have_promo_keyboard, age_keybo
 from db.repository import users_repository
 from handlers.standard_handler import user_request_handler
 from settings import photos_pages, menu_photo, messages_dict
+from utils.account_manager import continue_registration
 from utils.messages_provider import send_main_menu
 from utils.paginator import MechanicsPaginator
 from utils.promocode import user_entered_promo_code
@@ -72,20 +73,8 @@ async def send_user_message(message: Message, command: CommandObject, state: FSM
         await users_repository.add_user(user_id=message.from_user.id, username=message.from_user.username)
         user = await users_repository.get_user_by_user_id(message.from_user.id)
 
-    if not user.confirm_politic:
-        await message.answer(messages_dict["user_agreement_message_text"],
-                                 disable_web_page_preview=True,
-                                 reply_markup=next_politic_keyboard.as_markup())
-    elif not user.full_registration:
-        if user.name is None:
-            await go_to_enter_initials(bot=bot, call=message, state=state)
-        elif user.gender is None:
-            await message.answer("В каком роде мне к тебе обращаться?",
-                                 reply_markup=choice_gender_keyboard.as_markup())
-        elif user.age is None:
-            await message.answer(
-                "Какой возрастной диапазон тебе ближе?(Чтобы я мог лучше адаптироваться под твои запросы 🧡)",
-                reply_markup=age_keyboard.as_markup())
+    if not user.confirm_politic or not user.full_registration:
+        await continue_registration(user_id)
     else:
         await send_main_menu(user_id)
 
@@ -94,6 +83,8 @@ async def send_user_message(message: Message, command: CommandObject, state: FSM
 
 @user_router.callback_query(F.data == "confirm_politic")
 async def confirm_politic(call: CallbackQuery):
+    if not await users_repository.get_user_by_user_id(call.from_user.id):
+        await users_repository.add_user(user_id=call.from_user.id, username=call.from_user.username)
     await call.message.delete()
     await call.message.answer("У тебя есть промокод?🥜", reply_markup=have_promo_keyboard.as_markup())
     await users_repository.update_confirm_politic_by_user_id(user_id=call.from_user.id)
@@ -181,10 +172,14 @@ async def skip_enter_name(call: CallbackQuery, state: FSMContext):
     await call.message.delete()
 
 
-@user_router.message(F.text, InputMessage.enter_initials)
+@user_router.message(F.text, InputMessage.enter_initials) #TODO
 async def user_entered_initials(message: Message, state: FSMContext, bot: Bot):
     state_data = await state.get_data()
     message_delete = state_data.get("message_delete")
+    user = await users_repository.get_user_by_user_id(message.from_user.id)
+    if not user or not user.full_registration or not user.confirm_politic:
+        await continue_registration(message.from_user.id)
+        return
     if message_delete:
         try:
             await bot.delete_message(chat_id=message.from_user.id, message_id=message_delete)
@@ -192,6 +187,7 @@ async def user_entered_initials(message: Message, state: FSMContext, bot: Bot):
             print(traceback.format_exc())
     data = message.text.split()
     name = data[0]
+    await state.clear()
     await users_repository.update_initials_id_by_user_id(user_id=message.from_user.id,
                                                          first_name=name)
 
