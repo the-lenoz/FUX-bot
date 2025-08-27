@@ -165,10 +165,10 @@ async def generate_gift_keyboard(user_id: int):
         InlineKeyboardButton(text=f"{await get_user_price_string(user_id, 7)}/неделя",
                              callback_data=f"choice_sub|7|gift"))
     subscriptions_keyboard.row(
-        InlineKeyboardButton(text=f"{await get_user_price_string(user_id, 7)}/месяц",
+        InlineKeyboardButton(text=f"{await get_user_price_string(user_id, 30)}/месяц",
                              callback_data=f"choice_sub|30|gift"))
     subscriptions_keyboard.row(
-        InlineKeyboardButton(text=f"{await get_user_price_string(user_id, 7)}/3 месяца",
+        InlineKeyboardButton(text=f"{await get_user_price_string(user_id, 90)}/3 месяца",
                              callback_data=f"choice_sub|90|gift"))
     subscriptions_keyboard.row(menu_button)
     return subscriptions_keyboard

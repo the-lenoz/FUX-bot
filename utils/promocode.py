@@ -179,9 +179,9 @@ async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: 
                                                             time_limit_subscription=promo.days_sub)
 
             end_date = datetime.now(timezone.utc) + timedelta(days=promo.days_sub)
-            await main_bot.send_message(user_id, f"✅ Теперь у тебя есть подписка на <b>{promo.days_sub} дней</b>! Подписка действует до {end_date.strftime('%d.%m.%y, %H:%M')} (GMT+3)")
-            await send_subscription_management_menu(user_id)
             await subscribed_callback(user_id)
+            await main_bot.send_message(user_id,
+                                        f"✅ Теперь у тебя есть подписка на <b>{promo.days_sub} дней</b>! Подписка действует до {end_date.strftime('%d.%m.%y, %H:%M')} (GMT+3)")
             return True
         else:
             await subscriptions_repository.increase_subscription_time_limit(subscription_id=activate_user_sub.id,

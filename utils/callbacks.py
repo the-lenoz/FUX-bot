@@ -1,11 +1,15 @@
 from bots import main_bot
 from db.repository import pending_messages_repository, recommendations_repository
-from settings import messages_dict
+from settings import messages_dict, you_fooher_photo
 from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report
 from utils.gpt_distributor import user_request_handler
+from utils.messages_provider import send_subscription_management_menu
 
 
 async def subscribed_callback(user_id: int):
+    await main_bot.send_photo(user_id, you_fooher_photo)
+    await send_subscription_management_menu(user_id)
+
     pending_messages = await pending_messages_repository.get_user_pending_messages(user_id)
     if pending_messages.recommendation_id:
         await main_bot.send_message(

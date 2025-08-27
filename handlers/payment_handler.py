@@ -91,6 +91,7 @@ async def check_payment_callback(call: types.CallbackQuery, state: FSMContext, b
         else:
             user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
             date_end = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=days)
+            await subscribed_callback(user_id)
             if user_sub is None:
                 await subscriptions_repository.add_subscription(user_id=user_id,
                                                                 time_limit_subscription=days,
@@ -114,7 +115,6 @@ async def check_payment_callback(call: types.CallbackQuery, state: FSMContext, b
                     f"✅ Твоя подписка была <b>продлена</b> на <u>{days} дней</u>! Теперь ты с нами до <b>{date_end.strftime('%d.%m.%y')}</b> 💛"
                 )
             await call.message.delete()
-            await subscribed_callback(user_id)
 
     else:
         try:
