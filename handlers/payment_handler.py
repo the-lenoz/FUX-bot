@@ -101,6 +101,7 @@ async def check_payment_callback(call: types.CallbackQuery, state: FSMContext, b
                 await call.message.answer_photo(photo=you_fooher_photo)
 
                 await send_subscription_management_menu(user_id)
+            else:
                 last_sub_date_end = user_sub.creation_date + datetime.timedelta(days=user_sub.time_limit_subscription)
                 difference = last_sub_date_end - date_now
                 await subscriptions_repository.deactivate_subscription(subscription_id=user_sub.id)
