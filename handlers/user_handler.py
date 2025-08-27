@@ -177,7 +177,7 @@ async def user_entered_initials(message: Message, state: FSMContext, bot: Bot):
     state_data = await state.get_data()
     message_delete = state_data.get("message_delete")
     user = await users_repository.get_user_by_user_id(message.from_user.id)
-    if not user or not user.full_registration or not user.confirm_politic:
+    if not user:
         await continue_registration(message.from_user.id)
         return
     if message_delete:
