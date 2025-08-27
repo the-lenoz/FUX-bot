@@ -172,7 +172,7 @@ async def skip_enter_name(call: CallbackQuery, state: FSMContext):
     await call.message.delete()
 
 
-@user_router.message(F.text, InputMessage.enter_initials) #TODO
+@user_router.message(F.text, InputMessage.enter_initials)
 async def user_entered_initials(message: Message, state: FSMContext, bot: Bot):
     state_data = await state.get_data()
     message_delete = state_data.get("message_delete")

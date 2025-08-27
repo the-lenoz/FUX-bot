@@ -6,7 +6,7 @@ from aiogram.types import Message, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from data.keyboards import menu_keyboard
-from db.repository import subscriptions_repository
+from db.repository import subscriptions_repository, users_repository
 from utils.messages_provider import send_subscription_management_menu
 
 sub_management_router = Router()
@@ -25,6 +25,7 @@ async def sub_management(call: types.CallbackQuery, state: FSMContext, bot: Bot)
 @sub_management_router.callback_query(F.data.startswith("cancel_subscription"), any_state)
 async def cancel_subscription(call: types.CallbackQuery, state: FSMContext, bot: Bot):
     confirm = int(call.data.split("|")[-1])
+    user = await users_repository.get_user_by_user_id(call.from_user.id)
     if confirm == 2:
         user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=call.from_user.id)
         await subscriptions_repository.update_recurrent(
@@ -44,7 +45,7 @@ async def cancel_subscription(call: types.CallbackQuery, state: FSMContext, bot:
             InlineKeyboardButton(text="нет", callback_data="sub_management")
         )
         await call.message.answer(
-            "Ты точно уверен в этом?🤔",
+            "Ты точно уверена в этом?🤔" if user.gender == "female" else "Ты точно уверен в этом?🤔",
             reply_markup=keyboard_builder.as_markup()
         )
     else:
