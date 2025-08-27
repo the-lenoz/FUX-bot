@@ -61,17 +61,18 @@ async def start_use(call: CallbackQuery, state: FSMContext):
 @user_router.message(CommandStart())
 async def send_user_message(message: Message, command: CommandObject, state: FSMContext, bot: Bot):
     user = await users_repository.get_user_by_user_id(message.from_user.id)
+    if not user:
+        await users_repository.add_user(user_id=message.from_user.id, username=message.from_user.username)
+        user = await users_repository.get_user_by_user_id(message.from_user.id)
+
     user_id = message.from_user.id
+
     if command.args:
         try:
             await user_entered_promo_code(user_id, command.args)
         except:
             logging.error(f"Invalid start payload: {command.args}")
             pass
-
-    if not user:
-        await users_repository.add_user(user_id=message.from_user.id, username=message.from_user.username)
-        user = await users_repository.get_user_by_user_id(message.from_user.id)
 
     if not user.confirm_politic or not user.full_registration:
         await continue_registration(user_id)
