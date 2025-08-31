@@ -1,17 +1,22 @@
+import asyncio
 import logging
 import mimetypes
 import os
 import secrets
+import wave
 from asyncio import sleep
+from io import BytesIO
 from typing import Literal, Dict, List
 
+import numpy as np
+import pydub
 from aiogram.types import BufferedInputFile
 from google.cloud import texttospeech
 from gcloud.aio import storage
 from google.cloud.texttospeech import SynthesisInput, VoiceSelectionParams, AudioConfig, \
     AudioEncoding
 from google.genai import types, Client, errors
-from google.genai.types import HttpOptions
+from google.genai.types import HttpOptions, LiveConnectConfig, SpeechConfig, VoiceConfig, PrebuiltVoiceConfig
 from pydantic import BaseModel
 
 from utils.prompts import SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT
@@ -20,7 +25,7 @@ from utils.user_request_types import UserFile
 BASIC_MODEL = "gemini-2.5-flash-lite-preview-06-17"
 ADVANCED_MODEL = "gemini-2.5-flash"
 
-TTS_MODEL = "gemini-2.5-flash"
+TTS_MODEL = "gemini-live-2.5-flash-preview-native-audio"
 
 MAX_RETRIES = 10
 
@@ -134,21 +139,64 @@ class LLMProvider:
     # noinspection PyTypeChecker
     @staticmethod
     async def generate_speech(text: str, user_ai_temperature: float = 1) -> BufferedInputFile:
-        tts_client = texttospeech.TextToSpeechAsyncClient()
-        synthesis_input = SynthesisInput(text=text)
-        voice = VoiceSelectionParams(
-            language_code="ru-RU", name=("ru-RU-Chirp3-HD-Fenrir" if user_ai_temperature == 1.3
-                                         else ("ru-RU-Chirp3-HD-Puck" if user_ai_temperature == 1 else "ru-RU-Chirp3-HD-Charon"))
+        config = LiveConnectConfig(
+            response_modalities=["AUDIO"],
+            speech_config=SpeechConfig(
+                voice_config=VoiceConfig(
+                    prebuilt_voice_config=PrebuiltVoiceConfig(
+                        voice_name="Puck",
+                    )
+                ),
+            )
         )
-        audio_config = AudioConfig(
-            audio_encoding=AudioEncoding.OGG_OPUS
-        )
-        response = await tts_client.synthesize_speech(
-            input=synthesis_input, voice=voice, audio_config=audio_config
-        )
+        success = False
+        tries = 0
+        while not success and tries < MAX_RETRIES:
+            try:
+                async with google_genai_client.aio.live.connect(
+                        model=secrets.choice((TTS_MODEL, ADVANCED_MODEL)),
+                        config=config,
+                ) as session:
+                    text_input = f'Ты - просто text-to-speech модель. Ты не придумываешь свой ответ, а просто читаешь текст. Прочти его выразительно, в заданном стиле. Стиль: говори {"очень жёстко, злобно, строго, быстро и восклицательно. Ты как будто приказываешь" if user_ai_temperature == 0.6 else "спокойно"}. Текст:\n\n{text}'
+                    await session.send_client_content(
+                        turns=types.Content(role="user", parts=[types.Part(text=text_input)]))
+
+                    audio_data = []
+                    async for message in session.receive():
+                        if (
+                                message.server_content.model_turn
+                                and message.server_content.model_turn.parts
+                        ):
+                            for part in message.server_content.model_turn.parts:
+                                if part.inline_data:
+                                    audio_data.append(
+                                        np.frombuffer(part.inline_data.data, dtype=np.int16)
+                                    )
+                success = True
+            except Exception as e:
+                logger.error(e)
+                await asyncio.sleep(5)
+            tries += 1
+
+
+        buffer = BytesIO()
+        with wave.open(buffer, "w") as f:
+            f.setnchannels(1)
+            f.setsampwidth(2)
+            f.setframerate(24000)
+            f.writeframes(np.concatenate(audio_data))
+        buffer.seek(0)
+
+        audio_segment = pydub.AudioSegment.from_wav(buffer)
+
+        opus_buffer = BytesIO()
+        audio_segment.export(opus_buffer, format="opus", codec="libopus", bitrate="64k")
+
+        # Seek to the beginning of the BytesIO object so it can be read from
+        opus_buffer.seek(0)
 
         return BufferedInputFile(
-            response.audio_content,
+            opus_buffer.getvalue(),
             "voice.ogg"
         )
 
