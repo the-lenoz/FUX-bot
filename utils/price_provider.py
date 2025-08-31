@@ -1,3 +1,5 @@
+import datetime
+
 from db.repository import users_repository
 from settings import SUBSCRIPTION_PLANS, POWER_MODE_DAY_DISCOUNT
 from utils.text import strike
@@ -18,4 +20,4 @@ async def get_user_price_string(user_id: int, plan: int):
 
 
 def calculate_discounted_price_multiplier(power_mode_days: int):
-    return max(.0, 1 - POWER_MODE_DAY_DISCOUNT * power_mode_days) # pow(1 - POWER_MODE_DAY_DISCOUNT, power_mode_days)
+    return max(.0, 1 - POWER_MODE_DAY_DISCOUNT * power_mode_days) * 0.8 # TODO

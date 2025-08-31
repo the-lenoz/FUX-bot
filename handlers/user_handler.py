@@ -61,17 +61,18 @@ async def start_use(call: CallbackQuery, state: FSMContext):
 @user_router.message(CommandStart())
 async def send_user_message(message: Message, command: CommandObject, state: FSMContext, bot: Bot):
     user = await users_repository.get_user_by_user_id(message.from_user.id)
+    if not user:
+        await users_repository.add_user(user_id=message.from_user.id, username=message.from_user.username)
+        user = await users_repository.get_user_by_user_id(message.from_user.id)
+
     user_id = message.from_user.id
+
     if command.args:
         try:
             await user_entered_promo_code(user_id, command.args)
         except:
             logging.error(f"Invalid start payload: {command.args}")
             pass
-
-    if not user:
-        await users_repository.add_user(user_id=message.from_user.id, username=message.from_user.username)
-        user = await users_repository.get_user_by_user_id(message.from_user.id)
 
     if not user.confirm_politic or not user.full_registration:
         await continue_registration(user_id)
@@ -172,12 +173,12 @@ async def skip_enter_name(call: CallbackQuery, state: FSMContext):
     await call.message.delete()
 
 
-@user_router.message(F.text, InputMessage.enter_initials) #TODO
+@user_router.message(F.text, InputMessage.enter_initials)
 async def user_entered_initials(message: Message, state: FSMContext, bot: Bot):
     state_data = await state.get_data()
     message_delete = state_data.get("message_delete")
     user = await users_repository.get_user_by_user_id(message.from_user.id)
-    if not user or not user.full_registration or not user.confirm_politic:
+    if not user:
         await continue_registration(message.from_user.id)
         return
     if message_delete:
