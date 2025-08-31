@@ -11,7 +11,7 @@ from utils.messages_provider import send_subscription_management_menu
 
 sub_management_router = Router()
 
-@sub_management_router.message(Command("subscribe"))
+@sub_management_router.message(Command("premium"))
 async def handle_sub_command(message: Message, bot: Bot):
     await send_subscription_management_menu(message.from_user.id)
 
