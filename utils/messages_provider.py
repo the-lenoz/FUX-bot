@@ -24,7 +24,7 @@ async def send_message_copy(user_id, message: Message):
     if message.photo:
         file_buffer = io.BytesIO()
         try:
-            await message.bot.download(message.photo, destination=file_buffer)
+            await message.bot.download(message.photo[-1].file_id, destination=file_buffer)
         except TelegramBadRequest:
             await message.answer(
                 "<b>Фото</b> слишком большое - размер не должен превышать <i>20MB</i>"
@@ -36,7 +36,7 @@ async def send_message_copy(user_id, message: Message):
     elif message.voice:
         file_buffer = io.BytesIO()
         try:
-            await message.bot.download(message.voice, destination=file_buffer)
+            await message.bot.download(message.voice.file_id, destination=file_buffer)
         except TelegramBadRequest:
             await message.answer(
                 "<b>Голосовое</b> слишком большое - размер не должен превышать <i>20MB</i>"
@@ -48,7 +48,7 @@ async def send_message_copy(user_id, message: Message):
     elif message.document:
         file_buffer = io.BytesIO()
         try:
-            await message.bot.download(message.document, destination=file_buffer)
+            await message.bot.download(message.document.file_id, destination=file_buffer)
         except TelegramBadRequest:
             await message.answer(
                 "<b>Документ</b> слишком большой - размер не должен превышать <i>20MB</i>"
