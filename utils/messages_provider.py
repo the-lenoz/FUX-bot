@@ -3,7 +3,7 @@ from datetime import datetime, timezone, date
 
 import telegramify_markdown
 from aiogram.enums import ParseMode
-from aiogram.types import BufferedInputFile
+from aiogram.types import BufferedInputFile, Message
 from telegramify_markdown import InterpreterChain, TextInterpreter, FileInterpreter, MermaidInterpreter, ContentTypes
 
 from bots import main_bot
@@ -16,6 +16,17 @@ from utils.payment_for_services import create_payment
 from utils.prompts import TRACKING_REPORT_COMMENT_PROMPT
 from utils.subscription import get_user_subscription
 from utils.user_request_types import UserFile
+
+
+async def send_message_copy(user_id, message: Message):
+    if message.photo:
+        await main_bot.send_photo(user_id, photo=message.photo, caption=message.caption)
+    elif message.voice:
+        await main_bot.send_voice(user_id, voice=message.voice, caption=message.caption)
+    elif message.document:
+        await main_bot.send_document(user_id, document=message.document)
+    elif message.text:
+        await main_bot.send_message(user_id, text=message.text)
 
 
 async def send_main_menu(user_id: int):

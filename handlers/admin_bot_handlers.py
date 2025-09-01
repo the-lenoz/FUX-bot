@@ -16,6 +16,7 @@ from utils.generate_promo import generate_single_promo_code
 from utils.get_table_db_to_excel import export_table_to_memory
 from utils.is_main_admin import is_main_admin
 from utils.list_admins_keyboard import AdminsKeyboard
+from utils.messages_provider import send_message_copy
 from utils.paginator import create_paginated_keyboard
 from utils.promocode import user_entered_promo_code
 from utils.state_models import InputMessage, AdminBotStates
@@ -271,7 +272,7 @@ async def enter_message_mailing(message: types.Message, state: FSMContext, bot: 
     if type_users == "all":
         for user in users:
             try:
-                await main_bot.send_message(chat_id=user.user_id, text=message.text)
+                await send_message_copy(user_id=user.user_id, message=message)
             except:
                 continue
     elif type_users == "sub":
@@ -279,7 +280,7 @@ async def enter_message_mailing(message: types.Message, state: FSMContext, bot: 
             user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user.user_id)
             if user_sub:
                 try:
-                    await main_bot.send_message(chat_id=user.user_id, text=message.text)
+                    await send_message_copy(user_id=user.user_id, message=message)
                 except:
                     continue
     elif type_users == "not_sub":
@@ -287,7 +288,7 @@ async def enter_message_mailing(message: types.Message, state: FSMContext, bot: 
             user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user.user_id)
             if user_sub is None:
                 try:
-                    await main_bot.send_message(chat_id=user.user_id, text=message.text)
+                    await send_message_copy(user_id=user.user_id, message=message)
                 except:
                     continue
     elif type_users == "passive":
@@ -295,7 +296,7 @@ async def enter_message_mailing(message: types.Message, state: FSMContext, bot: 
             last_user_event = await events_repository.get_last_event_by_user_id(user.user_id)
             if last_user_event.creation_date - user.creation_date < timedelta(hours=24):
                 try:
-                    await main_bot.send_message(chat_id=user.user_id, text=message.text)
+                    await send_message_copy(user_id=user.user_id, message=message)
                 except:
                     continue
     await message.answer(text="Ваша рассылка отправлена всем выбранным пользователям бота", reply_markup=admin_keyboard)
