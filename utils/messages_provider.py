@@ -1,8 +1,10 @@
 import calendar
+import io
 from datetime import datetime, timezone, date
 
 import telegramify_markdown
 from aiogram.enums import ParseMode
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import BufferedInputFile, Message
 from telegramify_markdown import InterpreterChain, TextInterpreter, FileInterpreter, MermaidInterpreter, ContentTypes
 
@@ -21,11 +23,42 @@ from utils.user_request_types import UserFile
 async def send_message_copy(user_id, message: Message):
     print(message)
     if message.photo:
-        await main_bot.send_photo(user_id, photo=message.photo, caption=message.caption)
+        file_buffer = io.BytesIO()
+        try:
+            await message.bot.download(message.photo, destination=file_buffer)
+        except TelegramBadRequest:
+            await message.answer(
+                "<b>Фото</b> слишком большое - размер не должен превышать <i>20MB</i>"
+            )
+            return
+        file_buffer.seek(0)
+        data = file_buffer.read()
+        await main_bot.send_photo(user_id, photo=BufferedInputFile(data, "picture.jpg"), caption=message.caption)
         print("Forwarded photo")
     elif message.voice:
-        await main_bot.send_voice(user_id, voice=message.voice, caption=message.caption)
+        file_buffer = io.BytesIO()
+        try:
+            await message.bot.download(message.voice, destination=file_buffer)
+        except TelegramBadRequest:
+            await message.answer(
+                "<b>Голосовое</b> слишком большое - размер не должен превышать <i>20MB</i>"
+            )
+            return
+        file_buffer.seek(0)
+        data = file_buffer.read()
+        await main_bot.send_voice(user_id, voice=BufferedInputFile(data, "voice.ogg"), caption=message.caption)
     elif message.document:
+        file_buffer = io.BytesIO()
+        try:
+            await message.bot.download(message.document, destination=file_buffer)
+        except TelegramBadRequest:
+            await message.answer(
+                "<b>Документ</b> слишком большой - размер не должен превышать <i>20MB</i>"
+            )
+            return
+        file_buffer.seek(0)
+        data = file_buffer.read()
+        await main_bot.send_voice(user_id, voice=BufferedInputFile(data, message.document.file_name), caption=message.caption)
         await main_bot.send_document(user_id, document=message.document)
     elif message.text:
         await main_bot.send_message(user_id, text=message.text)
