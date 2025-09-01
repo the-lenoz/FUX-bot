@@ -21,6 +21,7 @@ from utils.user_request_types import UserFile
 async def send_message_copy(user_id, message: Message):
     if message.photo:
         await main_bot.send_photo(user_id, photo=message.photo, caption=message.caption)
+        print("Forwarded photo")
     elif message.voice:
         await main_bot.send_voice(user_id, voice=message.voice, caption=message.caption)
     elif message.document:
