@@ -258,7 +258,7 @@ async def enter_type_users_for_mailing(call: types.CallbackQuery, state: FSMCont
 @is_main_admin
 async def get_db_tables(message: types.Message, state: FSMContext, bot: Bot):
     await state.clear()
-    message = await message.answer(text="Выбери таблицу, данные которой ты хочешь выгрузить",
+    await message.answer(text="Выбери таблицу, данные которой ты хочешь выгрузить",
                                    reply_markup=db_tables_keyboard.as_markup())
 
 

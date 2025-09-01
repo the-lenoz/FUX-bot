@@ -27,6 +27,8 @@ async def send_message_copy(user_id, message: Message):
         await main_bot.send_document(user_id, document=message.document)
     elif message.text:
         await main_bot.send_message(user_id, text=message.text)
+    else:
+        print("Error sending message: unknown type")
 
 
 async def send_main_menu(user_id: int):
