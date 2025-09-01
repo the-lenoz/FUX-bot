@@ -262,7 +262,7 @@ async def get_db_tables(message: types.Message, state: FSMContext, bot: Bot):
                                    reply_markup=db_tables_keyboard.as_markup())
 
 
-@admin_router.message(F.text, InputMessage.enter_message_mailing)
+@admin_router.message(InputMessage.enter_message_mailing)
 @is_main_admin
 async def enter_message_mailing(message: types.Message, state: FSMContext, bot: Bot):
     state_data = await state.get_data()
