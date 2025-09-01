@@ -21,7 +21,6 @@ from utils.user_request_types import UserFile
 
 
 async def send_message_copy(user_id, message: Message):
-    print(message)
     if message.photo:
         file_buffer = io.BytesIO()
         try:
@@ -34,7 +33,6 @@ async def send_message_copy(user_id, message: Message):
         file_buffer.seek(0)
         data = file_buffer.read()
         await main_bot.send_photo(user_id, photo=BufferedInputFile(data, "picture.jpg"), caption=message.caption)
-        print("Forwarded photo")
     elif message.voice:
         file_buffer = io.BytesIO()
         try:

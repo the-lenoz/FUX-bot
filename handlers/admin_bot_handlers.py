@@ -273,7 +273,8 @@ async def enter_message_mailing(message: types.Message, state: FSMContext, bot: 
         for user in users:
             try:
                 await send_message_copy(user_id=user.user_id, message=message)
-            except:
+            except Exception as e:
+                print(e)
                 continue
     elif type_users == "sub":
         for user in users:
