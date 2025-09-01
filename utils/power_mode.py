@@ -31,6 +31,7 @@ async def interval_skip_trigger(user_id: int):
         await trigger_skipped_day(user_id)
 
 async def update_power_mode(user_id: int):
+    return # TODO RETURN NUTS
     user = await users_repository.get_user_by_user_id(user_id)
     user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id)
     keyboard = InlineKeyboardBuilder()
