@@ -238,7 +238,7 @@ async def enter_type_users_for_mailing(call: types.CallbackQuery, state: FSMCont
     await state.clear()
     type_users = call.data.split("|")[1]
     if type_users == "all":
-        await call.message.answer(text="Напиши сообщение, которое ВСЕМ разошлётся пользователям",
+        await call.message.answer(text="Напиши сообщение, которое разошлётся ВСЕМ пользователям",
                                   reply_markup=cancel_keyboard.as_markup())
     elif type_users == "sub":
         await call.message.answer(text="Напиши сообщение, которое  разошлётся пользователям С ПОДПИСКОЙ",
