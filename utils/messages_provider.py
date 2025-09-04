@@ -32,8 +32,9 @@ async def send_message_copy(user_id, message: Message):
             return
         file_buffer.seek(0)
         data = file_buffer.read()
+        print(message.caption_entities)
         await main_bot.send_photo(user_id, photo=BufferedInputFile(data, "picture.jpg"),
-                                  caption=message.caption, caption_entities=message.caption_entities)
+                                  caption=message.html_text, caption_entities=message.caption_entities)
     elif message.voice:
         file_buffer = io.BytesIO()
         try:
