@@ -32,7 +32,8 @@ async def send_message_copy(user_id, message: Message):
             return
         file_buffer.seek(0)
         data = file_buffer.read()
-        await main_bot.send_photo(user_id, photo=BufferedInputFile(data, "picture.jpg"), caption_entities=message.caption_entities)
+        await main_bot.send_photo(user_id, photo=BufferedInputFile(data, "picture.jpg"),
+                                  caption=message.caption, caption_entities=message.caption_entities)
     elif message.voice:
         file_buffer = io.BytesIO()
         try:
@@ -44,7 +45,8 @@ async def send_message_copy(user_id, message: Message):
             return
         file_buffer.seek(0)
         data = file_buffer.read()
-        await main_bot.send_voice(user_id, voice=BufferedInputFile(data, "voice.ogg"), caption_entities=message.caption_entities)
+        await main_bot.send_voice(user_id, voice=BufferedInputFile(data, "voice.ogg"),
+                                  caption=message.caption, caption_entities=message.caption_entities)
     elif message.document:
         file_buffer = io.BytesIO()
         try:
@@ -56,9 +58,10 @@ async def send_message_copy(user_id, message: Message):
             return
         file_buffer.seek(0)
         data = file_buffer.read()
-        await main_bot.send_document(user_id, document=BufferedInputFile(data, message.document.file_name), caption_entities=message.caption_entities)
+        await main_bot.send_document(user_id, document=BufferedInputFile(data, message.document.file_name),
+                                     caption=message.caption, caption_entities=message.caption_entities)
     elif message.text:
-        await main_bot.send_message(user_id, entities=message.entities)
+        await main_bot.send_message(user_id, text=message.html_text)
     else:
         print("Error sending message: unknown type")
 
