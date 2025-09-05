@@ -244,6 +244,9 @@ async def enter_type_users_for_mailing(call: types.CallbackQuery, state: FSMCont
     elif type_users == "sub":
         await call.message.answer(text="Напиши сообщение, которое  разошлётся пользователям С ПОДПИСКОЙ",
                                   reply_markup=cancel_keyboard.as_markup())
+    elif type_users == "free_sub":
+        await call.message.answer(text="Напиши сообщение, которое  разошлётся пользователям С БЕСПЛАТНОЙ ПОДПИСКОЙ",
+                                  reply_markup=cancel_keyboard.as_markup())
     elif type_users == "not_sub":
         await call.message.answer(text="Напиши сообщение, которое разошлётся пользователям БЕЗ ПОДПИСКИ",
                                   reply_markup=cancel_keyboard.as_markup())
@@ -284,6 +287,14 @@ async def enter_message_mailing(message: types.Message, state: FSMContext, bot: 
         for user in users:
             user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user.user_id)
             if user_sub:
+                try:
+                    await send_message_copy(user_id=user.user_id, message=message)
+                except:
+                    continue
+    elif type_users == "free_sub":
+        for user in users:
+            sub = await subscriptions_repository.get_active_subscription_by_user_id(user.user_id)
+            if sub and not sub.plan:
                 try:
                     await send_message_copy(user_id=user.user_id, message=message)
                 except:

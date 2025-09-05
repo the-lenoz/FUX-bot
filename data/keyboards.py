@@ -281,6 +281,7 @@ db_tables_keyboard.row(InlineKeyboardButton(text="Отмена", callback_data="
 type_users_mailing_keyboard = InlineKeyboardBuilder()
 type_users_mailing_keyboard.row(InlineKeyboardButton(text='Всем пользователям', callback_data="type_users_mailing|all"))
 type_users_mailing_keyboard.row(InlineKeyboardButton(text='С подпиской', callback_data="type_users_mailing|sub"))
+type_users_mailing_keyboard.row(InlineKeyboardButton(text='С подпиской', callback_data="type_users_mailing|free_sub"))
 type_users_mailing_keyboard.row(InlineKeyboardButton(text='Без подписки', callback_data="type_users_mailing|not_sub"))
 type_users_mailing_keyboard.row(
     InlineKeyboardButton(text='Потерявшим подписку (либо платную, либо по промокоду)',
