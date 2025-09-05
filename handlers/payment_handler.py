@@ -96,7 +96,7 @@ async def check_payment_callback(call: types.CallbackQuery, state: FSMContext, b
                                                                 active=True,
                                                                 recurrent=True,
                                                                 plan=days)
-                await subscribed_callback(user_id, days)
+                await subscribed_callback(user_id, days, paid=True)
             else:
                 last_sub_date_end = user_sub.creation_date + datetime.timedelta(days=user_sub.time_limit_subscription)
                 difference = last_sub_date_end - date_now
@@ -106,7 +106,7 @@ async def check_payment_callback(call: types.CallbackQuery, state: FSMContext, b
                                                                 recurrent=True,
                                                                 plan=days)
 
-                await send_prolong_subscription_message(user_id, days, user_sub.id)
+                await send_prolong_subscription_message(user_id, days, user_sub.id, paid=True)
 
             await call.message.delete()
 

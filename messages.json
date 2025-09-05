@@ -34,5 +34,6 @@
   "new_subscription_message_standard_format": "✅ Теперь у тебя есть <b>{duration_word}</b> подписка! Подписка действует до {end_date}",
   "new_subscription_message_custom_duration_format": "✅ Теперь у тебя есть подписка на {duration_num} дней! Подписка действует до {end_date}",
   "prolong_subscription_message_standard_format": "✅ Твоя подписка была <b>продлена</b> на <u>{duration_word}</u>! Теперь ты с нами до <b>{end_date}</b> 💛",
-  "prolong_subscription_message_custom_duration_format": "✅ Твоя подписка была <b>продлена</b> на <u>{duration_num} дней</u>! Теперь ты с нами до <b>{end_date}</b> 💛"
+  "prolong_subscription_message_custom_duration_format": "✅ Твоя подписка была <b>продлена</b> на <u>{duration_num} дней</u>! Теперь ты с нами до <b>{end_date}</b> 💛",
+  "paid_subscription_recurrent_suffix": " — в этот день и произойдёт следующее списание."
 }

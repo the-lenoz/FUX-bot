@@ -50,7 +50,7 @@ async def edit_activation_sub(main_bot: Bot):
                                                                                 recurrent=True,
                                                                                 plan=sub.plan)
                                 date_end = date_end + datetime.timedelta(days=sub.time_limit_subscription)
-                                await send_prolong_subscription_message(user.user_id, sub.plan, sub.id)
+                                await send_prolong_subscription_message(user.user_id, sub.plan, sub.id, paid=True)
                             else:
                                 await subscriptions_repository.deactivate_subscription(sub.id)
                                 pass # TODO canceled обработку

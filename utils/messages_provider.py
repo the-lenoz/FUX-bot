@@ -66,21 +66,23 @@ async def send_message_copy(user_id, message: Message):
         print("Error sending message: unknown type")
 
 
-async def send_new_subscription_message(user_id: int, subscription_days: int):
+async def send_new_subscription_message(user_id: int, subscription_days: int, paid: bool = False):
     end_date = datetime.now(timezone.utc) + timedelta(days=subscription_days)
     duration_word = SUBSCRIPTION_WORDS.get(subscription_days)
     if duration_word:
         await main_bot.send_message(user_id,
                                     messages_dict["new_subscription_message_standard_format"]
                                     .format(duration_word=duration_word[0], # new sub word
-                                            end_date=end_date.strftime("%d.%m.%y")))
+                                            end_date=end_date.strftime("%d.%m.%y"))
+                                    + (messages_dict["paid_subscription_recurrent_suffix"] if paid else ""))
     else:
         await main_bot.send_message(user_id,
                                     messages_dict["new_subscription_message_custom_duration_format"]
                                     .format(duration_num=subscription_days,
-                                            end_date=end_date.strftime("%d.%m.%y")))
+                                            end_date=end_date.strftime("%d.%m.%y"))
+                                    + (messages_dict["paid_subscription_recurrent_suffix"] if paid else ""))
 
-async def send_prolong_subscription_message(user_id: int, subscription_days: int, subscription_id: int):
+async def send_prolong_subscription_message(user_id: int, subscription_days: int, subscription_id: int, paid: bool = False):
     subscription = await subscriptions_repository.get_subscription_by_id(subscription_id)
     end_date = subscription.creation_date + timedelta(days=subscription.time_limit_subscription)
 
@@ -89,12 +91,14 @@ async def send_prolong_subscription_message(user_id: int, subscription_days: int
         await main_bot.send_message(user_id,
                                     messages_dict["prolong_subscription_message_standard_format"]
                                     .format(duration_word=duration_word[1], # prolong word
-                                            end_date=end_date.strftime("%d.%m.%y")))
+                                            end_date=end_date.strftime("%d.%m.%y"))
+                                    + (messages_dict["paid_subscription_recurrent_suffix"] if paid else ""))
     else:
         await main_bot.send_message(user_id,
                                     messages_dict["prolong_subscription_message_custom_duration_format"]
                                     .format(duration_num=subscription_days,
-                                            end_date=end_date.strftime("%d.%m.%y")))
+                                            end_date=end_date.strftime("%d.%m.%y"))
+                                    + (messages_dict["paid_subscription_recurrent_suffix"] if paid else ""))
 
 
 async def send_main_menu(user_id: int):
