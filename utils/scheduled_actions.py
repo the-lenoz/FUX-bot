@@ -16,7 +16,7 @@ from db.repository import subscriptions_repository, users_repository, checkup_re
     payment_methods_repository
 from settings import how_are_you_photo, messages_dict, premium_sub_photo
 from utils.gpt_distributor import user_request_handler
-from utils.messages_provider import send_subscription_end_message, send_main_menu
+from utils.messages_provider import send_subscription_end_message, send_main_menu, send_prolong_subscription_message
 from utils.payment_for_services import charge_subscriber, get_payment
 from utils.power_mode import interval_skip_trigger
 from utils.price_provider import get_price_for_user
@@ -50,10 +50,7 @@ async def edit_activation_sub(main_bot: Bot):
                                                                                 recurrent=True,
                                                                                 plan=sub.plan)
                                 date_end = date_end + datetime.timedelta(days=sub.time_limit_subscription)
-                                await main_bot.send_message(
-                                    sub.user_id,
-                                    f"✅ Твоя подписка была <b>продлена</b> на <u>{sub.plan} дней</u>! Теперь ты с нами до <b>{date_end.strftime('%d.%m.%y')}</b> 💛"
-                                )
+                                await send_prolong_subscription_message(user.user_id, sub.plan, sub.id)
                             else:
                                 await subscriptions_repository.deactivate_subscription(sub.id)
                                 pass # TODO canceled обработку
