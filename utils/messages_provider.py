@@ -77,7 +77,7 @@ async def send_new_subscription_message(user_id: int, subscription_days: int):
     else:
         await main_bot.send_message(user_id,
                                     messages_dict["new_subscription_message_custom_duration_format"]
-                                    .format(duration_word=subscription_days,
+                                    .format(duration_num=subscription_days,
                                             end_date=end_date.strftime("%d.%m.%y")))
 
 async def send_prolong_subscription_message(user_id: int, subscription_days: int, subscription_id: int):
@@ -93,7 +93,7 @@ async def send_prolong_subscription_message(user_id: int, subscription_days: int
     else:
         await main_bot.send_message(user_id,
                                     messages_dict["prolong_subscription_message_custom_duration_format"]
-                                    .format(duration_word=subscription_days,
+                                    .format(duration_num=subscription_days,
                                             end_date=end_date.strftime("%d.%m.%y")))
 
 
