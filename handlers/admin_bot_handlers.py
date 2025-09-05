@@ -250,7 +250,7 @@ async def enter_type_users_for_mailing(call: types.CallbackQuery, state: FSMCont
         await call.message.answer(text="Напиши сообщение, которое разошлётся ПАССИВНЫМ пользователям",
                                   reply_markup=cancel_keyboard.as_markup())
     elif type_users == "unsubscribed":
-        await call.message.answer(text="Напиши сообщение, которое разошлётся ПАССИВНЫМ пользователям",
+        await call.message.answer(text="Напиши сообщение, которое разошлётся ПОТЕРЯВШИМ ПОДПИСКУ пользователям",
                                   reply_markup=cancel_keyboard.as_markup())
     await state.set_state(InputMessage.enter_message_mailing)
     await state.update_data(message_id=call.message.message_id, type_users=type_users)
