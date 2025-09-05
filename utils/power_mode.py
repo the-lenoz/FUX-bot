@@ -6,12 +6,12 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from bots import main_bot
 from db.repository import user_counters_repository, events_repository, user_timezone_repository, users_repository, \
     subscriptions_repository
-from settings import MAX_DAYS_FREEZE, messages_dict
+from settings import MAX_DAYS_FREEZE, messages_dict, DEFAULT_TIMEZONE
 
 
 async def trigger_power_mode(user_id: int):
     last_user_event = await events_repository.get_last_event_by_user_id(user_id)
-    user_timezone = await user_timezone_repository.get_user_timezone_delta(user_id)
+    user_timezone = await user_timezone_repository.get_user_timezone_delta(user_id) or DEFAULT_TIMEZONE
 
     now_date = datetime.datetime.now(datetime.timezone(user_timezone)).date()
     user = await users_repository.get_user_by_user_id(user_id)
@@ -21,7 +21,7 @@ async def trigger_power_mode(user_id: int):
 
 async def interval_skip_trigger(user_id: int):
     last_user_event = await events_repository.get_last_event_by_user_id(user_id)
-    user_timezone = await user_timezone_repository.get_user_timezone_delta(user_id)
+    user_timezone = await user_timezone_repository.get_user_timezone_delta(user_id) or DEFAULT_TIMEZONE
 
     now_date = datetime.datetime.now(datetime.timezone(user_timezone)).date()
     yesterday_date = (datetime.datetime.now(datetime.timezone(user_timezone)) - datetime.timedelta(days=1)).date()

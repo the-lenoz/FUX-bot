@@ -5,7 +5,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from db.repository import checkup_repository, days_checkups_repository, subscriptions_repository, users_repository, \
     user_timezone_repository, user_counters_repository
-from settings import emoji_dict, speed_dict, table_names, SUBSCRIPTION_PLANS
+from settings import emoji_dict, speed_dict, table_names, SUBSCRIPTION_PLANS, DEFAULT_TIMEZONE
 from utils.checkups_sent import sent_today
 from utils.price_provider import get_user_price_string
 
@@ -122,7 +122,7 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
     keyboard = InlineKeyboardBuilder()
     user_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id=user_id)
     user_counters = await user_counters_repository.get_user_counters(user_id)
-    user_timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id)
+    user_timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id) or DEFAULT_TIMEZONE
     today_tracking = False
     missed_tracking = False
     for checkup in user_checkups:
