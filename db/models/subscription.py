@@ -3,6 +3,7 @@ from sqlalchemy.orm import Mapped, relationship
 
 from db.base import BaseModel, CleanModel
 from .user import User
+from ..time_provider import get_now_utc_time
 
 
 class Subscription(BaseModel, CleanModel):
@@ -13,7 +14,7 @@ class Subscription(BaseModel, CleanModel):
 
     user_id = Column(BigInteger, ForeignKey('users.user_id'), nullable=False, unique=False)
     user: Mapped[User] = relationship("User", backref=__tablename__, cascade='all', lazy='subquery')
-    start_date = Column(DateTime, nullable=False, default=func.now())
+    start_date = Column(DateTime, nullable=False, default=get_now_utc_time)
     time_limit_subscription = Column(Integer, nullable=False)
     active = Column(Boolean, nullable=False, default=True)
     recurrent = Column(Boolean, nullable=False, default=False)

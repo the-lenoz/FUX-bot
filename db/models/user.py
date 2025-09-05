@@ -1,6 +1,7 @@
 from sqlalchemy import Column, BigInteger, String, Boolean, Float, DateTime, func
 
 from db.base import BaseModel, CleanModel
+from db.time_provider import get_now_utc_time
 
 
 class User(BaseModel, CleanModel):
@@ -24,7 +25,7 @@ class User(BaseModel, CleanModel):
     activate_promo = Column(Boolean, nullable=False, unique=False, default=False)
     email = Column(String, nullable=True, unique=False)
 
-    last_rec_week_date = Column(DateTime, nullable=False, default=func.now())
+    last_rec_week_date = Column(DateTime, nullable=False, default=get_now_utc_time)
     power_mode_days = Column(BigInteger, nullable=True, unique=False, default=0)
 
     used_free_recommendation = Column(Boolean, nullable=False, default=False)
