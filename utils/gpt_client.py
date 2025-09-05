@@ -35,7 +35,7 @@ standard_assistant_id = os.getenv("STANDARD_ASSISTANT_ID")
 
 logger = logging.getLogger(__name__)
 
-google_genai_client = Client(http_options=HttpOptions(api_version="v1"), location='global')
+google_genai_client = Client(http_options=HttpOptions(api_version="v1"), location='us-central1')
 
 class ModelChatMessage(BaseModel):
     role: Literal["user", "assistant", "developer", "system"]
