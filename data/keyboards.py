@@ -36,7 +36,7 @@ edit_activate_notification_keyboard.row(InlineKeyboardButton(text="в Меню",
 referral_keyboard = InlineKeyboardBuilder()
 referral_keyboard.row(InlineKeyboardButton(text="✍️ Ввести промокод", callback_data="enter_promo_code"))
 referral_keyboard.row(InlineKeyboardButton(text="Выпустить промокод", callback_data="create_promo_code"))
-referral_keyboard.row(InlineKeyboardButton(text="Подарить подписку", callback_data="buy_gift"))
+referral_keyboard.row(InlineKeyboardButton(text="🎁 Подарить подписку", callback_data="buy_gift"))
 referral_keyboard.row(menu_button)
 
 price_keyboard = InlineKeyboardBuilder()
@@ -110,10 +110,6 @@ choice_gender_settings_keyboard.row(InlineKeyboardButton(text="В женском
 choice_gender_settings_keyboard.row(InlineKeyboardButton(text="В мужском роде♂️", callback_data="gender|male"))
 choice_gender_settings_keyboard.row(InlineKeyboardButton(text="Отменить", callback_data="system_settings"))
 
-exercises_keyboard = InlineKeyboardBuilder()
-exercises_keyboard.row(InlineKeyboardButton(text="Упражнения", callback_data="choose_exercise_problem"))
-exercises_keyboard.row(menu_button)
-
 recommendation_keyboard = InlineKeyboardBuilder()
 recommendation_keyboard.row(InlineKeyboardButton(text="Получить рекомендацию", callback_data="recommendation"))
 
@@ -143,7 +139,7 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
     if missed_tracking:
         keyboard.row(InlineKeyboardButton(text="⚠️ПРОПУЩЕННЫЕ трекинги", callback_data="missed_tracking"))
 
-    keyboard.row(InlineKeyboardButton(text="📝Упражнения", callback_data="choose_exercise_problem"))
+    keyboard.row(InlineKeyboardButton(text="🧘‍♀️Упражнения", callback_data="choose_exercise_problem"))
     keyboard.add(InlineKeyboardButton(text="📉️Трекинги", callback_data="checkups"))
     keyboard.row(InlineKeyboardButton(text="📜О сервисе", callback_data="all_mechanics"))
     keyboard.add(InlineKeyboardButton(text="⚙️Настройки", callback_data="system_settings"))
