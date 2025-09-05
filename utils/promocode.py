@@ -6,7 +6,7 @@ from data.keyboards import cancel_keyboard, menu_keyboard
 from db.repository import referral_system_repository, users_repository, promo_activations_repository, \
     subscriptions_repository
 from utils.callbacks import subscribed_callback
-from utils.messages_provider import send_subscription_management_menu
+from utils.messages_provider import send_subscription_management_menu, send_prolong_subscription_message
 
 logger = logging.getLogger(__name__)
 
@@ -39,16 +39,16 @@ async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: 
         await referral_system_repository.update_activations_by_promo_id(promo_id=promo.id)
         await promo_activations_repository.add_activation(promo_id=promo.id, activate_user_id=user_id)
         await users_repository.update_activate_promo_by_user_id(user_id=user_id)
-        activate_user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
-        if activate_user_sub is None:
+        active_user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
+        if active_user_sub is None:
             await subscriptions_repository.add_subscription(user_id=user_id,
                                                             time_limit_subscription=7)
             end_date = datetime.now(timezone.utc) + timedelta(days=7)
             text = f"✅ Теперь у тебя есть <b>недельная подписка</b>! Подписка действует до {end_date.strftime('%d.%m.%y, %H:%M')} (GMT+3)"
         else:
-            await subscriptions_repository.increase_subscription_time_limit(subscription_id=activate_user_sub.id,
+            await subscriptions_repository.increase_subscription_time_limit(subscription_id=active_user_sub.id,
                                                                             time_to_add=7)
-            end_date = activate_user_sub.creation_date + timedelta(days=activate_user_sub.time_limit_subscription + 7)
+            end_date = active_user_sub.creation_date + timedelta(days=active_user_sub.time_limit_subscription + 7)
             text = f"✅ К текущему плану тебе добавили <b>одну неделю</b>! Подписка действует до {end_date.strftime('%d.%m.%y, %H:%M')} (GMT+3)"
         await main_bot.send_message(user_id, text)
 
@@ -172,22 +172,19 @@ async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: 
             return False
         await referral_system_repository.update_activations_by_promo_id(promo_id=promo.id)
         await promo_activations_repository.add_activation(promo_id=promo.id, activate_user_id=user_id)
-        # await users_repository.update_activate_promo_by_user_id(user_id=user_id)
-        activate_user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
-        if activate_user_sub is None:
+
+        active_user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
+        if active_user_sub is None:
             await subscriptions_repository.add_subscription(user_id=user_id,
                                                             time_limit_subscription=promo.days_sub)
 
-            end_date = datetime.now(timezone.utc) + timedelta(days=promo.days_sub)
-            await subscribed_callback(user_id)
-            await main_bot.send_message(user_id,
-                                        f"✅ Теперь у тебя есть подписка на <b>{promo.days_sub} дней</b>! Подписка действует до {end_date.strftime('%d.%m.%y, %H:%M')} (GMT+3)")
+            await subscribed_callback(user_id, promo.days_sub)
             return True
         else:
-            await subscriptions_repository.increase_subscription_time_limit(subscription_id=activate_user_sub.id,
+            await subscriptions_repository.increase_subscription_time_limit(subscription_id=active_user_sub.id,
                                                                             time_to_add=promo.days_sub)
-            end_date = activate_user_sub.creation_date + timedelta(
-                days=activate_user_sub.time_limit_subscription + promo.days_sub)
-            await main_bot.send_message(user_id, f"✅ К текущему плану тебе добавили <b>{promo.days_sub} дней</b>! Подписка действует до {end_date.strftime('%d.%m.%y, %H:%M')} (GMT+3)")
+
+            await send_prolong_subscription_message(user_id, promo.days_sub, active_user_sub.id)
+
             return True
 

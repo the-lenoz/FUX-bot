@@ -12,7 +12,7 @@ from db.repository import users_repository, subscriptions_repository, operation_
 from settings import you_fooher_photo, sub_description_photo_after
 from utils.callbacks import subscribed_callback
 from utils.generate_promo import generate_single_promo_code
-from utils.messages_provider import send_invoice, send_subscription_management_menu
+from utils.messages_provider import send_invoice, send_subscription_management_menu, send_prolong_subscription_message
 from utils.payment_for_services import check_payment, get_payment_method_id
 from utils.price_provider import get_price_for_user
 from utils.state_models import InputMessage
@@ -90,18 +90,13 @@ async def check_payment_callback(call: types.CallbackQuery, state: FSMContext, b
                 reply_markup=menu_keyboard.as_markup())
         else:
             user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
-            date_end = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=days)
-            await subscribed_callback(user_id)
             if user_sub is None:
                 await subscriptions_repository.add_subscription(user_id=user_id,
                                                                 time_limit_subscription=days,
                                                                 active=True,
                                                                 recurrent=True,
                                                                 plan=days)
-                formatted_date = date_end.strftime('%d.%m.%y, %H:%M')
-                await call.message.answer_photo(photo=you_fooher_photo)
-
-                await send_subscription_management_menu(user_id)
+                await subscribed_callback(user_id, days)
             else:
                 last_sub_date_end = user_sub.creation_date + datetime.timedelta(days=user_sub.time_limit_subscription)
                 difference = last_sub_date_end - date_now
@@ -110,10 +105,9 @@ async def check_payment_callback(call: types.CallbackQuery, state: FSMContext, b
                                                                 time_limit_subscription=days + difference.days,
                                                                 recurrent=True,
                                                                 plan=days)
-                date_end = date_end + datetime.timedelta(days=user_sub.time_limit_subscription)
-                await call.message.answer(
-                    f"✅ Твоя подписка была <b>продлена</b> на <u>{days} дней</u>! Теперь ты с нами до <b>{date_end.strftime('%d.%m.%y')}</b> 💛"
-                )
+
+                await send_prolong_subscription_message(user_id, days, user_sub.id)
+
             await call.message.delete()
 
     else:

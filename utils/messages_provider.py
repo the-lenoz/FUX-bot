@@ -1,6 +1,6 @@
 import calendar
 import io
-from datetime import datetime, timezone, date
+from datetime import datetime, timezone, date, timedelta
 
 import telegramify_markdown
 from aiogram.enums import ParseMode
@@ -11,8 +11,8 @@ from telegramify_markdown import InterpreterChain, TextInterpreter, FileInterpre
 from bots import main_bot
 from data.keyboards import buy_sub_keyboard, main_keyboard, keyboard_for_pay, generate_sub_keyboard, \
     generate_change_plan_keyboard
-from db.repository import users_repository, user_counters_repository, operation_repository
-from settings import messages_dict, menu_photo, sub_description_photo_before, premium_sub_photo
+from db.repository import users_repository, user_counters_repository, operation_repository, subscriptions_repository
+from settings import messages_dict, menu_photo, sub_description_photo_before, premium_sub_photo, SUBSCRIPTION_WORDS
 from utils.gpt_client import LLMProvider, ADVANCED_MODEL
 from utils.payment_for_services import create_payment
 from utils.prompts import TRACKING_REPORT_COMMENT_PROMPT
@@ -64,6 +64,37 @@ async def send_message_copy(user_id, message: Message):
         await main_bot.send_message(user_id, text=message.html_text)
     else:
         print("Error sending message: unknown type")
+
+
+async def send_new_subscription_message(user_id: int, subscription_days: int):
+    end_date = datetime.now(timezone.utc) + timedelta(days=subscription_days)
+    duration_word = SUBSCRIPTION_WORDS.get(subscription_days)
+    if duration_word:
+        await main_bot.send_message(user_id,
+                                    messages_dict["new_subscription_message_standard_format"]
+                                    .format(duration_word=duration_word[0], # new sub word
+                                            end_date=end_date.strftime("%d.%m.%y")))
+    else:
+        await main_bot.send_message(user_id,
+                                    messages_dict["new_subscription_message_custom_duration_format"]
+                                    .format(duration_word=subscription_days,
+                                            end_date=end_date.strftime("%d.%m.%y")))
+
+async def send_prolong_subscription_message(user_id: int, subscription_days: int, subscription_id: int):
+    subscription = await subscriptions_repository.get_subscription_by_id(subscription_id)
+    end_date = subscription.creation_date + timedelta(days=subscription.time_limit_subscription)
+
+    duration_word = SUBSCRIPTION_WORDS.get(subscription_days)
+    if duration_word:
+        await main_bot.send_message(user_id,
+                                    messages_dict["prolong_subscription_message_standard_format"]
+                                    .format(duration_word=duration_word[1], # prolong word
+                                            end_date=end_date.strftime("%d.%m.%y")))
+    else:
+        await main_bot.send_message(user_id,
+                                    messages_dict["prolong_subscription_message_custom_duration_format"]
+                                    .format(duration_word=subscription_days,
+                                            end_date=end_date.strftime("%d.%m.%y")))
 
 
 async def send_main_menu(user_id: int):
