@@ -14,8 +14,9 @@ class CleanModel:
         Базовая модель в базе данных
     """
     id = Column(Integer, primary_key=True, autoincrement=True, unique=True)
-    creation_date = Column(DateTime, nullable=False, default=func.now())
-    upd_date = Column(DateTime, onupdate=func.now(), nullable=False, default=func.now())
+    creation_date = Column(DateTime, nullable=False, default=lambda: datetime.datetime.now(datetime.timezone.utc))
+    upd_date = Column(DateTime, onupdate=lambda: datetime.datetime.now(datetime.timezone.utc), nullable=False,
+                        default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     @property
     def no_upd_time(self) -> datetime:

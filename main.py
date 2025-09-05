@@ -59,7 +59,7 @@ async def main():
     scheduler.add_job(func=send_checkup, trigger="interval", minutes=1, max_instances=20,
                       misfire_grace_time=120)
     scheduler.add_job(func=send_recommendations, args=[main_bot], trigger="interval",
-                      minutes=10, max_instances=20, misfire_grace_time=120)
+                      minutes=1, max_instances=20, misfire_grace_time=120)
     scheduler.add_job(notification_reminder, trigger='interval', hours=1, args=[main_bot])
     scheduler.add_job(
         send_statistics,
