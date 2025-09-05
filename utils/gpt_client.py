@@ -25,7 +25,7 @@ from utils.user_request_types import UserFile
 BASIC_MODEL = "gemini-2.5-flash-lite-preview-06-17"
 ADVANCED_MODEL = "gemini-2.5-flash"
 
-TTS_MODEL = "gemini-live-2.5-flash-preview-native-audio"
+TTS_MODEL = "gemini-live-2.5-flash"
 
 MAX_RETRIES = 10
 
@@ -154,7 +154,7 @@ class LLMProvider:
         while not success and tries < MAX_RETRIES:
             try:
                 async with google_genai_client.aio.live.connect(
-                        model=secrets.choice((TTS_MODEL, ADVANCED_MODEL)),
+                        model=TTS_MODEL,
                         config=config,
                 ) as session:
                     text_input = f'Ты - просто text-to-speech модель. Ты не придумываешь свой ответ, а просто читаешь текст. Прочти его выразительно, в заданном стиле. Стиль: говори {"очень жёстко, злобно, строго, быстро и восклицательно. Ты как будто приказываешь" if user_ai_temperature == 0.6 else "спокойно"}. Текст:\n\n{text}'
