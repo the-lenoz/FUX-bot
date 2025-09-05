@@ -194,7 +194,7 @@ async def set_user_timezone(message: Message, state: FSMContext):
     await user_timezone_repository.set_user_timezone_delta(user_id=message.from_user.id,
                                                            timezone_utc_delta=timezone[1])
 
-    type_checkup = state.get_value("type_checkup")
+    type_checkup = await state.get_value("type_checkup")
 
     if await state.get_value("enter_checkup_time"):
         await message.answer_photo(
