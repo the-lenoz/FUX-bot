@@ -5,7 +5,7 @@ from db.base import BaseModel, CleanModel
 from .user import User
 
 
-class Subscriptions(BaseModel, CleanModel):
+class Subscription(BaseModel, CleanModel):
     """
     Таблица юзеров
     """

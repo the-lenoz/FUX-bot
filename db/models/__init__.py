@@ -8,7 +8,7 @@ from .operations import Operations
 from .promo_activations import PromoActivations
 from .recommendations import Recommendation
 from .referral_system import ReferralSystem
-from .subscriptions import Subscriptions
+from .subscription import Subscription
 from .mental_problems import MentalProblem
 
 from .user import User
@@ -19,7 +19,7 @@ __all__ = ['User',
            'AiRequests',
            'ReferralSystem',
            'PromoActivations',
-           'Subscriptions',
+           'Subscription',
            'Operations',
            'Checkup',
            'CheckupDayData',
