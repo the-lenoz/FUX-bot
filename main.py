@@ -21,7 +21,7 @@ from handlers.sub_management_handler import sub_management_router
 from handlers.system_settings_handler import system_settings_router
 from handlers.user_handler import user_router
 from utils.scheduled_actions import edit_activation_sub, send_checkup, notification_reminder, \
-    break_power_mode, send_recommendations, send_statistics, reset_limits
+    break_power_mode, send_recommendations, send_statistics
 from utils.user_middleware import EventLoggerMiddleware
 
 logging.basicConfig(
@@ -66,12 +66,7 @@ async def main():
         trigger=CronTrigger(hour=19),
         args=[admin_bot]
     )
-    scheduler.add_job(
-        reset_limits,
-        trigger="interval",
-        minutes=60, max_instances=20, misfire_grace_time=120,
-        args=[main_bot]
-    )
+
 
 
     scheduler.start()

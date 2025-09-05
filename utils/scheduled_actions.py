@@ -190,16 +190,16 @@ async def send_statistics(admin_bot: Bot):
         )
 
 
-async def reset_limits(main_bot: Bot):
+async def reset_limits(main_bot: Bot): # NOT USED ANYMORE
     users = await users_repository.select_all_users()
     for user in users:
         user_timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id=user.user_id) or DEFAULT_TIMEZONE
         if datetime.datetime.now(timezone(user_timezone_delta)).weekday() == 0 and datetime.datetime.now(timezone(user_timezone_delta)).hour == 8:
             await limits_repository.update_user_limits(
                 user_id=user.user_id,
-                exercises_remaining=2,
-                universal_requests_remaining=10,
-                psychological_requests_remaining=30
+                exercises_remaining=1,
+                universal_requests_remaining=5,
+                psychological_requests_remaining=10
             )
 
             user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user.user_id)
