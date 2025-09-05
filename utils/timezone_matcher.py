@@ -31,14 +31,6 @@ timezones_dict = {
 
 
 
-
-
-
-
-
-
-
-
 def calculate_timezone(user_time: datetime.datetime, current_utc_time: datetime.datetime | None = None):
     current_utc_time = current_utc_time or datetime.datetime.now(datetime.timezone.utc)
 
