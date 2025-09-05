@@ -418,7 +418,7 @@ async def enter_max_activations(message: types.Message, state: FSMContext, bot: 
                                                    type_promo="from_admin")
         await message.answer(f"Отлично, ты выпустил промокод!\n\nПромокод:")
         await message.answer(f"<code>{promo_code}</code>")
-        await message.answer(f"Ссылка: {await create_start_link(message.bot, promo_code)}")
+        await message.answer(f"Ссылка: {await create_start_link(main_bot, promo_code)}")
         return
     await message.answer("Ты ввел не число, попробуй еще раз ввести"
                          " максимальное количество активаций данного промокода",
