@@ -5,6 +5,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import any_state
 from aiogram.types import InlineKeyboardButton, BufferedInputFile
+from aiogram.utils.deep_linking import create_start_link
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from bots import main_bot
@@ -415,7 +416,9 @@ async def enter_max_activations(message: types.Message, state: FSMContext, bot: 
                                                    max_days=max_days,
                                                    max_activations=max_activations,
                                                    type_promo="from_admin")
-        await message.answer(f"Отлично, ты выпустил промокод!\n\nПромокод: <code>{promo_code}</code>")
+        await message.answer(f"Отлично, ты выпустил промокод!\n\nПромокод:")
+        await message.answer(f"<code>{promo_code}</code>")
+        await message.answer(f"Ссылка: {await create_start_link(message.bot, promo_code)}")
         return
     await message.answer("Ты ввел не число, попробуй еще раз ввести"
                          " максимальное количество активаций данного промокода",
