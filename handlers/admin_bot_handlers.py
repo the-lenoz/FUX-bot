@@ -249,6 +249,9 @@ async def enter_type_users_for_mailing(call: types.CallbackQuery, state: FSMCont
     elif type_users == "passive":
         await call.message.answer(text="Напиши сообщение, которое разошлётся ПАССИВНЫМ пользователям",
                                   reply_markup=cancel_keyboard.as_markup())
+    elif type_users == "unsubscribed":
+        await call.message.answer(text="Напиши сообщение, которое разошлётся ПАССИВНЫМ пользователям",
+                                  reply_markup=cancel_keyboard.as_markup())
     await state.set_state(InputMessage.enter_message_mailing)
     await state.update_data(message_id=call.message.message_id, type_users=type_users)
 
@@ -296,6 +299,14 @@ async def enter_message_mailing(message: types.Message, state: FSMContext, bot: 
         for user in users:
             last_user_event = await events_repository.get_last_event_by_user_id(user.user_id)
             if last_user_event.creation_date - user.creation_date < timedelta(hours=24):
+                try:
+                    await send_message_copy(user_id=user.user_id, message=message)
+                except:
+                    continue
+    elif type_users == "unsubscribed":
+        for user in users:
+            if await subscriptions_repository.get_all_subscriptions_by_user_id(user.user_id) \
+                    and not await subscriptions_repository.get_active_subscription_by_user_id(user.user_id):
                 try:
                     await send_message_copy(user_id=user.user_id, message=message)
                 except:

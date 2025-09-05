@@ -288,6 +288,9 @@ type_users_mailing_keyboard.row(InlineKeyboardButton(text='С подпиской
 type_users_mailing_keyboard.row(InlineKeyboardButton(text='Без подписки', callback_data="type_users_mailing|not_sub"))
 type_users_mailing_keyboard.row(
     InlineKeyboardButton(text='Пассивным (пользовался меньше 24ч)', callback_data="type_users_mailing|passive"))
+type_users_mailing_keyboard.row(
+    InlineKeyboardButton(text='Потерявшим подписку (либо платную, либо по промокоду)',
+                         callback_data="type_users_mailing|unsubscribed"))
 type_users_mailing_keyboard.row(InlineKeyboardButton(text="Отмена", callback_data="cancel"))
 
 account_keyboard = InlineKeyboardBuilder()
