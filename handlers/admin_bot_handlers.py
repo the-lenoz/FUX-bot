@@ -294,7 +294,7 @@ async def enter_message_mailing(message: types.Message, state: FSMContext, bot: 
     elif type_users == "free_sub":
         for user in users:
             sub = await subscriptions_repository.get_active_subscription_by_user_id(user.user_id)
-            if sub and not sub.plan:
+            if sub and not sub.recurrent:
                 try:
                     await send_message_copy(user_id=user.user_id, message=message)
                 except:
