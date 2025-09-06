@@ -31,14 +31,6 @@ timezones_dict = {
 
 
 
-
-
-
-
-
-
-
-
 def calculate_timezone(user_time: datetime.datetime, current_utc_time: datetime.datetime | None = None):
     current_utc_time = current_utc_time or datetime.datetime.now(datetime.timezone.utc)
 
@@ -50,5 +42,5 @@ def calculate_timezone(user_time: datetime.datetime, current_utc_time: datetime.
     minutes = round((delta.seconds + 24*3600*delta.days) // 60) % 60
     if hours > 12:
         hours = hours - 24
-    print(hours, minutes, delta)
+
     return timezones_dict.get(hours * 100 + minutes), datetime.timedelta(hours=hours, minutes=minutes)

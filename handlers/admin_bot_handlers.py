@@ -5,6 +5,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import any_state
 from aiogram.types import InlineKeyboardButton, BufferedInputFile
+from aiogram.utils.deep_linking import create_start_link
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from bots import main_bot
@@ -243,11 +244,17 @@ async def enter_type_users_for_mailing(call: types.CallbackQuery, state: FSMCont
     elif type_users == "sub":
         await call.message.answer(text="Напиши сообщение, которое  разошлётся пользователям С ПОДПИСКОЙ",
                                   reply_markup=cancel_keyboard.as_markup())
+    elif type_users == "free_sub":
+        await call.message.answer(text="Напиши сообщение, которое  разошлётся пользователям С БЕСПЛАТНОЙ ПОДПИСКОЙ",
+                                  reply_markup=cancel_keyboard.as_markup())
     elif type_users == "not_sub":
         await call.message.answer(text="Напиши сообщение, которое разошлётся пользователям БЕЗ ПОДПИСКИ",
                                   reply_markup=cancel_keyboard.as_markup())
     elif type_users == "passive":
         await call.message.answer(text="Напиши сообщение, которое разошлётся ПАССИВНЫМ пользователям",
+                                  reply_markup=cancel_keyboard.as_markup())
+    elif type_users == "unsubscribed":
+        await call.message.answer(text="Напиши сообщение, которое разошлётся ПОТЕРЯВШИМ ПОДПИСКУ пользователям",
                                   reply_markup=cancel_keyboard.as_markup())
     await state.set_state(InputMessage.enter_message_mailing)
     await state.update_data(message_id=call.message.message_id, type_users=type_users)
@@ -284,6 +291,14 @@ async def enter_message_mailing(message: types.Message, state: FSMContext, bot: 
                     await send_message_copy(user_id=user.user_id, message=message)
                 except:
                     continue
+    elif type_users == "free_sub":
+        for user in users:
+            sub = await subscriptions_repository.get_active_subscription_by_user_id(user.user_id)
+            if sub and not sub.recurrent:
+                try:
+                    await send_message_copy(user_id=user.user_id, message=message)
+                except:
+                    continue
     elif type_users == "not_sub":
         for user in users:
             user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user.user_id)
@@ -296,6 +311,14 @@ async def enter_message_mailing(message: types.Message, state: FSMContext, bot: 
         for user in users:
             last_user_event = await events_repository.get_last_event_by_user_id(user.user_id)
             if last_user_event.creation_date - user.creation_date < timedelta(hours=24):
+                try:
+                    await send_message_copy(user_id=user.user_id, message=message)
+                except:
+                    continue
+    elif type_users == "unsubscribed":
+        for user in users:
+            if await subscriptions_repository.get_all_subscriptions_by_user_id(user.user_id) \
+                    and not await subscriptions_repository.get_active_subscription_by_user_id(user.user_id):
                 try:
                     await send_message_copy(user_id=user.user_id, message=message)
                 except:
@@ -404,7 +427,9 @@ async def enter_max_activations(message: types.Message, state: FSMContext, bot: 
                                                    max_days=max_days,
                                                    max_activations=max_activations,
                                                    type_promo="from_admin")
-        await message.answer(f"Отлично, ты выпустил промокод!\n\nПромокод: <code>{promo_code}</code>")
+        await message.answer(f"Отлично, ты выпустил промокод!\n\nПромокод:")
+        await message.answer(f"<code>{promo_code}</code>")
+        await message.answer(f"Ссылка: {await create_start_link(main_bot, promo_code)}")
         return
     await message.answer("Ты ввел не число, попробуй еще раз ввести"
                          " максимальное количество активаций данного промокода",

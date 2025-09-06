@@ -5,6 +5,7 @@ from sqlalchemy.orm import relationship, Mapped
 
 from db.base import BaseModel, CleanModel
 from .user import User
+from ..time_provider import get_now_utc_time
 
 
 class Checkup(BaseModel, CleanModel):
@@ -17,7 +18,7 @@ class Checkup(BaseModel, CleanModel):
     number_checkup = Column(BigInteger, nullable=False)
     type_checkup = Column(String, nullable=False)
     time_checkup = Column(Time, nullable=True, unique=False)
-    last_date_send = Column(DateTime, nullable=True, unique=False, default=func.now() - timedelta(days=2))
+    last_date_send = Column(DateTime, nullable=True, unique=False, default=get_now_utc_time)
 
     @property
     def stats(self) -> str:

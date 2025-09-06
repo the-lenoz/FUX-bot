@@ -5,7 +5,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from db.repository import checkup_repository, days_checkups_repository, subscriptions_repository, users_repository, \
     user_timezone_repository, user_counters_repository
-from settings import emoji_dict, speed_dict, table_names, SUBSCRIPTION_PLANS
+from settings import emoji_dict, speed_dict, table_names, SUBSCRIPTION_PLANS, DEFAULT_TIMEZONE
 from utils.checkups_sent import sent_today
 from utils.price_provider import get_user_price_string
 
@@ -36,7 +36,7 @@ edit_activate_notification_keyboard.row(InlineKeyboardButton(text="в Меню",
 referral_keyboard = InlineKeyboardBuilder()
 referral_keyboard.row(InlineKeyboardButton(text="✍️ Ввести промокод", callback_data="enter_promo_code"))
 referral_keyboard.row(InlineKeyboardButton(text="Выпустить промокод", callback_data="create_promo_code"))
-referral_keyboard.row(InlineKeyboardButton(text="Подарить подписку", callback_data="buy_gift"))
+referral_keyboard.row(InlineKeyboardButton(text="🎁 Подарить подписку", callback_data="buy_gift"))
 referral_keyboard.row(menu_button)
 
 price_keyboard = InlineKeyboardBuilder()
@@ -110,10 +110,6 @@ choice_gender_settings_keyboard.row(InlineKeyboardButton(text="В женском
 choice_gender_settings_keyboard.row(InlineKeyboardButton(text="В мужском роде♂️", callback_data="gender|male"))
 choice_gender_settings_keyboard.row(InlineKeyboardButton(text="Отменить", callback_data="system_settings"))
 
-exercises_keyboard = InlineKeyboardBuilder()
-exercises_keyboard.row(InlineKeyboardButton(text="Упражнения", callback_data="choose_exercise_problem"))
-exercises_keyboard.row(menu_button)
-
 recommendation_keyboard = InlineKeyboardBuilder()
 recommendation_keyboard.row(InlineKeyboardButton(text="Получить рекомендацию", callback_data="recommendation"))
 
@@ -122,7 +118,7 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
     keyboard = InlineKeyboardBuilder()
     user_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id=user_id)
     user_counters = await user_counters_repository.get_user_counters(user_id)
-    user_timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id)
+    user_timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id) or DEFAULT_TIMEZONE
     today_tracking = False
     missed_tracking = False
     for checkup in user_checkups:
@@ -143,7 +139,7 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
     if missed_tracking:
         keyboard.row(InlineKeyboardButton(text="⚠️ПРОПУЩЕННЫЕ трекинги", callback_data="missed_tracking"))
 
-    keyboard.row(InlineKeyboardButton(text="📝Упражнения", callback_data="choose_exercise_problem"))
+    keyboard.row(InlineKeyboardButton(text="🧘‍♀️Упражнения", callback_data="choose_exercise_problem"))
     keyboard.add(InlineKeyboardButton(text="📉️Трекинги", callback_data="checkups"))
     keyboard.row(InlineKeyboardButton(text="📜О сервисе", callback_data="all_mechanics"))
     keyboard.add(InlineKeyboardButton(text="⚙️Настройки", callback_data="system_settings"))
@@ -285,7 +281,11 @@ db_tables_keyboard.row(InlineKeyboardButton(text="Отмена", callback_data="
 type_users_mailing_keyboard = InlineKeyboardBuilder()
 type_users_mailing_keyboard.row(InlineKeyboardButton(text='Всем пользователям', callback_data="type_users_mailing|all"))
 type_users_mailing_keyboard.row(InlineKeyboardButton(text='С подпиской', callback_data="type_users_mailing|sub"))
+type_users_mailing_keyboard.row(InlineKeyboardButton(text='С бесплатной подпиской', callback_data="type_users_mailing|free_sub"))
 type_users_mailing_keyboard.row(InlineKeyboardButton(text='Без подписки', callback_data="type_users_mailing|not_sub"))
+type_users_mailing_keyboard.row(
+    InlineKeyboardButton(text='Потерявшим подписку (либо платную, либо по промокоду)',
+                         callback_data="type_users_mailing|unsubscribed"))
 type_users_mailing_keyboard.row(
     InlineKeyboardButton(text='Пассивным (пользовался меньше 24ч)', callback_data="type_users_mailing|passive"))
 type_users_mailing_keyboard.row(InlineKeyboardButton(text="Отмена", callback_data="cancel"))

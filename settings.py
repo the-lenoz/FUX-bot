@@ -27,6 +27,12 @@ SUBSCRIPTION_PLANS = {
     90: 990
 }
 
+SUBSCRIPTION_WORDS = {
+    7: ("недельная", "неделю"),
+    30: ("месячная", "месяц"),
+    90: ("трёхмесячная", "три месяца")
+}
+
 POWER_MODE_DAY_DISCOUNT = 0.015
 
 MAX_DAYS_FREEZE = 3

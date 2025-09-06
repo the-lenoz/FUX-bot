@@ -10,9 +10,9 @@ class LimitsRepository:
     def __init__(self):
         self.session_maker = DatabaseEngine().create_session()
 
-    async def create_user_limits(self, user_id: int, exercises_remaining: int = 2,
-                                 universal_requests_remaining: int = 10,
-                                 psychological_requests_remaining: int = 30,
+    async def create_user_limits(self, user_id: int, exercises_remaining: int = 1,
+                                 universal_requests_remaining: int = 5,
+                                 psychological_requests_remaining: int = 10,
                                  attachments_remaining: int = 2,
                                  voices_remaining: int = 2) -> Limits:
         async with self.session_maker() as session:

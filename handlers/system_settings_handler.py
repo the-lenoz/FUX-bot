@@ -11,7 +11,8 @@ from bots import main_bot
 from data.keyboards import menu_keyboard, menu_button, get_ai_temperature_keyboard, menu_age_keyboard, \
     settings_cancel_keyboard, choice_gender_settings_keyboard
 from db.repository import users_repository, checkup_repository, subscriptions_repository, user_timezone_repository
-from settings import temperature_ai_photo, checkup_emotions_photo, checkup_productivity_photo, messages_dict
+from settings import temperature_ai_photo, checkup_emotions_photo, checkup_productivity_photo, messages_dict, \
+    DEFAULT_TIMEZONE
 from utils.state_models import InputMessage, AccountSettingsStates
 from utils.gpt_distributor import user_request_handler
 from utils.timezone_matcher import calculate_timezone
@@ -183,7 +184,7 @@ async def edit_checkup_time_call(call: CallbackQuery, state: FSMContext):
     checkup = await checkup_repository.get_checkup_by_checkup_id(checkup_id=checkup_id)
     await state.set_state(InputMessage.edit_time_checkup)
     await state.update_data(checkup_id=checkup_id)
-    timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id)
+    timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id) or DEFAULT_TIMEZONE
     await call.message.answer_photo(photo=checkup_emotions_photo if checkup.type_checkup == "emotions" else checkup_productivity_photo,
                                         caption="Для того, чтобы продолжить, введи, пожалуйста, время, в которое тебе отправлять <u>трекинг</u> " + ("<b>эмоций</b>" if checkup.type_checkup == "emotions" else "<b>продуктивности</b>") +
                               f"\n\nСейчас данный трекинг отправляется в {(datetime.combine(datetime.today(), checkup.time_checkup) + timezone_delta).time().strftime('%H:%M')}",
@@ -200,7 +201,7 @@ async def enter_new_checkup_time(message: Message, state: FSMContext):
     await state.clear()
     checkup_id = int(state_data.get("checkup_id"))
     if is_valid_time(message.text):
-        user_timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id)
+        user_timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id) or DEFAULT_TIMEZONE
         time = (datetime.strptime(message.text, "%H:%M") - user_timezone_delta).time()
         await checkup_repository.update_time_checkup_by_checkup_id(checkup_id=checkup_id,
                                                                    time_checkup=time)

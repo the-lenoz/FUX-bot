@@ -30,12 +30,11 @@ class UserTimezoneRepository:
             async with session.begin():
                 query = select(UserTimezone).where(UserTimezone.user_id == user_id)
                 result = await session.execute(query)
-                timezone: UserTimezone = result.scalars().one_or_none()
+                timezone = result.scalars().one_or_none()
                 if timezone:
                     return timezone.timezone_UTC_delta
                 else:
-                    await self.set_user_timezone_delta(user_id, DEFAULT_TIMEZONE)
-                    return DEFAULT_TIMEZONE
+                    return None
 
     async def delete_user_timezone_by_user_id(self, user_id: int):
         async with self.session_maker() as session:

@@ -1,6 +1,6 @@
 import calendar
 import io
-from datetime import datetime, timezone, date
+from datetime import datetime, timezone, date, timedelta
 
 import telegramify_markdown
 from aiogram.enums import ParseMode
@@ -11,8 +11,8 @@ from telegramify_markdown import InterpreterChain, TextInterpreter, FileInterpre
 from bots import main_bot
 from data.keyboards import buy_sub_keyboard, main_keyboard, keyboard_for_pay, generate_sub_keyboard, \
     generate_change_plan_keyboard
-from db.repository import users_repository, user_counters_repository, operation_repository
-from settings import messages_dict, menu_photo, sub_description_photo_before, premium_sub_photo
+from db.repository import users_repository, user_counters_repository, operation_repository, subscriptions_repository
+from settings import messages_dict, menu_photo, sub_description_photo_before, premium_sub_photo, SUBSCRIPTION_WORDS
 from utils.gpt_client import LLMProvider, ADVANCED_MODEL
 from utils.payment_for_services import create_payment
 from utils.prompts import TRACKING_REPORT_COMMENT_PROMPT
@@ -32,7 +32,8 @@ async def send_message_copy(user_id, message: Message):
             return
         file_buffer.seek(0)
         data = file_buffer.read()
-        await main_bot.send_photo(user_id, photo=BufferedInputFile(data, "picture.jpg"), caption=message.caption)
+        await main_bot.send_photo(user_id, photo=BufferedInputFile(data, "picture.jpg"),
+                                  caption=message.html_text, caption_entities=message.caption_entities)
     elif message.voice:
         file_buffer = io.BytesIO()
         try:
@@ -44,7 +45,8 @@ async def send_message_copy(user_id, message: Message):
             return
         file_buffer.seek(0)
         data = file_buffer.read()
-        await main_bot.send_voice(user_id, voice=BufferedInputFile(data, "voice.ogg"), caption=message.caption)
+        await main_bot.send_voice(user_id, voice=BufferedInputFile(data, "voice.ogg"),
+                                  caption=message.html_text, caption_entities=message.caption_entities)
     elif message.document:
         file_buffer = io.BytesIO()
         try:
@@ -56,12 +58,47 @@ async def send_message_copy(user_id, message: Message):
             return
         file_buffer.seek(0)
         data = file_buffer.read()
-        await main_bot.send_voice(user_id, voice=BufferedInputFile(data, message.document.file_name), caption=message.caption)
-        await main_bot.send_document(user_id, document=message.document)
+        await main_bot.send_document(user_id, document=BufferedInputFile(data, message.document.file_name),
+                                     caption=message.html_text, caption_entities=message.caption_entities)
     elif message.text:
-        await main_bot.send_message(user_id, text=message.text)
+        await main_bot.send_message(user_id, text=message.html_text)
     else:
         print("Error sending message: unknown type")
+
+
+async def send_new_subscription_message(user_id: int, subscription_days: int, paid: bool = False):
+    end_date = datetime.now(timezone.utc) + timedelta(days=subscription_days)
+    duration_word = SUBSCRIPTION_WORDS.get(subscription_days)
+    if duration_word:
+        await main_bot.send_message(user_id,
+                                    messages_dict["new_subscription_message_standard_format"]
+                                    .format(duration_word=duration_word[0], # new sub word
+                                            end_date=end_date.strftime("%d.%m.%y"))
+                                    + (messages_dict["paid_subscription_recurrent_suffix"] if paid else ""))
+    else:
+        await main_bot.send_message(user_id,
+                                    messages_dict["new_subscription_message_custom_duration_format"]
+                                    .format(duration_num=subscription_days,
+                                            end_date=end_date.strftime("%d.%m.%y"))
+                                    + (messages_dict["paid_subscription_recurrent_suffix"] if paid else ""))
+
+async def send_prolong_subscription_message(user_id: int, subscription_days: int, subscription_id: int, paid: bool = False):
+    subscription = await subscriptions_repository.get_subscription_by_id(subscription_id)
+    end_date = subscription.creation_date + timedelta(days=subscription.time_limit_subscription)
+
+    duration_word = SUBSCRIPTION_WORDS.get(subscription_days)
+    if duration_word:
+        await main_bot.send_message(user_id,
+                                    messages_dict["prolong_subscription_message_standard_format"]
+                                    .format(duration_word=duration_word[1], # prolong word
+                                            end_date=end_date.strftime("%d.%m.%y"))
+                                    + (messages_dict["paid_subscription_recurrent_suffix"] if paid else ""))
+    else:
+        await main_bot.send_message(user_id,
+                                    messages_dict["prolong_subscription_message_custom_duration_format"]
+                                    .format(duration_num=subscription_days,
+                                            end_date=end_date.strftime("%d.%m.%y"))
+                                    + (messages_dict["paid_subscription_recurrent_suffix"] if paid else ""))
 
 
 async def send_main_menu(user_id: int):

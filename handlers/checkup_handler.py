@@ -14,7 +14,8 @@ from db.repository import users_repository, subscriptions_repository, checkup_re
     user_timezone_repository, user_counters_repository
 from handlers.system_settings_handler import send_system_settings
 from settings import checkups_types_photo, checkup_emotions_photo, \
-    checkup_productivity_photo, messages_dict, emotions_emoji_description_photo, productivity_emoji_description_photo
+    checkup_productivity_photo, messages_dict, emotions_emoji_description_photo, productivity_emoji_description_photo, \
+    DEFAULT_TIMEZONE
 from utils.state_models import InputMessage
 from utils.validators import is_valid_time
 from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report
@@ -53,7 +54,7 @@ async def go_missed_tracking(call: CallbackQuery):
     user_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id=user_id)
     keyboard = InlineKeyboardBuilder()
     have_checkups = False
-    user_timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id)
+    user_timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id) or DEFAULT_TIMEZONE
     for checkup in user_checkups:
         active_days = await days_checkups_repository.get_active_day_checkups_by_checkup_id(checkup_id=checkup.id)
         for active_day in active_days:
@@ -193,7 +194,7 @@ async def set_user_timezone(message: Message, state: FSMContext):
     await user_timezone_repository.set_user_timezone_delta(user_id=message.from_user.id,
                                                            timezone_utc_delta=timezone[1])
 
-    type_checkup = state.get_value("type_checkup")
+    type_checkup = await state.get_value("type_checkup")
 
     if await state.get_value("enter_checkup_time"):
         await message.answer_photo(
@@ -216,7 +217,7 @@ async def update_time_checkup(message: Message, state: FSMContext):
     await state.clear()
     type_checkup = state_data.get("type_checkup")
     user_checkups = await checkup_repository.get_checkups_by_user_id(user_id=user_id)
-    user_timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id)
+    user_timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id) or DEFAULT_TIMEZONE
     if result:
         time_obj = (datetime.strptime(message.text, "%H:%M") - user_timezone_delta).time()
 

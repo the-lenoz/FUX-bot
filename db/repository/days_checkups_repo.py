@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.engine import DatabaseEngine
 from db.models import CheckupDayData
+from db.time_provider import get_now_utc_time
 
 
 class DaysCheckupRepository:
@@ -81,7 +82,7 @@ class DaysCheckupRepository:
                 sql = update(CheckupDayData).values({
                     CheckupDayData.send_checkup: True,
                     CheckupDayData.points: points,
-                    CheckupDayData.date_end_day: func.now()
+                    CheckupDayData.date_end_day: get_now_utc_time
                 }).where(or_(CheckupDayData.id == day_checkup_id))
                 await session.execute(sql)
                 await session.commit()
