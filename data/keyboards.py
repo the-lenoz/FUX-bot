@@ -305,7 +305,7 @@ notification_keyboard.row(
 )
 notification_keyboard.row(
     InlineKeyboardButton(text="Упражнение", callback_data="choose_exercise_problem"),
-    InlineKeyboardButton(text="Трекинг", callback_data="settings|checkups")
+    InlineKeyboardButton(text="Трекинг", callback_data="go_checkup")
 )
 
 
