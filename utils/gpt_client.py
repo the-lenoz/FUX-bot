@@ -22,7 +22,7 @@ from pydantic import BaseModel
 from utils.prompts import SMALL_TALK_TEXT_CHECK_PROMPT_FORMAT
 from utils.user_request_types import UserFile
 
-BASIC_MODEL = "gemini-2.5-flash-lite-preview-06-17"
+BASIC_MODEL = "gemini-2.5-flash-lite"
 ADVANCED_MODEL = "gemini-2.5-flash"
 
 TTS_MODEL = "gemini-live-2.5-flash-preview-native-audio"
