@@ -363,11 +363,17 @@ class PsyHandler(AIHandler):
             action="upload_voice"
         )
         logger.info("sending voice")
-        await main_bot.send_voice(
-            user_id,
-            voice_file,
-            reply_markup=create_practice_exercise_recommendation_keyboard(problem_id)
-        )
+        if voice_file:
+            await main_bot.send_voice(
+                user_id,
+                voice_file,
+                reply_markup=create_practice_exercise_recommendation_keyboard(problem_id)
+            )
+        else:
+            await main_bot.send_message(
+                user_id,
+                "Произошла ошибка - не могу отправить голосовое. Скоро исправим!"
+            )
 
     async def provide_recommendations(self, user_id: int, from_notification: bool = False):
         typing_message = await main_bot.send_message(

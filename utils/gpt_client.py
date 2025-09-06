@@ -178,27 +178,30 @@ class LLMProvider:
                 await asyncio.sleep(5)
             tries += 1
 
+        if success:
+            buffer = BytesIO()
+            with wave.open(buffer, "w") as f:
+                f.setnchannels(1)
+                f.setsampwidth(2)
+                f.setframerate(24000)
+                f.writeframes(np.concatenate(audio_data))
+            buffer.seek(0)
 
-        buffer = BytesIO()
-        with wave.open(buffer, "w") as f:
-            f.setnchannels(1)
-            f.setsampwidth(2)
-            f.setframerate(24000)
-            f.writeframes(np.concatenate(audio_data))
-        buffer.seek(0)
+            audio_segment = pydub.AudioSegment.from_wav(buffer)
 
-        audio_segment = pydub.AudioSegment.from_wav(buffer)
+            opus_buffer = BytesIO()
+            audio_segment.export(opus_buffer, format="opus", codec="libopus", bitrate="64k")
 
-        opus_buffer = BytesIO()
-        audio_segment.export(opus_buffer, format="opus", codec="libopus", bitrate="64k")
+            # Seek to the beginning of the BytesIO object so it can be read from
+            opus_buffer.seek(0)
 
-        # Seek to the beginning of the BytesIO object so it can be read from
-        opus_buffer.seek(0)
-
-        return BufferedInputFile(
-            opus_buffer.getvalue(),
-            "voice.ogg"
-        )
+            return BufferedInputFile(
+                opus_buffer.getvalue(),
+                "voice.ogg"
+            )
+        else:
+            logger.error("Ошибка - голос не сохранён")
+            return None
 
     @staticmethod
     async def is_text_smalltalk(text: str):
