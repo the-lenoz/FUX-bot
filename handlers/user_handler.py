@@ -47,11 +47,6 @@ async def start_use(call: CallbackQuery, state: FSMContext):
     await user_request_handler.AI_handler.exit(user_id)
     await call.message.delete()
     await asyncio.sleep(10)
-    if not await get_user_subscription(user_id):
-        await call.message.answer(
-            messages_dict["free_account_message"]
-        )
-    await asyncio.sleep(10)
     await call.message.answer(
         f"{(user.name + ', е') if user.name else 'Е'}сли что-то крутится в голове — <b>расскажи</b> 😌."
         " Это может быть просто ощущение, мысль или вопрос без ответа?",
