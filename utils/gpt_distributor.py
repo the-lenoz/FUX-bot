@@ -23,7 +23,8 @@ from utils.limits import decrease_psy_requests_limit, decrease_universal_request
 from utils.photo_recommendation import generate_blurred_image_with_text
 from utils.prompts import RECOMMENDATION_PROMPT, \
     MENTAL_PROBLEM_ABSTRACT_PROMPT, EXERCISE_PROMPT_FORMAT, DIALOG_LATEST_MESSAGE_CHECKER_PROMPT, \
-    DEFAULT_ASSISTANT_PROMPT_ADDON, get_assistant_system_prompt, DIALOG_CHECKER_PROMPT, MENTAL_PROBLEM_TITLE_PROMPT
+    DEFAULT_ASSISTANT_PROMPT_ADDON, get_assistant_system_prompt, DIALOG_CHECKER_PROMPT, MENTAL_PROBLEM_TITLE_PROMPT, \
+    GO_DEEPER_PROMPT
 from utils.subscription import get_user_subscription
 from utils.user_properties import get_user_description
 from utils.user_request_types import UserRequest
@@ -326,7 +327,8 @@ class PsyHandler(AIHandler):
             await main_bot.send_message(request.user_id, messages_dict["voice_message_reminder_text"])
 
     @staticmethod
-    async def send_recommendation(user_id: int, recommendation, problem_id: int, from_notification: bool = False):
+    async def send_recommendation(user_id: int, recommendation, problem_id: int,
+                                  from_notification: bool = False, go_deeper: bool = False):
         try:
             await main_bot.send_message(
                 user_id,
@@ -352,7 +354,7 @@ class PsyHandler(AIHandler):
             await main_bot.send_voice(
                 user_id,
                 voice_file,
-                reply_markup=create_practice_exercise_recommendation_keyboard(problem_id)
+                reply_markup=create_practice_exercise_recommendation_keyboard(problem_id, go_deeper=go_deeper)
             )
         else:
             await main_bot.send_message(
@@ -360,7 +362,7 @@ class PsyHandler(AIHandler):
                 "Произошла ошибка - не могу отправить голосовое. Скоро исправим!"
             )
 
-    async def provide_recommendations(self, user_id: int, from_notification: bool = False):
+    async def provide_recommendations(self, user_id: int, from_notification: bool = False, go_deeper: bool = False):
         typing_message = await main_bot.send_message(
             user_id,
             messages_dict["typing_message_text"]
@@ -382,11 +384,10 @@ class PsyHandler(AIHandler):
                 if problem_id and self.active_threads.get(user_id):
                     recommendation_request = UserRequest(
                         user_id=user_id,
-                        text=RECOMMENDATION_PROMPT
+                        text=GO_DEEPER_PROMPT if go_deeper else RECOMMENDATION_PROMPT
                     )
                     await self.create_message(recommendation_request)
-                    recommendation = await self.run_thread(user_id, save_answer=False)
-                    logger.info("exiting thread...")
+                    recommendation = await self.run_thread(user_id)
 
                     recommendation_object = await recommendations_repository.add_recommendation(
                         user_id=user_id,
@@ -399,7 +400,8 @@ class PsyHandler(AIHandler):
                             user_id=user_id,
                             recommendation=recommendation,
                             problem_id=problem_id,
-                            from_notification=from_notification
+                            from_notification=from_notification,
+                            go_deeper=go_deeper
                         )
 
                         if not is_subscribed:
