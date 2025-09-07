@@ -82,7 +82,7 @@ class DaysCheckupRepository:
                 sql = update(CheckupDayData).values({
                     CheckupDayData.send_checkup: True,
                     CheckupDayData.points: points,
-                    CheckupDayData.date_end_day: get_now_utc_time
+                    CheckupDayData.date_end_day: get_now_utc_time()
                 }).where(or_(CheckupDayData.id == day_checkup_id))
                 await session.execute(sql)
                 await session.commit()

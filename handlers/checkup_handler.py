@@ -13,9 +13,10 @@ from data.keyboards import generate_checkup_type_keyboard, buy_sub_keyboard, men
 from db.repository import users_repository, subscriptions_repository, checkup_repository, days_checkups_repository, \
     user_timezone_repository, user_counters_repository
 from handlers.system_settings_handler import send_system_settings
-from settings import checkups_types_photo, checkup_emotions_photo, \
-    checkup_productivity_photo, messages_dict, emotions_emoji_description_photo, productivity_emoji_description_photo, \
-    DEFAULT_TIMEZONE
+from settings import DEFAULT_TIMEZONE
+from data.message_templates import messages_dict
+from data.images import checkups_types_photo, checkup_emotions_photo, checkup_productivity_photo, \
+    productivity_emoji_description_photo, emotions_emoji_description_photo
 from utils.state_models import InputMessage
 from utils.validators import is_valid_time
 from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report

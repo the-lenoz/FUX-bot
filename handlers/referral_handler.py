@@ -6,7 +6,7 @@ from aiogram.utils.deep_linking import create_start_link
 
 from data.keyboards import referral_keyboard, menu_keyboard, generate_gift_keyboard
 from db.repository import referral_system_repository
-from settings import messages_dict
+from data.message_templates import messages_dict
 from utils.generate_promo import generate_single_promo_code
 from utils.state_models import InputMessage
 

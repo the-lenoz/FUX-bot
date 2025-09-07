@@ -11,8 +11,9 @@ from bots import main_bot
 from data.keyboards import menu_keyboard, menu_button, get_ai_temperature_keyboard, menu_age_keyboard, \
     settings_cancel_keyboard, choice_gender_settings_keyboard
 from db.repository import users_repository, checkup_repository, subscriptions_repository, user_timezone_repository
-from settings import temperature_ai_photo, checkup_emotions_photo, checkup_productivity_photo, messages_dict, \
-    DEFAULT_TIMEZONE
+from settings import DEFAULT_TIMEZONE
+from data.message_templates import messages_dict
+from data.images import temperature_ai_photo, checkup_emotions_photo, checkup_productivity_photo
 from utils.state_models import InputMessage, AccountSettingsStates
 from utils.gpt_distributor import user_request_handler
 from utils.timezone_matcher import calculate_timezone

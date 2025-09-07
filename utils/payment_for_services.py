@@ -1,12 +1,12 @@
-from os import getenv
-
 from dotenv import load_dotenv, find_dotenv
 from requests import HTTPError
 from yookassa import Configuration, Payment
 
+from data.secrets import yookassa_shop_id, yookassa_shop_secret_key
+
 load_dotenv(find_dotenv("../.env"))
-Configuration.account_id = getenv("SHOP_ID")
-Configuration.secret_key = getenv("SECRET_KEY")
+Configuration.account_id = yookassa_shop_id
+Configuration.secret_key = yookassa_shop_secret_key
 
 async def create_payment(email: str,
                          amount: int,

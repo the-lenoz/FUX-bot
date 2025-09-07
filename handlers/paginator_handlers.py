@@ -2,7 +2,7 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InputMediaPhoto
 
-from settings import photos_pages
+from data.images import photos_pages
 from utils.paginator import MechanicsPaginator
 
 paginator_router = Router()

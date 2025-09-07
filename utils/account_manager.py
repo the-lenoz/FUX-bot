@@ -5,8 +5,7 @@ from data.keyboards import next_politic_keyboard, choice_gender_keyboard, age_ke
 from db.repository import ai_requests_repository, checkup_repository, events_repository, exercises_user_repository, \
     mental_problems_repository, payment_methods_repository, recommendations_repository, \
     subscriptions_repository, user_timezone_repository, users_repository, pending_messages_repository
-from settings import messages_dict
-
+from data.message_templates import messages_dict
 
 logger = logging.getLogger(__name__)
 

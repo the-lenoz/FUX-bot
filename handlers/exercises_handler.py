@@ -12,8 +12,10 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from bots import main_bot
 from data.keyboards import menu_keyboard, buy_sub_keyboard, discuss_problem_keyboard
 from db.repository import limits_repository, user_counters_repository, mental_problems_repository
-from settings import exercises_photo, messages_dict
+from data.message_templates import messages_dict
+from data.images import exercises_photo
 from utils.gpt_distributor import user_request_handler
+from utils.limits import decrease_exercises_limit
 from utils.subscription import get_user_subscription
 
 exercises_router = Router()
@@ -81,12 +83,10 @@ async def send_exercise_by_problem_id(call: CallbackQuery, state: FSMContext, bo
 async def send_exercise(call: CallbackQuery, bot: Bot, problem_id: int):
     user_id = call.from_user.id
 
-    limits = await limits_repository.get_user_limits(user_id)
-    if limits.exercises_remaining or await get_user_subscription(user_id):
+    if await decrease_exercises_limit(user_id) or await get_user_subscription(user_id):
         delete_message = await call.message.answer(
             "✍️Генерирую <b>упражнение</b>…")
         exercise = await user_request_handler.AI_handler.generate_exercise(user_id, problem_id)
-        await limits_repository.update_user_limits(user_id, exercises_remaining=limits.exercises_remaining - 1)
 
         await call.message.answer(telegramify_markdown.markdownify(exercise), parse_mode=ParseMode.MARKDOWN_V2)
         await call.message.answer(messages_dict["exercise_conversation_welcome_text"], reply_markup=menu_keyboard.as_markup())

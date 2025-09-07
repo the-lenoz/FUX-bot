@@ -5,7 +5,8 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from db.repository import checkup_repository, days_checkups_repository, subscriptions_repository, users_repository, \
     user_timezone_repository, user_counters_repository
-from settings import emoji_dict, speed_dict, table_names, SUBSCRIPTION_PLANS, DEFAULT_TIMEZONE
+from settings import tables_to_export, SUBSCRIPTION_PLANS, DEFAULT_TIMEZONE
+from data.trackings import emoji_dict, speed_dict
 from utils.checkups_sent import sent_today
 from utils.price_provider import get_user_price_string
 
@@ -269,7 +270,7 @@ def get_ai_temperature_keyboard(user_ai_temperature: int):
 
 db_tables_keyboard = InlineKeyboardBuilder()
 row_to_kb = 1
-for table_name in table_names:
+for table_name in tables_to_export:
     if row_to_kb == 1:
         db_tables_keyboard.row(InlineKeyboardButton(text=table_name, callback_data=f"db_tables|{table_name}"))
         row_to_kb = 2

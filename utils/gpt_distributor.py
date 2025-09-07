@@ -14,10 +14,12 @@ from data.keyboards import buy_sub_keyboard, create_practice_exercise_recommenda
 from db.repository import users_repository, ai_requests_repository, mental_problems_repository, \
     exercises_user_repository, recommendations_repository, limits_repository, pending_messages_repository, \
     user_counters_repository
-from settings import messages_dict
+from data.message_templates import messages_dict
 from utils.account_manager import continue_registration
 from utils.documents import convert_to_pdf
 from utils.gpt_client import BASIC_MODEL, ADVANCED_MODEL, ModelChatThread, LLMProvider
+from utils.limits import decrease_psy_requests_limit, decrease_universal_requests_limit, decrease_attachments_limit, \
+    decrease_voices_limit
 from utils.photo_recommendation import generate_blurred_image_with_text
 from utils.prompts import RECOMMENDATION_PROMPT, \
     MENTAL_PROBLEM_ABSTRACT_PROMPT, EXERCISE_PROMPT_FORMAT, DIALOG_LATEST_MESSAGE_CHECKER_PROMPT, \
@@ -52,14 +54,11 @@ class UserRequestHandler:
                 await self.AI_handler.handle(request)
             else:
                 await asyncio.sleep(2)
-                limits = await limits_repository.get_user_limits(user_id=request.user_id)
                 if request.file is None:
                     if await LLMProvider.is_text_smalltalk(request.text):
                         await self.AI_handler.handle(request)
                     elif await self.AI_handler.check_is_dialog_latest_message_psy(request):
-                        if limits.psychological_requests_remaining:
-                            await limits_repository.update_user_limits(user_id=request.user_id,
-                                                                       psychological_requests_remaining=limits.psychological_requests_remaining - 1)
+                        if await decrease_psy_requests_limit(request.user_id):
                             await self.AI_handler.handle(request)
                         else:
                             await main_bot.send_message(
@@ -68,9 +67,7 @@ class UserRequestHandler:
                                 reply_markup=buy_sub_keyboard.as_markup()
                             )
                     else:
-                        if limits.universal_requests_remaining:
-                            await limits_repository.update_user_limits(user_id=request.user_id,
-                                                                       universal_requests_remaining=limits.universal_requests_remaining - 1)
+                        if await decrease_universal_requests_limit(request.user_id):
                             await self.AI_handler.handle(request)
                         else:
                             await main_bot.send_message(
@@ -80,11 +77,7 @@ class UserRequestHandler:
                             )
                 else:
                     if request.file.file_type == 'image':
-                        if limits.attachments_remaining:
-                            await limits_repository.update_user_limits(
-                                user_id=request.user_id,
-                                attachments_remaining=limits.attachments_remaining - 1
-                            )
+                        if await decrease_attachments_limit(request.user_id):
                             await self.AI_handler.handle(request)
                         else:
                             await main_bot.send_message(
@@ -93,11 +86,7 @@ class UserRequestHandler:
                                 reply_markup=buy_sub_keyboard.as_markup()
                             )
                     elif request.file.file_type == 'voice':
-                        if limits.voices_remaining:
-                            await limits_repository.update_user_limits(
-                                user_id=request.user_id,
-                                voices_remaining=limits.voices_remaining - 1
-                            )
+                        if await decrease_voices_limit(request.user_id):
                             await self.AI_handler.handle(request)
                         else:
                             await main_bot.send_message(
@@ -106,11 +95,7 @@ class UserRequestHandler:
                                 reply_markup=buy_sub_keyboard.as_markup()
                             )
                     elif request.file.file_type == 'document':
-                        if limits.attachments_remaining:
-                            await limits_repository.update_user_limits(
-                                user_id=request.user_id,
-                                attachments_remaining=limits.attachments_remaining - 1
-                            )
+                        if await decrease_attachments_limit(request.user_id):
                             await self.AI_handler.handle(request)
                         else:
                             await main_bot.send_message(
