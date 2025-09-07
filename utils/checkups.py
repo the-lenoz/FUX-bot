@@ -3,8 +3,8 @@ from datetime import datetime, timezone, timedelta
 from bots import main_bot
 from data.keyboards import emotions_keyboard, productivity_keyboard
 from db.repository import days_checkups_repository, checkup_repository
-from settings import checkup_emotions_photo, checkup_productivity_photo, emotions_emoji_description_photo, \
-    productivity_emoji_description_photo
+from data.images import checkup_emotions_photo, checkup_productivity_photo, productivity_emoji_description_photo, \
+    emotions_emoji_description_photo
 
 
 async def send_checkup(checkup_id: int):

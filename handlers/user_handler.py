@@ -16,7 +16,8 @@ from data.keyboards import next_politic_keyboard, have_promo_keyboard, age_keybo
 
 from db.repository import users_repository
 from handlers.standard_handler import user_request_handler
-from settings import photos_pages, menu_photo, messages_dict
+from data.message_templates import messages_dict
+from data.images import menu_photo, photos_pages
 from utils.account_manager import continue_registration
 from utils.messages_provider import send_main_menu
 from utils.paginator import MechanicsPaginator

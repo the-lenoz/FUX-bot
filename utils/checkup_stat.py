@@ -16,7 +16,7 @@ from bots import main_bot
 from data.keyboards import buy_sub_keyboard
 from db.repository import days_checkups_repository, pending_messages_repository, \
     user_counters_repository
-from settings import calendar_template_photo
+from data.images import calendar_template_photo
 from utils.messages_provider import send_motivation_weekly_message, send_monthly_tracking_report_comment
 from utils.subscription import get_user_subscription
 

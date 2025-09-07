@@ -4,17 +4,18 @@ from sqlalchemy.sql.expression import update
 
 from db.engine import DatabaseEngine
 from db.models.limits import Limits
+from settings import LIMITS
 
 
 class LimitsRepository:
     def __init__(self):
         self.session_maker = DatabaseEngine().create_session()
 
-    async def create_user_limits(self, user_id: int, exercises_remaining: int = 1,
-                                 universal_requests_remaining: int = 5,
-                                 psychological_requests_remaining: int = 10,
-                                 attachments_remaining: int = 2,
-                                 voices_remaining: int = 2) -> Limits:
+    async def create_user_limits(self, user_id: int, exercises_remaining: int = LIMITS["exercises"],
+                                 universal_requests_remaining: int = LIMITS["universal_requests"],
+                                 psychological_requests_remaining: int = LIMITS["psychological_requests"],
+                                 attachments_remaining: int = LIMITS["attachments"],
+                                 voices_remaining: int = LIMITS["voices"]) -> Limits:
         async with self.session_maker() as session:
             session: AsyncSession
             async with session.begin():

@@ -6,7 +6,8 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from bots import main_bot
 from db.repository import user_counters_repository, events_repository, user_timezone_repository, users_repository, \
     subscriptions_repository
-from settings import MAX_DAYS_FREEZE, messages_dict, DEFAULT_TIMEZONE
+from settings import MAX_DAYS_FREEZE, DEFAULT_TIMEZONE
+from data.message_templates import messages_dict
 
 
 async def trigger_power_mode(user_id: int):
@@ -31,7 +32,6 @@ async def interval_skip_trigger(user_id: int):
         await trigger_skipped_day(user_id)
 
 async def update_power_mode(user_id: int):
-    return # TODO RETURN NUTS
     user = await users_repository.get_user_by_user_id(user_id)
     user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id)
     keyboard = InlineKeyboardBuilder()

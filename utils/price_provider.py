@@ -18,4 +18,4 @@ async def get_user_price_string(user_id: int, plan: int):
 
 
 def calculate_discounted_price_multiplier(power_mode_days: int):
-    return 0.8 # max(.0, 1 - POWER_MODE_DAY_DISCOUNT * power_mode_days) TODO
+    return max(.0, 1 - POWER_MODE_DAY_DISCOUNT * power_mode_days)

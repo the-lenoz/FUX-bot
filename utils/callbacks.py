@@ -2,7 +2,8 @@ import asyncio
 
 from bots import main_bot
 from db.repository import pending_messages_repository, recommendations_repository
-from settings import messages_dict, you_fooher_photo
+from data.message_templates import messages_dict
+from data.images import you_fooher_photo
 from utils.checkup_stat import send_weekly_checkup_report, send_monthly_checkup_report
 from utils.gpt_distributor import user_request_handler
 from utils.messages_provider import send_subscription_management_menu, send_new_subscription_message

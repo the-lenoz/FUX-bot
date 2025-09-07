@@ -12,7 +12,9 @@ from bots import main_bot
 from data.keyboards import buy_sub_keyboard, main_keyboard, keyboard_for_pay, generate_sub_keyboard, \
     generate_change_plan_keyboard
 from db.repository import users_repository, user_counters_repository, operation_repository, subscriptions_repository
-from settings import messages_dict, menu_photo, sub_description_photo_before, premium_sub_photo, SUBSCRIPTION_WORDS
+from data.message_templates import messages_dict
+from data.subscription_words import SUBSCRIPTION_WORDS
+from data.images import menu_photo, sub_description_photo_before, premium_sub_photo
 from utils.gpt_client import LLMProvider, ADVANCED_MODEL
 from utils.payment_for_services import create_payment
 from utils.prompts import TRACKING_REPORT_COMMENT_PROMPT
@@ -103,7 +105,7 @@ async def send_prolong_subscription_message(user_id: int, subscription_days: int
 
 async def send_main_menu(user_id: int):
     user = await users_repository.get_user_by_user_id(user_id)
-    text = messages_dict["main_menu_text"] # + str(user.power_mode_days) # TODO RETURN NUTS (messages.json)
+    text = messages_dict["main_menu_text"] + str(user.power_mode_days)
     keyboard = await main_keyboard(user_id=user_id)
     await main_bot.send_photo(chat_id=user_id,
                               photo=menu_photo,

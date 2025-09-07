@@ -29,9 +29,6 @@ TTS_MODEL = "gemini-live-2.5-flash-preview-native-audio"
 
 MAX_RETRIES = 10
 
-mental_assistant_id = os.getenv("MENTAL_ASSISTANT_ID")
-standard_assistant_id = os.getenv("STANDARD_ASSISTANT_ID")
-
 
 logger = logging.getLogger(__name__)
 

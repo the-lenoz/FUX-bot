@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from db.repository import users_repository, operation_repository, ai_requests_repository, events_repository, \
     checkup_repository, promo_activations_repository
-from settings import messages_dict
+from data.message_templates import messages_dict
 
 
 class MainStatistics(BaseModel):
