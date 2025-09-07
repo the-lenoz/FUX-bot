@@ -328,7 +328,7 @@ def create_practice_exercise_recommendation_keyboard(problem_id: int, go_deeper:
     practice_exercise_recommendation_keyboard = InlineKeyboardBuilder()
     if not go_deeper: # Кнопка из обычной рекомендации, а не из глубокой!
         practice_exercise_recommendation_keyboard.row(InlineKeyboardButton(text="🤔 Уйти глубже",
-                                                                           callback_data=f"deep_recommendation_by_problem_id"))
+                                                                           callback_data=f"deep_recommendation_by_problem_id|{problem_id}"))
     practice_exercise_recommendation_keyboard.row(InlineKeyboardButton(text="📝Получить упражнение",
                                                                        callback_data=f"exercise_by_problem_id|{problem_id}"))
     return practice_exercise_recommendation_keyboard.as_markup()
