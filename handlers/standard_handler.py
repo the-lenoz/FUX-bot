@@ -31,7 +31,7 @@ async def start_problem_conversation(call: CallbackQuery, state: FSMContext, bot
 async def provide_recommendation(message: Message, bot: Bot):
     await user_request_handler.AI_handler.provide_recommendations(message.from_user.id)
 
-@standard_router.callback_query(F.data == "recommendation")
+@standard_router.callback_query(F.data.startswith("recommendation"))
 async def provide_recommendation(call: CallbackQuery, state: FSMContext, bot: Bot):
     go_deeper = call.data.split("|")[-1] == 'go_deeper'
 
