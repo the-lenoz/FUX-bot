@@ -431,7 +431,7 @@ class PsyHandler(AIHandler):
                 user_id,
                 messages_dict["discuss_problem_for_recommendation_text"]
             )
-        if problem_id or from_notification:
+        if from_notification or go_deeper:
             await self.exit(user_id, save=False)
 
     async def generate_exercise(self, user_id: int, problem_id: int) -> str | None:
