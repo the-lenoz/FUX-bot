@@ -122,7 +122,7 @@ async def go_deeper(call: CallbackQuery, bot: Bot, problem_id: int):
         await send_long_markdown_message(user_id, exercise)
 
         await call.message.answer(messages_dict["exercise_conversation_welcome_text"],
-                                  reply_markup=create_practice_exercise_recommendation_keyboard(problem_id).as_markup())
+                                  reply_markup=create_practice_exercise_recommendation_keyboard(problem_id, True).as_markup())
 
         await bot.delete_message(message_id=delete_message.message_id, chat_id=user_id)
     else:
