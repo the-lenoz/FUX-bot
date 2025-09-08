@@ -52,7 +52,7 @@ async def choose_exercise_problem(call: CallbackQuery, state: FSMContext, bot: B
                 ))
                 problem_titles.add(problem.problem_title)
         keyboard_builder.row(InlineKeyboardButton(
-            text="🎲 Выбор Фуха - общие упражнения", callback_data="choose_exercise_FUX"
+            text="🎲 Универсальные упражнения", callback_data="choose_exercise_FUX"
         ))
         keyboard_builder.row(InlineKeyboardButton(
             text="Отмена", callback_data="cancel"
