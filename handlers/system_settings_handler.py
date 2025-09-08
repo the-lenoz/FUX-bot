@@ -46,10 +46,7 @@ async def send_system_settings(user_id: int):
         InlineKeyboardButton(text=f"Имя: {user.name if user.name else 'НЕ УСТАНОВЛЕНО'}",
                              callback_data="settings|edit|name")
     )
-    keyboard.row(
-        InlineKeyboardButton(text=f"Возраст: {user.age if user.age else 'НЕ УСТАНОВЛЕН'}",
-                             callback_data="settings|edit|age")
-    )
+
     keyboard.row(
         InlineKeyboardButton(text=f"Пол: {'Мужской' if user.gender == 'male' else ('Женский' if user.gender == 'female' else 'НЕ УСТАНОВЛЕН')}",
                              callback_data="settings|edit|gender")

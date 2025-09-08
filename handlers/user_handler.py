@@ -198,9 +198,12 @@ async def user_enter_gender(call: CallbackQuery, state: FSMContext):
     gender = call.data.split("|")[1]
     await users_repository.update_gender_by_user_id(user_id=call.from_user.id, gender=gender)
     if not user.full_registration:
-        await call.message.answer("Какой возрастной диапазон тебе ближе?"
-                                  " (Чтобы я мог лучше адаптироваться под твои запросы 🧡)",
-                                  reply_markup=age_keyboard.as_markup())
+        await users_repository.update_full_reg_by_user_id(user_id=call.from_user.id)
+        paginator = MechanicsPaginator(page_now=1)
+        keyboard = paginator.generate_now_page()
+
+        await call.message.answer_photo(photo=photos_pages.get(paginator.page_now),
+                                        reply_markup=keyboard)
     else:
         await call.message.answer(
             "Пол сохранён!",
@@ -226,5 +229,5 @@ async def user_choice_age(call: CallbackQuery, state: FSMContext):
             reply_markup=settings_cancel_keyboard.as_markup()
         )
     await users_repository.update_age_by_user_id(user_id=user_id, age=age)
-    await users_repository.update_full_reg_by_user_id(user_id=user_id)
+
     await call.message.delete()
