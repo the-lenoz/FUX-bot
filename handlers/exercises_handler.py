@@ -92,7 +92,7 @@ async def send_exercise(call: CallbackQuery, bot: Bot, problem_id: int):
 
     if await decrease_exercises_limit(user_id) or await get_user_subscription(user_id):
         delete_message = await call.message.answer(
-            "✍️Генерирую <b>упражнение</b>…"
+            "✍️⏱️ Одну секунду! Загружаю <b>упражнение</b>..."
         )
 
         exercise = await user_request_handler.AI_handler.generate_exercise(user_id, problem_id)

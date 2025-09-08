@@ -142,7 +142,7 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
 
     keyboard.row(InlineKeyboardButton(text="🧘‍♀️Упражнения", callback_data="choose_exercise_problem"))
     keyboard.add(InlineKeyboardButton(text="📉️Трекинги", callback_data="checkups"))
-    keyboard.row(InlineKeyboardButton(text="📜О сервисе", callback_data="all_mechanics"))
+    keyboard.row(InlineKeyboardButton(text="📜Гайд по боту", callback_data="all_mechanics"))
     keyboard.add(InlineKeyboardButton(text="⚙️Настройки", callback_data="system_settings"))
     keyboard.row(InlineKeyboardButton(text="🎁Промокоды", callback_data="referral_system"))
     user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id=user_id)
