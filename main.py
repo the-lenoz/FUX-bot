@@ -21,7 +21,7 @@ from handlers.sub_management_handler import sub_management_router
 from handlers.system_settings_handler import system_settings_router
 from handlers.user_handler import user_router
 from utils.scheduled_actions import edit_activation_sub, send_checkup, notification_reminder, \
-    break_power_mode, send_recommendations, send_statistics
+    break_power_mode, send_statistics
 from utils.user_middleware import EventLoggerMiddleware
 
 logging.basicConfig(
@@ -58,8 +58,6 @@ async def main():
                       misfire_grace_time=120)
     scheduler.add_job(func=send_checkup, trigger="interval", minutes=1, max_instances=20,
                       misfire_grace_time=120)
-    scheduler.add_job(func=send_recommendations, args=[main_bot], trigger="interval",
-                      minutes=1, max_instances=20, misfire_grace_time=120)
     scheduler.add_job(notification_reminder, trigger='interval', hours=1, args=[main_bot])
     scheduler.add_job(
         send_statistics,

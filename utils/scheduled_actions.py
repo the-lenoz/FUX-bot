@@ -101,6 +101,7 @@ async def send_checkup():
             continue
 
 
+@deprecated()
 async def send_recommendations(_main_bot: Bot):
     users = await users_repository.select_all_users()
     now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)

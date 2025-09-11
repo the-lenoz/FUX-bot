@@ -20,10 +20,12 @@ from utils.documents import convert_to_pdf
 from utils.gpt_client import BASIC_MODEL, ADVANCED_MODEL, ModelChatThread, LLMProvider
 from utils.limits import decrease_psy_requests_limit, decrease_universal_requests_limit, decrease_attachments_limit, \
     decrease_voices_limit
+from utils.messages_provider import send_long_markdown_message
 from utils.photo_recommendation import generate_blurred_image_with_text
 from utils.prompts import RECOMMENDATION_PROMPT, \
     MENTAL_PROBLEM_ABSTRACT_PROMPT, EXERCISE_PROMPT_FORMAT, DIALOG_LATEST_MESSAGE_CHECKER_PROMPT, \
-    DEFAULT_ASSISTANT_PROMPT_ADDON, get_assistant_system_prompt, DIALOG_CHECKER_PROMPT, MENTAL_PROBLEM_TITLE_PROMPT
+    DEFAULT_ASSISTANT_PROMPT_ADDON, get_assistant_system_prompt, DIALOG_CHECKER_PROMPT, MENTAL_PROBLEM_TITLE_PROMPT, \
+    GO_DEEPER_PROMPT
 from utils.subscription import get_user_subscription
 from utils.user_properties import get_user_description
 from utils.user_request_types import UserRequest
@@ -127,41 +129,7 @@ class AIHandler:
 
         result = await self.run_thread(request.user_id)
 
-        interpreter_chain = InterpreterChain([
-            TextInterpreter(),  # Use pure text first
-            FileInterpreter(),  # Handle code blocks
-            MermaidInterpreter(session=None),  # Handle Mermaid charts
-        ])
-
-        boxs = await telegramify_markdown.telegramify(
-            content=result,
-            interpreters_use=interpreter_chain,
-            latex_escape=True,
-            normalize_whitespace=True,
-            max_word_count=4090  # The maximum number of words in a single message.
-        )
-
-        for item in boxs:
-            if item.content_type == ContentTypes.TEXT:
-                await main_bot.send_message(
-                    request.user_id,
-                    item.content,
-                    parse_mode=ParseMode.MARKDOWN_V2
-                )
-            elif item.content_type == ContentTypes.PHOTO:
-                await main_bot.send_photo(
-                    request.user_id,
-                    BufferedInputFile(file=item.file_data, filename=item.file_name),
-                    caption=item.caption,
-                    parse_mode=ParseMode.MARKDOWN_V2
-                )
-            elif item.content_type == ContentTypes.FILE:
-                await main_bot.send_document(
-                    request.user_id,
-                    BufferedInputFile(file=item.file_data, filename=item.file_name),
-                    caption=item.caption,
-                    parse_mode=ParseMode.MARKDOWN_V2
-                )
+        await send_long_markdown_message(request.user_id, result)
 
         await ai_requests_repository.add_request(
             user_id=request.user_id,
@@ -326,7 +294,8 @@ class PsyHandler(AIHandler):
             await main_bot.send_message(request.user_id, messages_dict["voice_message_reminder_text"])
 
     @staticmethod
-    async def send_recommendation(user_id: int, recommendation, problem_id: int, from_notification: bool = False):
+    async def send_recommendation(user_id: int, recommendation, problem_id: int,
+                                  from_notification: bool = False, go_deeper: bool = False):
         try:
             await main_bot.send_message(
                 user_id,
@@ -352,7 +321,7 @@ class PsyHandler(AIHandler):
             await main_bot.send_voice(
                 user_id,
                 voice_file,
-                reply_markup=create_practice_exercise_recommendation_keyboard(problem_id)
+                reply_markup=create_practice_exercise_recommendation_keyboard(problem_id, go_deeper=go_deeper)
             )
         else:
             await main_bot.send_message(
@@ -360,7 +329,7 @@ class PsyHandler(AIHandler):
                 "Произошла ошибка - не могу отправить голосовое. Скоро исправим!"
             )
 
-    async def provide_recommendations(self, user_id: int, from_notification: bool = False):
+    async def provide_recommendations(self, user_id: int, from_notification: bool = False, go_deeper: bool = False):
         typing_message = await main_bot.send_message(
             user_id,
             messages_dict["typing_message_text"]
@@ -385,8 +354,7 @@ class PsyHandler(AIHandler):
                         text=RECOMMENDATION_PROMPT
                     )
                     await self.create_message(recommendation_request)
-                    recommendation = await self.run_thread(user_id, save_answer=False)
-                    logger.info("exiting thread...")
+                    recommendation = await self.run_thread(user_id)
 
                     recommendation_object = await recommendations_repository.add_recommendation(
                         user_id=user_id,
@@ -399,7 +367,8 @@ class PsyHandler(AIHandler):
                             user_id=user_id,
                             recommendation=recommendation,
                             problem_id=problem_id,
-                            from_notification=from_notification
+                            from_notification=from_notification,
+                            go_deeper=go_deeper
                         )
 
                         if not is_subscribed:
@@ -432,7 +401,7 @@ class PsyHandler(AIHandler):
         if problem_id or from_notification:
             await self.exit(user_id, save=False)
 
-    async def generate_exercise(self, user_id: int, problem_id: int) -> str | None:
+    async def generate_exercise(self, user_id: int, problem_id: int, deep_recommendation: bool = False) -> str | None:
         problem = await mental_problems_repository.get_problem_by_id(problem_id=problem_id)
 
         await user_counters_repository.used_exercises(user_id)
@@ -442,7 +411,7 @@ class PsyHandler(AIHandler):
                 LLMProvider.create_message(
                     [
                         await LLMProvider.create_text_content_item(
-                            EXERCISE_PROMPT_FORMAT.format(
+                            (GO_DEEPER_PROMPT if deep_recommendation else EXERCISE_PROMPT_FORMAT).format(
                                 problem_summary=problem.problem_abstract
                             )
                         )

@@ -301,3 +301,41 @@ async def send_subscription_management_menu(user_id: int):
                                   caption=messages_dict["buy_sub_photo_description"],
                                   photo=premium_sub_photo,
                                   reply_markup=(await generate_sub_keyboard(user_id)).as_markup())
+
+
+async def send_long_markdown_message(user_id: int, text: str):
+    interpreter_chain = InterpreterChain([
+        TextInterpreter(),  # Use pure text first
+        FileInterpreter(),  # Handle code blocks
+        MermaidInterpreter(session=None),  # Handle Mermaid charts
+    ])
+
+    boxs = await telegramify_markdown.telegramify(
+        content=text,
+        interpreters_use=interpreter_chain,
+        latex_escape=True,
+        normalize_whitespace=True,
+        max_word_count=4090  # The maximum number of words in a single message.
+    )
+
+    for item in boxs:
+        if item.content_type == ContentTypes.TEXT:
+            await main_bot.send_message(
+                user_id,
+                item.content,
+                parse_mode=ParseMode.MARKDOWN_V2
+            )
+        elif item.content_type == ContentTypes.PHOTO:
+            await main_bot.send_photo(
+                user_id,
+                BufferedInputFile(file=item.file_data, filename=item.file_name),
+                caption=item.caption,
+                parse_mode=ParseMode.MARKDOWN_V2
+            )
+        elif item.content_type == ContentTypes.FILE:
+            await main_bot.send_document(
+                user_id,
+                BufferedInputFile(file=item.file_data, filename=item.file_name),
+                caption=item.caption,
+                parse_mode=ParseMode.MARKDOWN_V2
+            )

@@ -433,7 +433,7 @@ async def send_monthly_checkup_report(user_id: int, last_date = None):
                 graphic = generate_tracking_calendar(year=last_date.year, month=last_date.month,
                                                      data=checkups_report,
                                                     checkup_type=checkup_type)
-                if not user_counters.received_monthly_tracking_reports or await get_user_subscription(user_id):
+                if await get_user_subscription(user_id):
                     await main_bot.send_photo(
                         photo=BufferedInputFile(file=graphic, filename="graphic.png"),
                         chat_id=user_id,

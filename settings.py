@@ -4,9 +4,9 @@ DEFAULT_TIMEZONE = timedelta(hours=3) # Moscow (GMT +3)
 
 
 SUBSCRIPTION_PLANS = {
-    7: 249,
-    30: 490,
-    90: 990
+    7: 199,
+    30: 399,
+    90: 790
 }
 
 LIMITS = {
