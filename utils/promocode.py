@@ -24,7 +24,7 @@ async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: 
             "Ты не можешь активировать промокод, который ты сам же выпустил)",
             reply_markup=menu_keyboard.as_markup())
         return False
-    # delete_message = await message.answer("Секундочку, загружаем информацию о промокоде)")
+
     if promo.type_promo == "standard":
         user = await users_repository.get_user_by_user_id(user_id=user_id)
         if user.activate_promo:
@@ -179,12 +179,9 @@ async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: 
                                                             time_limit_subscription=promo.days_sub)
 
             await subscribed_callback(user_id, promo.days_sub)
-            return True
         else:
             await subscriptions_repository.increase_subscription_time_limit(subscription_id=active_user_sub.id,
                                                                             time_to_add=promo.days_sub)
-
             await send_prolong_subscription_message(user_id, promo.days_sub, active_user_sub.id)
 
-            return True
-
+        return True
