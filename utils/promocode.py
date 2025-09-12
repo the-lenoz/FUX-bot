@@ -6,7 +6,7 @@ from data.keyboards import cancel_keyboard, menu_keyboard
 from db.repository import referral_system_repository, users_repository, promo_activations_repository, \
     subscriptions_repository
 from utils.callbacks import subscribed_callback
-from utils.messages_provider import send_subscription_management_menu, send_prolong_subscription_message
+from utils.messages_provider import send_prolong_subscription_message
 
 logger = logging.getLogger(__name__)
 

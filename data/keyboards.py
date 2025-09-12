@@ -136,12 +136,12 @@ async def main_keyboard(user_id: int) -> InlineKeyboardBuilder:
             today_tracking = True
 
     if today_tracking:
-        keyboard.row(InlineKeyboardButton(text="Трекинги за СЕГОДНЯ", callback_data="go_checkup"))
+        keyboard.row(InlineKeyboardButton(text="Трекери за СЕГОДНЯ", callback_data="go_checkup"))
     if missed_tracking:
-        keyboard.row(InlineKeyboardButton(text="⚠️ПРОПУЩЕННЫЕ трекинги", callback_data="missed_tracking"))
+        keyboard.row(InlineKeyboardButton(text="⚠️ПРОПУЩЕННЫЕ трекери", callback_data="missed_tracking"))
 
     keyboard.row(InlineKeyboardButton(text="🧘‍♀️Упражнения", callback_data="choose_exercise_problem"))
-    keyboard.add(InlineKeyboardButton(text="📉️Трекинги", callback_data="checkups"))
+    keyboard.add(InlineKeyboardButton(text="📉️Трекери", callback_data="checkups"))
     keyboard.row(InlineKeyboardButton(text="📜Гайд по боту", callback_data="all_mechanics"))
     keyboard.add(InlineKeyboardButton(text="⚙️Настройки", callback_data="system_settings"))
     keyboard.row(InlineKeyboardButton(text="🎁Промокоды", callback_data="referral_system"))
@@ -229,11 +229,11 @@ async def generate_checkup_type_keyboard(user_id: int):
     checkup_type_keyboard = InlineKeyboardBuilder()
     checkup_type_keyboard.row(
         InlineKeyboardButton(
-            text="🤩Трекинг эмоций" + (" ✅" if "emotions" in active_tracking_types else ""),
+            text="🤩Трекер эмоций" + (" ✅" if "emotions" in active_tracking_types else ""),
             callback_data="checkups|emotions"))
     checkup_type_keyboard.row(
         InlineKeyboardButton(
-            text="🚀Трекинг продуктивности" + (" ✅" if "productivity" in active_tracking_types else ""),
+            text="🚀Трекер продуктивности" + (" ✅" if "productivity" in active_tracking_types else ""),
             callback_data="checkups|productivity"))
     checkup_type_keyboard.row(menu_button)
     return checkup_type_keyboard
@@ -306,7 +306,7 @@ notification_keyboard.row(
 )
 notification_keyboard.row(
     InlineKeyboardButton(text="Упражнение", callback_data="choose_exercise_problem"),
-    InlineKeyboardButton(text="Трекинг", callback_data="go_checkup")
+    InlineKeyboardButton(text="Трекер", callback_data="go_checkup")
 )
 
 
@@ -314,12 +314,12 @@ def delete_checkups_keyboard(type_checkup: str, checkup_id: int):
     keyboard = InlineKeyboardBuilder()
     if type_checkup == "emotions":
         keyboard.row(
-            InlineKeyboardButton(text="❌Приостановить трекинг", callback_data=f"delete_checkups|emotions|{checkup_id}"))
-        keyboard.row(InlineKeyboardButton(text="🚀Трекинг продуктивности", callback_data="checkups|productivity"))
+            InlineKeyboardButton(text="❌Приостановить трекер", callback_data=f"delete_checkups|emotions|{checkup_id}"))
+        keyboard.row(InlineKeyboardButton(text="🚀Трекер продуктивности", callback_data="checkups|productivity"))
     else:
-        keyboard.row(InlineKeyboardButton(text="❌Приостановить трекинг",
+        keyboard.row(InlineKeyboardButton(text="❌Приостановить трекер",
                                           callback_data=f"delete_checkups|productivity|{checkup_id}"))
-        keyboard.row(InlineKeyboardButton(text="🤩Трекинг эмоций", callback_data="checkups|emotions"))
+        keyboard.row(InlineKeyboardButton(text="🤩Трекер эмоций", callback_data="checkups|emotions"))
     keyboard.row(menu_button)
     return keyboard
 

@@ -39,12 +39,12 @@ async def go_checkup(call: CallbackQuery):
         active_day = await days_checkups_repository.get_active_day_checkup_by_checkup_id(checkup_id=checkup.id)
         if (active_day and active_day.creation_date.date() == datetime.now(timezone.utc).date()) or (datetime.now(timezone.utc).time() < checkup.time_checkup and not await sent_today(checkup.id)):
             have_checkups = True
-            button_text = "🤩Трекинг эмоций" if checkup.type_checkup == "emotions" else "🚀Трекинг продуктивности"
+            button_text = "🤩Трекер эмоций" if checkup.type_checkup == "emotions" else "🚀Трекер продуктивности"
             keyboard.row(InlineKeyboardButton(text=button_text, callback_data=f"start_checkup|{checkup.id}"))
     keyboard.row(menu_button)
-    message_text = "Выбери трекинг, который хочешь пройти"
+    message_text = "Выбери трекер, который хочешь пройти"
     if not have_checkups:
-        message_text = "На данный момент у тебя нет трекингов, которые можно пройти"
+        message_text = "На данный момент у тебя нет трекеров, которые можно пройти"
     await call.message.answer(message_text, reply_markup=keyboard.as_markup())
     await call.message.delete()
 
@@ -62,13 +62,13 @@ async def go_missed_tracking(call: CallbackQuery):
             if (active_day and active_day.creation_date.date() != datetime.now(timezone(user_timezone_delta)).date() and
                     datetime.now(timezone(user_timezone_delta)).date() - active_day.creation_date.date() < timedelta(days=4)):
                 have_checkups = True
-                button_text = ("🤩Трекинг эмоций" if checkup.type_checkup == "emotions" else "🚀Трекинг продуктивности") +\
+                button_text = ("🤩Трекер эмоций" if checkup.type_checkup == "emotions" else "🚀Трекер продуктивности") +\
                               f" {active_day.creation_date.strftime('%d.%m.%Y')}"
                 keyboard.row(InlineKeyboardButton(text=button_text, callback_data=f"start_checkup|{checkup.id}"))
     keyboard.row(menu_button)
-    message_text = "Выбери пропущенный трекинг, который хочешь пройти"
+    message_text = "Выбери пропущенный трекер, который хочешь пройти"
     if not have_checkups:
-        message_text = "На данный момент у тебя нет трекингов, которые можно пройти"
+        message_text = "На данный момент у тебя нет трекеров, которые можно пройти"
     await call.message.answer(message_text, reply_markup=keyboard.as_markup())
     await call.message.delete()
 
@@ -157,14 +157,14 @@ async def start_checkups(call: CallbackQuery, state: FSMContext):
             await call.message.answer_photo(
                 photo=emotions_emoji_description_photo if type_checkup == "emotions" else productivity_emoji_description_photo,
                 caption="Для того, чтобы продолжить, введи, пожалуйста, время, в которое тебе отправлять"
-                        " <u>трекинг</u> " + (
+                        " <u>трекер</u> " + (
                             "<b>эмоций</b>" if type_checkup == "emotions" else "<b>продуктивности</b>") + ". Пример: 21:00",
                 reply_markup=menu_keyboard.as_markup())
             await state.set_state(InputMessage.enter_time_checkup)
         await call.message.delete()
         return
     await call.message.delete()
-    await call.message.answer("Этот формат трекинга уже активен🧡",
+    await call.message.answer("Этот формат трекера уже активен🧡",
                               reply_markup=delete_checkups_keyboard(type_checkup=type_checkup,
                                                                     checkup_id=user_checkup.id).as_markup())
 
@@ -174,9 +174,9 @@ async def delete_checkups(call: CallbackQuery, state: FSMContext):
     call_data = call.data.split("|")[1:]
     checkup_id = int(call_data[1])
     await checkup_repository.delete_checkup_by_checkup_id(checkup_id=checkup_id)
-    await call.message.answer("⚙Трекинг состояния отключён! Теперь тебе не будут приходить уведомления.\n\n"
+    await call.message.answer("⚙Трекер состояния отключён! Теперь тебе не будут приходить уведомления.\n\n"
                               "Если захочешь включить его снова, то это всегда можно будет сделать"
-                              " в разделе «<b>🗓Трекинги</b>»")
+                              " в разделе «<b>🗓Трекери</b>»")
     await call.message.delete()
 
 
@@ -201,7 +201,7 @@ async def set_user_timezone(message: Message, state: FSMContext):
         await message.answer_photo(
             photo=checkup_emotions_photo if type_checkup == "emotions" else checkup_productivity_photo,
             caption="Для того, чтобы продолжить, введи, пожалуйста, время, в которое тебе отправлять"
-                    " <u>трекинг</u> " + (
+                    " <u>трекер</u> " + (
                         "<b>эмоций</b>" if type_checkup == "emotions" else "<b>продуктивности</b>") + ". Пример: 21:00",
             reply_markup=menu_keyboard.as_markup())
         await state.set_state(InputMessage.enter_time_checkup)
@@ -237,7 +237,7 @@ async def update_time_checkup(message: Message, state: FSMContext):
                                                        points=0,
                                                        user_id=user_id,
                                                        checkup_type=type_checkup)
-        await message.answer('🐿️Отлично, теперь в это время тебе будет приходить ежедневный трекинг.\n\nЕсли ты захочешь пройти трекинг в другое время, то ты всегда сможешь изменить его в настройках⚙️')
+        await message.answer('🐿️Отлично, теперь в это время тебе будет приходить ежедневный трекер.\n\nЕсли ты захочешь пройти трекер в другое время, то ты всегда сможешь изменить его в настройках⚙️')
 
         if number_checkup == 0:
             await message.answer(messages_dict["tracking_first_time_motivation_message"], reply_markup=menu_keyboard.as_markup())

@@ -60,7 +60,7 @@ async def send_system_settings(user_id: int):
     if user.email:
         keyboard.row(InlineKeyboardButton(text=f"Email: {user.email}", callback_data="settings|edit|email"))
     for checkup in user_checkups:
-        text = ("Время трекинга эмоций🤩" if checkup.type_checkup == "emotions" else "Время трекинга продуктивности🚀") + f": {(datetime.combine(datetime.today(), checkup.time_checkup) + timezone_delta).time().strftime('%H:%M')}"
+        text = ("Время трекера эмоций🤩" if checkup.type_checkup == "emotions" else "Время трекера продуктивности🚀") + f": {(datetime.combine(datetime.today(), checkup.time_checkup) + timezone_delta).time().strftime('%H:%M')}"
         keyboard.row(InlineKeyboardButton(text=text, callback_data=f"edit_checkup|{checkup.id}"))
     keyboard.row(InlineKeyboardButton(text="🗑 Удалить все данные", callback_data=f"delete_account|0"))
     keyboard.row(menu_button)
@@ -138,10 +138,10 @@ async def set_system_settings_checkups(call: CallbackQuery, state: FSMContext):
     user_checkups = await checkup_repository.get_active_checkups_by_user_id(user_id=user_id)
     keyboard = InlineKeyboardBuilder()
     for checkup in user_checkups:
-        text = "🤩Трекинг эмоций" if checkup.type_checkup == "emotions" else "🚀Трекинг продуктивности"
+        text = "🤩Трекер эмоций" if checkup.type_checkup == "emotions" else "🚀Трекер продуктивности"
         keyboard.row(InlineKeyboardButton(text=text, callback_data=f"edit_checkup|{checkup.id}"))
     keyboard.row(menu_button)
-    await call.message.answer("Выбери трекинг, время которого, ты хочешь изменить⚙️",
+    await call.message.answer("Выбери трекер, время которого, ты хочешь изменить⚙️",
                               reply_markup=keyboard.as_markup())
     await call.message.delete()
 
@@ -184,8 +184,8 @@ async def edit_checkup_time_call(call: CallbackQuery, state: FSMContext):
     await state.update_data(checkup_id=checkup_id)
     timezone_delta = await user_timezone_repository.get_user_timezone_delta(user_id) or DEFAULT_TIMEZONE
     await call.message.answer_photo(photo=checkup_emotions_photo if checkup.type_checkup == "emotions" else checkup_productivity_photo,
-                                        caption="Для того, чтобы продолжить, введи, пожалуйста, время, в которое тебе отправлять <u>трекинг</u> " + ("<b>эмоций</b>" if checkup.type_checkup == "emotions" else "<b>продуктивности</b>") +
-                              f"\n\nСейчас данный трекинг отправляется в {(datetime.combine(datetime.today(), checkup.time_checkup) + timezone_delta).time().strftime('%H:%M')}",
+                                        caption="Для того, чтобы продолжить, введи, пожалуйста, время, в которое тебе отправлять <u>трекер</u> " + ("<b>эмоций</b>" if checkup.type_checkup == "emotions" else "<b>продуктивности</b>") +
+                              f"\n\nСейчас данный трекер отправляется в {(datetime.combine(datetime.today(), checkup.time_checkup) + timezone_delta).time().strftime('%H:%M')}",
                               reply_markup=settings_cancel_keyboard.as_markup())
     await call.message.delete()
 
@@ -203,7 +203,7 @@ async def enter_new_checkup_time(message: Message, state: FSMContext):
         time = (datetime.strptime(message.text, "%H:%M") - user_timezone_delta).time()
         await checkup_repository.update_time_checkup_by_checkup_id(checkup_id=checkup_id,
                                                                    time_checkup=time)
-        await message.answer(f"Отлично, теперь данный трекинг будет отправляться в {message.text}",
+        await message.answer(f"Отлично, теперь данный трекер будет отправляться в {message.text}",
                              reply_markup=menu_keyboard.as_markup())
         return
     await state.set_state(InputMessage.edit_time_checkup)

@@ -156,7 +156,7 @@ def generate_weekly_tracking_report(emotion_data=None, dates=None, checkup_type:
             label.set_bbox(dict(facecolor='#F76000', edgecolor='none', pad=5, boxstyle='round,pad=0.5'))
             label.set_color('white')
 
-    name = 'НЕДЕЛЬНЫЙ ТРЕКИНГ'
+    name = 'НЕДЕЛЬНЫЙ ТРЕКЕР'
     name2 = "ЭМОЦИЙ" if checkup_type == "emotions" else "ПРОДУКТИВНОСТИ"
 
     ax.text(0.5, 1.05, name, ha='center', va='center', transform=ax.transAxes,
@@ -371,11 +371,11 @@ async def send_weekly_checkup_report(user_id: int, last_date = None):
                 await main_bot.send_photo(
                     photo=BufferedInputFile(file=graphic, filename="graphic.png"),
                     chat_id=user_id,
-                    caption=f"✅ Трекинг <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за неделю готов!"
+                    caption=f"✅ Трекер <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за неделю готов!"
                 )
                 await main_bot.send_document(
                     chat_id=user_id,
-                    document=BufferedInputFile(file=graphic, filename=f"Недельный Трекинг {'Эмоций' if checkup_type == 'emotions' else 'Продуктивности'}.png"),
+                    document=BufferedInputFile(file=graphic, filename=f"Недельный Трекер {'Эмоций' if checkup_type == 'emotions' else 'Продуктивности'}.png"),
                     caption="☝️Скачать <b>файл</b> в лучшем <u>качестве</u> можно здесь"
                 )
             else:
@@ -400,7 +400,7 @@ async def send_weekly_checkup_report(user_id: int, last_date = None):
                     user_id,
                     BufferedInputFile(new_graphic.getvalue(), "report.png"),
                     has_spoiler=True,
-                    caption="✅ Результаты <i>недельного трекинга</i> <b>готовы</b>, но для того, чтобы их увидеть 👀 нужна <b>подписка</b>!",
+                    caption="✅ Результаты <i>недельного трекера</i> <b>готовы</b>, но для того, чтобы их увидеть 👀 нужна <b>подписка</b>!",
                     reply_markup=buy_sub_keyboard.as_markup()
                 )
     if not user_counters.received_monthly_tracking_reports:
@@ -437,12 +437,12 @@ async def send_monthly_checkup_report(user_id: int, last_date = None):
                     await main_bot.send_photo(
                         photo=BufferedInputFile(file=graphic, filename="graphic.png"),
                         chat_id=user_id,
-                        caption=f"✅ Трекинг <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за <u>месяц</u> готов!"
+                        caption=f"✅ Трекер <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за <u>месяц</u> готов!"
                     )
                     await main_bot.send_document(
                         chat_id=user_id,
                         document=BufferedInputFile(file=graphic,
-                                                   filename=f"Месячный Трекинг {'Эмоций' if checkup_type == 'emotions' else 'Продуктивности'}.png"),
+                                                   filename=f"Месячный Трекер {'Эмоций' if checkup_type == 'emotions' else 'Продуктивности'}.png"),
                         caption="☝️Скачать <b>файл</b> в лучшем <u>качестве</u> можно здесь"
                     )
                     await send_monthly_tracking_report_comment(user_id, graphic)
@@ -470,7 +470,7 @@ async def send_monthly_checkup_report(user_id: int, last_date = None):
                         user_id,
                         BufferedInputFile(new_graphic.getvalue(), "report.png"),
                         has_spoiler=True,
-                        caption="✅ Результаты <i>месячного трекинга</i> <b>готовы</b>, но для того, чтобы их увидеть 👀 нужна <b>подписка</b>!",
+                        caption="✅ Результаты <i>месячного трекера</i> <b>готовы</b>, но для того, чтобы их увидеть 👀 нужна <b>подписка</b>!",
                         reply_markup=buy_sub_keyboard.as_markup()
                     )
         finally:
