@@ -1,3 +1,4 @@
+import asyncio
 import calendar
 import io
 from datetime import datetime, timezone, date, timedelta
@@ -198,6 +199,16 @@ async def send_subscription_end_message(user_id: int):
         photo=sub_description_photo_before,
         chat_id=user_id,
         reply_markup=buy_sub_keyboard.as_markup())
+
+async def schedule_send_enable_second_tracker_message(user_id: int):
+    await asyncio.sleep(3600)
+
+    await main_bot.send_message(
+        user_id,
+        messages_dict["enable_second_tracker_format"].format(
+            tracking_type="эмоции" # TODO
+        )
+    )
 
 async def send_motivation_weekly_message(user_id: int):
     # Получаем сегодняшнюю дату

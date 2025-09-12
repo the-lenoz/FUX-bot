@@ -1,3 +1,4 @@
+import asyncio
 import calendar
 import io
 import os
@@ -15,9 +16,10 @@ from aiogram.types import BufferedInputFile
 from bots import main_bot
 from data.keyboards import buy_sub_keyboard
 from db.repository import days_checkups_repository, pending_messages_repository, \
-    user_counters_repository
+    user_counters_repository, checkup_repository
 from data.images import calendar_template_photo
-from utils.messages_provider import send_motivation_weekly_message, send_monthly_tracking_report_comment
+from utils.messages_provider import send_motivation_weekly_message, send_monthly_tracking_report_comment, \
+    schedule_send_enable_second_tracker_message
 from utils.subscription import get_user_subscription
 
 # Цвета
@@ -405,6 +407,11 @@ async def send_weekly_checkup_report(user_id: int, last_date = None):
                 )
     if not user_counters.received_monthly_tracking_reports:
         await send_motivation_weekly_message(user_id)
+
+    if not user_counters.received_weekly_tracking_reports \
+            and len(await checkup_repository.get_active_checkups_by_user_id(user_id)) == 1:
+        asyncio.create_task(schedule_send_enable_second_tracker_message(user_id))
+
 
 async def send_monthly_checkup_report(user_id: int, last_date = None):
     last_date = last_date or datetime.now(timezone.utc).replace(tzinfo=None)
