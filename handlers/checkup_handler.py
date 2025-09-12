@@ -176,7 +176,7 @@ async def delete_checkups(call: CallbackQuery, state: FSMContext):
     await checkup_repository.delete_checkup_by_checkup_id(checkup_id=checkup_id)
     await call.message.answer("⚙Трекер состояния отключён! Теперь тебе не будут приходить уведомления.\n\n"
                               "Если захочешь включить его снова, то это всегда можно будет сделать"
-                              " в разделе «<b>🗓Трекери</b>»")
+                              " в разделе «<b>🗓Трекеры</b>»")
     await call.message.delete()
 
 
