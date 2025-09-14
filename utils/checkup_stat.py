@@ -1,3 +1,4 @@
+import asyncio
 import calendar
 import io
 import os
@@ -15,9 +16,10 @@ from aiogram.types import BufferedInputFile
 from bots import main_bot
 from data.keyboards import buy_sub_keyboard
 from db.repository import days_checkups_repository, pending_messages_repository, \
-    user_counters_repository
+    user_counters_repository, checkup_repository
 from data.images import calendar_template_photo
-from utils.messages_provider import send_motivation_weekly_message, send_monthly_tracking_report_comment
+from utils.messages_provider import send_motivation_weekly_message, send_monthly_tracking_report_comment, \
+    schedule_send_enable_second_tracker_message
 from utils.subscription import get_user_subscription
 
 # Цвета
@@ -156,7 +158,7 @@ def generate_weekly_tracking_report(emotion_data=None, dates=None, checkup_type:
             label.set_bbox(dict(facecolor='#F76000', edgecolor='none', pad=5, boxstyle='round,pad=0.5'))
             label.set_color('white')
 
-    name = 'НЕДЕЛЬНЫЙ ТРЕКИНГ'
+    name = 'НЕДЕЛЬНЫЙ ТРЕКЕР'
     name2 = "ЭМОЦИЙ" if checkup_type == "emotions" else "ПРОДУКТИВНОСТИ"
 
     ax.text(0.5, 1.05, name, ha='center', va='center', transform=ax.transAxes,
@@ -371,11 +373,11 @@ async def send_weekly_checkup_report(user_id: int, last_date = None):
                 await main_bot.send_photo(
                     photo=BufferedInputFile(file=graphic, filename="graphic.png"),
                     chat_id=user_id,
-                    caption=f"✅ Трекинг <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за неделю готов!"
+                    caption=f"✅ Трекер <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за неделю готов!"
                 )
                 await main_bot.send_document(
                     chat_id=user_id,
-                    document=BufferedInputFile(file=graphic, filename=f"Недельный Трекинг {'Эмоций' if checkup_type == 'emotions' else 'Продуктивности'}.png"),
+                    document=BufferedInputFile(file=graphic, filename=f"Недельный Трекер {'Эмоций' if checkup_type == 'emotions' else 'Продуктивности'}.png"),
                     caption="☝️Скачать <b>файл</b> в лучшем <u>качестве</u> можно здесь"
                 )
             else:
@@ -400,78 +402,78 @@ async def send_weekly_checkup_report(user_id: int, last_date = None):
                     user_id,
                     BufferedInputFile(new_graphic.getvalue(), "report.png"),
                     has_spoiler=True,
-                    caption="✅ Результаты <i>недельного трекинга</i> <b>готовы</b>, но для того, чтобы их увидеть 👀 нужна <b>подписка</b>!",
+                    caption="✅ Результаты <i>недельного трекера</i> <b>готовы</b>, но для того, чтобы их увидеть 👀 нужна <b>подписка</b>!",
                     reply_markup=buy_sub_keyboard.as_markup()
                 )
     if not user_counters.received_monthly_tracking_reports:
         await send_motivation_weekly_message(user_id)
 
+    if not user_counters.received_weekly_tracking_reports \
+            and len(await checkup_repository.get_active_checkups_by_user_id(user_id)) == 1:
+        asyncio.create_task(schedule_send_enable_second_tracker_message(user_id))
+
+
 async def send_monthly_checkup_report(user_id: int, last_date = None):
     last_date = last_date or datetime.now(timezone.utc).replace(tzinfo=None)
 
-    user_counters = await user_counters_repository.get_user_counters(user_id)
-
     checkup_type: Literal["emotions", "productivity"]
     for checkup_type in ("emotions", "productivity"):
-        try:
-            checkup_days = await days_checkups_repository.get_days_checkups_by_user_id(user_id=user_id)
-            checkups_report = []
+        checkup_days = await days_checkups_repository.get_days_checkups_by_user_id(user_id=user_id)
+        checkups_report = []
 
-            send = False
-            for monthday in range(1, calendar.monthrange(last_date.year, last_date.month)[1] + 1):
-                day = datetime(year=last_date.year, month=last_date.month, day=monthday)
-                day_checkup_data = None
-                for checkup_day in checkup_days:
-                    if checkup_day.creation_date and checkup_day.creation_date.date() == day.date() \
-                            and checkup_day.checkup_type == checkup_type:
-                        day_checkup_data = checkup_day.points
-                        send = True
-                checkups_report.append(day_checkup_data)
+        send = False
+        for monthday in range(1, calendar.monthrange(last_date.year, last_date.month)[1] + 1):
+            day = datetime(year=last_date.year, month=last_date.month, day=monthday)
+            day_checkup_data = None
+            for checkup_day in checkup_days:
+                if checkup_day.creation_date and checkup_day.creation_date.date() == day.date() \
+                        and checkup_day.checkup_type == checkup_type:
+                    day_checkup_data = checkup_day.points
+                    send = True
+            checkups_report.append(day_checkup_data)
 
-            if send:
-                await user_counters_repository.user_got_monthly_reports(user_id=user_id)
-                graphic = generate_tracking_calendar(year=last_date.year, month=last_date.month,
-                                                     data=checkups_report,
-                                                    checkup_type=checkup_type)
-                if await get_user_subscription(user_id):
-                    await main_bot.send_photo(
-                        photo=BufferedInputFile(file=graphic, filename="graphic.png"),
-                        chat_id=user_id,
-                        caption=f"✅ Трекинг <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за <u>месяц</u> готов!"
-                    )
-                    await main_bot.send_document(
-                        chat_id=user_id,
-                        document=BufferedInputFile(file=graphic,
-                                                   filename=f"Месячный Трекинг {'Эмоций' if checkup_type == 'emotions' else 'Продуктивности'}.png"),
-                        caption="☝️Скачать <b>файл</b> в лучшем <u>качестве</u> можно здесь"
-                    )
-                    await send_monthly_tracking_report_comment(user_id, graphic)
-                else:
-                    graphic_image = Image.open(io.BytesIO(graphic))
+        if send:
+            await user_counters_repository.user_got_monthly_reports(user_id=user_id)
+            graphic = generate_tracking_calendar(year=last_date.year, month=last_date.month,
+                                                 data=checkups_report,
+                                                checkup_type=checkup_type)
+            if await get_user_subscription(user_id):
+                await main_bot.send_photo(
+                    photo=BufferedInputFile(file=graphic, filename="graphic.png"),
+                    chat_id=user_id,
+                    caption=f"✅ Трекер <b>{'эмоций' if checkup_type == 'emotions' else 'продуктивности'}</b> за <u>месяц</u> готов!"
+                )
+                await main_bot.send_document(
+                    chat_id=user_id,
+                    document=BufferedInputFile(file=graphic,
+                                               filename=f"Месячный Трекер {'Эмоций' if checkup_type == 'emotions' else 'Продуктивности'}.png"),
+                    caption="☝️Скачать <b>файл</b> в лучшем <u>качестве</u> можно здесь"
+                )
+                await send_monthly_tracking_report_comment(user_id, graphic)
+            else:
+                graphic_image = Image.open(io.BytesIO(graphic))
 
-                    # Create rectangle mask
-                    mask = Image.new('L', graphic_image.size, 0)
-                    draw = ImageDraw.Draw(mask)
-                    draw.rectangle([(171, 473), (1180, 1292)], fill=255)
-                    draw.rectangle([(1200, 424), (1336, 1318)], fill=255)
+                # Create rectangle mask
+                mask = Image.new('L', graphic_image.size, 0)
+                draw = ImageDraw.Draw(mask)
+                draw.rectangle([(171, 473), (1180, 1292)], fill=255)
+                draw.rectangle([(1200, 424), (1336, 1318)], fill=255)
 
-                    mask = ImageOps.invert(mask)
+                mask = ImageOps.invert(mask)
 
-                    # Blur image
-                    blurred = graphic_image.filter(ImageFilter.GaussianBlur(36))
+                # Blur image
+                blurred = graphic_image.filter(ImageFilter.GaussianBlur(36))
 
-                    blurred.paste(graphic_image, mask=mask)
-                    new_graphic = io.BytesIO()
-                    blurred.convert('RGB').save(new_graphic, format='PNG')
+                blurred.paste(graphic_image, mask=mask)
+                new_graphic = io.BytesIO()
+                blurred.convert('RGB').save(new_graphic, format='PNG')
 
-                    await pending_messages_repository.update_user_pending_messages(user_id=user_id,
-                                                                                   monthly_tracking_date=last_date)
-                    await main_bot.send_photo(
-                        user_id,
-                        BufferedInputFile(new_graphic.getvalue(), "report.png"),
-                        has_spoiler=True,
-                        caption="✅ Результаты <i>месячного трекинга</i> <b>готовы</b>, но для того, чтобы их увидеть 👀 нужна <b>подписка</b>!",
-                        reply_markup=buy_sub_keyboard.as_markup()
-                    )
-        finally:
-            pass
+                await pending_messages_repository.update_user_pending_messages(user_id=user_id,
+                                                                               monthly_tracking_date=last_date)
+                await main_bot.send_photo(
+                    user_id,
+                    BufferedInputFile(new_graphic.getvalue(), "report.png"),
+                    has_spoiler=True,
+                    caption="✅ Результаты <i>месячного трекера</i> <b>готовы</b>, но для того, чтобы их увидеть 👀 нужна <b>подписка</b>!",
+                    reply_markup=buy_sub_keyboard.as_markup()
+            )

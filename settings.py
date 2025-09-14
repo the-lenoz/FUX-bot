@@ -9,6 +9,8 @@ SUBSCRIPTION_PLANS = {
     90: 790
 }
 
+NEW_SUBSCRIPTION_REMINDER_PERIOD = 14
+
 LIMITS = {
     "psychological_requests": 10,
     "universal_requests": 5,
