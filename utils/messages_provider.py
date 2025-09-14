@@ -1,3 +1,4 @@
+import asyncio
 import calendar
 import io
 from datetime import datetime, timezone, date, timedelta
@@ -114,7 +115,7 @@ async def send_main_menu(user_id: int):
                               caption=text,
                               reply_markup=keyboard.as_markup())
 
-async def send_invoice(user_id: int, amount: str, days: str, mode_type: str):
+async def send_invoice(user_id: int, amount: int, days: str, mode_type: str):
     user = await users_repository.get_user_by_user_id(user_id)
     payment = await create_payment(user.email, amount=amount)
     await operation_repository.add_operation(operation_id=payment[0], user_id=user_id, is_paid=False,
@@ -205,6 +206,7 @@ async def schedule_send_enable_second_tracker_message(user_id: int):
     trackings = await checkup_repository.get_active_checkups_by_user_id(user_id)
     if len(trackings) != 1:
         return
+    await asyncio.sleep(3600)
     keyboard = InlineKeyboardBuilder()
     keyboard.add(InlineKeyboardButton(text="📉️Трекеры", callback_data="checkups"))
     await main_bot.send_message(
