@@ -238,6 +238,23 @@ async def generate_checkup_type_keyboard(user_id: int):
     checkup_type_keyboard.row(menu_button)
     return checkup_type_keyboard
 
+async def generate_inactive_checkup_type_keyboard(user_id: int):
+    user_active_trackings = await checkup_repository.get_active_checkups_by_user_id(user_id)
+    active_tracking_types = [tracking.type_checkup for tracking in user_active_trackings]
+    checkup_type_keyboard = InlineKeyboardBuilder()
+    if "emotions" not in active_tracking_types:
+        checkup_type_keyboard.row(
+            InlineKeyboardButton(
+                text="🤩Трекер эмоций",
+                callback_data="checkups|emotions"))
+    if "productivity" not in active_tracking_types:
+        checkup_type_keyboard.row(
+            InlineKeyboardButton(
+                text="🚀Трекер продуктивности",
+                callback_data="checkups|productivity"))
+    checkup_type_keyboard.row(menu_button)
+    return checkup_type_keyboard
+
 def emotions_keyboard(check_data: str):
     keyboard = InlineKeyboardBuilder()
     for emoji in emoji_dict.keys():

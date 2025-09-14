@@ -1,4 +1,3 @@
-import asyncio
 import calendar
 import io
 from datetime import datetime, timezone, date, timedelta
@@ -7,17 +6,17 @@ import telegramify_markdown
 from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import BufferedInputFile, Message, InlineKeyboardButton
-from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from telegramify_markdown import InterpreterChain, TextInterpreter, FileInterpreter, MermaidInterpreter, ContentTypes
 
 from bots import main_bot
+from data.images import menu_photo, sub_description_photo_before, premium_sub_photo
 from data.keyboards import buy_sub_keyboard, main_keyboard, keyboard_for_pay, generate_sub_keyboard, \
-    generate_change_plan_keyboard, generate_checkup_type_keyboard
-from db.repository import users_repository, user_counters_repository, operation_repository, subscriptions_repository, \
-    checkup_repository
+    generate_change_plan_keyboard, generate_inactive_checkup_type_keyboard
 from data.message_templates import messages_dict
 from data.subscription_words import SUBSCRIPTION_WORDS
-from data.images import menu_photo, sub_description_photo_before, premium_sub_photo
+from db.repository import users_repository, user_counters_repository, operation_repository, subscriptions_repository, \
+    checkup_repository
 from utils.gpt_client import LLMProvider, ADVANCED_MODEL
 from utils.payment_for_services import create_payment
 from utils.prompts import TRACKING_REPORT_COMMENT_PROMPT
@@ -206,7 +205,6 @@ async def schedule_send_enable_second_tracker_message(user_id: int):
     trackings = await checkup_repository.get_active_checkups_by_user_id(user_id)
     if len(trackings) != 1:
         return
-    await asyncio.sleep(3600)
     keyboard = InlineKeyboardBuilder()
     keyboard.add(InlineKeyboardButton(text="📉️Трекеры", callback_data="checkups"))
     await main_bot.send_message(
@@ -214,7 +212,7 @@ async def schedule_send_enable_second_tracker_message(user_id: int):
         messages_dict["enable_second_tracker_format"].format(
             tracking_type="эмоции" if trackings[0].type_checkup != "emotions" else "продуктивность"
         ),
-        reply_markup=(await generate_checkup_type_keyboard(user_id)).as_markup()
+        reply_markup=(await generate_inactive_checkup_type_keyboard(user_id)).as_markup()
     )
 
 
