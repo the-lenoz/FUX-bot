@@ -12,7 +12,7 @@ from telegramify_markdown import InterpreterChain, TextInterpreter, FileInterpre
 
 from bots import main_bot
 from data.keyboards import buy_sub_keyboard, main_keyboard, keyboard_for_pay, generate_sub_keyboard, \
-    generate_change_plan_keyboard
+    generate_change_plan_keyboard, generate_checkup_type_keyboard
 from db.repository import users_repository, user_counters_repository, operation_repository, subscriptions_repository, \
     checkup_repository
 from data.message_templates import messages_dict
@@ -214,7 +214,7 @@ async def schedule_send_enable_second_tracker_message(user_id: int):
         messages_dict["enable_second_tracker_format"].format(
             tracking_type="эмоции" if trackings[0].type_checkup != "emotions" else "продуктивность"
         ),
-        reply_markup=keyboard.as_markup()
+        reply_markup=(await generate_checkup_type_keyboard(user_id)).as_markup()
     )
 
 
