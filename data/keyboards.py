@@ -111,6 +111,17 @@ choice_gender_settings_keyboard.row(InlineKeyboardButton(text="В женском
 choice_gender_settings_keyboard.row(InlineKeyboardButton(text="В мужском роде♂️", callback_data="gender|male"))
 choice_gender_settings_keyboard.row(InlineKeyboardButton(text="Отменить", callback_data="system_settings"))
 
+nuts_description_keyboard = InlineKeyboardBuilder()
+nuts_description_keyboard.row(InlineKeyboardButton(text="Что это?", callback_data="show_nuts_description"))
+
+async def get_sub_keyboard(user_id: int):
+    user_sub = await subscriptions_repository.get_all_subscriptions_by_user_id(user_id)
+    keyboard = InlineKeyboardBuilder()
+    keyboard.row(
+        InlineKeyboardButton(text="🐿 КУПИТЬ ПОДПИСКУ" if not user_sub else "🐿 ПОДПИСКА", callback_data="subscribe")
+    )
+    return keyboard
+
 recommendation_keyboard = InlineKeyboardBuilder()
 recommendation_keyboard.row(InlineKeyboardButton(text="Получить рекомендацию", callback_data="recommendation"))
 

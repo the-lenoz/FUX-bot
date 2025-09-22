@@ -12,7 +12,7 @@ from aiogram.types import Message, CallbackQuery
 from bots import main_bot
 from data.keyboards import next_politic_keyboard, have_promo_keyboard, age_keyboard, \
     main_keyboard, choice_gender_keyboard, settings_cancel_keyboard, skip_enter_name_keyboard, \
-    skip_enter_promocode_keyboard
+    skip_enter_promocode_keyboard, buy_sub_keyboard, get_sub_keyboard
 
 from db.repository import users_repository
 from handlers.standard_handler import user_request_handler
@@ -231,3 +231,9 @@ async def user_choice_age(call: CallbackQuery, state: FSMContext):
     await users_repository.update_age_by_user_id(user_id=user_id, age=age)
 
     await call.message.delete()
+
+
+@user_router.callback_query(F.data == "show_nuts_description")
+async def power_mode_help(call: CallbackQuery, _: FSMContext):
+    await call.message.answer(messages_dict["nuts_description_text"],
+                              reply_markup=(await get_sub_keyboard(call.from_user.id)).as_markup())
