@@ -1,11 +1,10 @@
 import datetime
 
 from bots import main_bot
-from data.keyboards import nuts_description_keyboard
-from db.repository import user_counters_repository, events_repository, user_timezone_repository, users_repository, \
-    subscriptions_repository
-from settings import MAX_DAYS_FREEZE, DEFAULT_TIMEZONE
+from data.keyboards import get_nuts_keyboard
 from data.message_templates import messages_dict
+from db.repository import user_counters_repository, events_repository, user_timezone_repository, users_repository
+from settings import MAX_DAYS_FREEZE, DEFAULT_TIMEZONE
 
 
 async def trigger_power_mode(user_id: int):
@@ -34,7 +33,7 @@ async def update_power_mode(user_id: int):
         await main_bot.send_message(
             user_id,
             messages_dict["new_nut_format"].format(user.power_mode_days + 1),
-            reply_markup=nuts_description_keyboard.as_markup()
+            reply_markup=(await get_nuts_keyboard(user_id)).as_markup()
         )
 
     await users_repository.update_power_mode_days_by_user_id(user_id, user.power_mode_days + 1)
@@ -54,5 +53,5 @@ async def break_power_mode(user_id: int):
         await main_bot.send_message(
             user_id,
             messages_dict["break_power_mode"],
-            reply_markup=nuts_description_keyboard.as_markup()
+            reply_markup=(await get_nuts_keyboard(user_id)).as_markup()
         )
