@@ -1,8 +1,5 @@
 import datetime
 
-from aiogram.types import InlineKeyboardButton
-from aiogram.utils.keyboard import InlineKeyboardBuilder
-
 from bots import main_bot
 from data.keyboards import nuts_description_keyboard
 from db.repository import user_counters_repository, events_repository, user_timezone_repository, users_repository, \
