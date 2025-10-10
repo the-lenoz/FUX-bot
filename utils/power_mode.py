@@ -51,7 +51,6 @@ async def break_power_mode(user_id: int):
     user = await users_repository.get_user_by_user_id(user_id)
     if user.power_mode_days:
         await users_repository.update_power_mode_days_by_user_id(user_id, 0)
-        user_sub = await subscriptions_repository.get_active_subscription_by_user_id(user_id)
         await main_bot.send_message(
             user_id,
             messages_dict["break_power_mode"],
