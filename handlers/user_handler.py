@@ -234,6 +234,6 @@ async def user_choice_age(call: CallbackQuery, state: FSMContext):
 
 
 @user_router.callback_query(F.data == "show_nuts_description")
-async def power_mode_help(call: CallbackQuery, _: FSMContext):
+async def power_mode_help(call: CallbackQuery, state: FSMContext):
     await call.message.answer(messages_dict["nuts_description_text"],
                               reply_markup=(await get_sub_keyboard(call.from_user.id)).as_markup())
