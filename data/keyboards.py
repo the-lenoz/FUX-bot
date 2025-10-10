@@ -216,10 +216,6 @@ async def generate_change_plan_keyboard(user_id: int, current_plan: int):
     return subscriptions_keyboard
 
 
-buy_sub_keyboard = InlineKeyboardBuilder()
-buy_sub_keyboard.row(InlineKeyboardButton(text="🐿 ПОДПИСКА", callback_data=f"subscribe"))
-buy_sub_keyboard.row(menu_button)
-
 
 async def keyboard_for_pay(operation_id: str, url: str, time_limit: int, mode_type: str | None = None):
     pay_ai_keyboard = InlineKeyboardBuilder()

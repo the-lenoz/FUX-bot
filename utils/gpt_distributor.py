@@ -10,7 +10,7 @@ from aiogram.types import BufferedInputFile
 from telegramify_markdown import ContentTypes, InterpreterChain, TextInterpreter, FileInterpreter, MermaidInterpreter
 
 from bots import main_bot
-from data.keyboards import buy_sub_keyboard, create_practice_exercise_recommendation_keyboard, recommendation_keyboard
+from data.keyboards import get_sub_keyboard, create_practice_exercise_recommendation_keyboard, recommendation_keyboard
 from db.repository import users_repository, ai_requests_repository, mental_problems_repository, \
     exercises_user_repository, recommendations_repository, limits_repository, pending_messages_repository, \
     user_counters_repository
@@ -66,7 +66,7 @@ class UserRequestHandler:
                             await main_bot.send_message(
                                 request.user_id,
                                 messages_dict["mental_assistant_subscription_text"],
-                                reply_markup=buy_sub_keyboard.as_markup()
+                                reply_markup=(await get_sub_keyboard(user_id)).as_markup()
                             )
                     else:
                         if await decrease_universal_requests_limit(request.user_id):
@@ -75,7 +75,7 @@ class UserRequestHandler:
                             await main_bot.send_message(
                                 request.user_id,
                                 messages_dict["universal_assistant_subscription_text"],
-                                reply_markup=buy_sub_keyboard.as_markup()
+                                reply_markup=(await get_sub_keyboard(user_id)).as_markup()
                             )
                 else:
                     if request.file.file_type == 'image':
@@ -85,7 +85,7 @@ class UserRequestHandler:
                             await main_bot.send_message(
                                 request.user_id,
                                 messages_dict["send_photos_subscription_text"],
-                                reply_markup=buy_sub_keyboard.as_markup()
+                                reply_markup=(await get_sub_keyboard(user_id)).as_markup()
                             )
                     elif request.file.file_type == 'voice':
                         if await decrease_voices_limit(request.user_id):
@@ -94,7 +94,7 @@ class UserRequestHandler:
                             await main_bot.send_message(
                                 request.user_id,
                                 messages_dict["send_voice_subscription_text"],
-                                reply_markup=buy_sub_keyboard.as_markup()
+                                reply_markup=(await get_sub_keyboard(user_id)).as_markup()
                             )
                     elif request.file.file_type == 'document':
                         if await decrease_attachments_limit(request.user_id):
@@ -103,7 +103,7 @@ class UserRequestHandler:
                             await main_bot.send_message(
                                 request.user_id,
                                 messages_dict["send_document_subscription_text"],
-                                reply_markup=buy_sub_keyboard.as_markup()
+                                reply_markup=(await get_sub_keyboard(user_id)).as_markup()
                             )
 
 
@@ -382,7 +382,7 @@ class PsyHandler(AIHandler):
                             has_spoiler=True,
                             photo=BufferedInputFile(file=photo_recommendation, filename=f"recommendation.png"),
                             caption=messages_dict["subscribe_for_recommendation_text"],
-                            reply_markup=buy_sub_keyboard.as_markup())
+                            reply_markup=(await get_sub_keyboard(user_id)).as_markup())
 
                 else:
                     await main_bot.send_message(

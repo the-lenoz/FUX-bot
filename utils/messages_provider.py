@@ -12,7 +12,7 @@ from telegramify_markdown import InterpreterChain, TextInterpreter, FileInterpre
 
 from bots import main_bot
 from data.images import menu_photo, sub_description_photo_before, premium_sub_photo
-from data.keyboards import buy_sub_keyboard, main_keyboard, keyboard_for_pay, generate_sub_keyboard, \
+from data.keyboards import get_sub_keyboard, main_keyboard, keyboard_for_pay, generate_sub_keyboard, \
     generate_change_plan_keyboard, generate_inactive_checkup_type_keyboard
 from data.message_templates import messages_dict
 from data.subscription_words import SUBSCRIPTION_WORDS
@@ -200,7 +200,7 @@ async def send_subscription_end_message(user_id: int):
                 "Ты всегда можешь продлить подписку, если захочешь",
         photo=sub_description_photo_before,
         chat_id=user_id,
-        reply_markup=buy_sub_keyboard.as_markup())
+        reply_markup=(await get_sub_keyboard(user_id)).as_markup())
 
 async def schedule_send_enable_second_tracker_message(user_id: int):
     trackings = await checkup_repository.get_active_checkups_by_user_id(user_id)

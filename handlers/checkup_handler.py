@@ -8,7 +8,7 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 import utils.checkups
-from data.keyboards import generate_checkup_type_keyboard, buy_sub_keyboard, menu_keyboard, menu_button, \
+from data.keyboards import generate_checkup_type_keyboard, get_sub_keyboard, menu_keyboard, menu_button, \
     delete_checkups_keyboard
 from db.repository import users_repository, subscriptions_repository, checkup_repository, days_checkups_repository, \
     user_timezone_repository, user_counters_repository
@@ -142,7 +142,7 @@ async def start_checkups(call: CallbackQuery, state: FSMContext):
     user_checkups = await checkup_repository.get_checkups_by_user_id(user_id=user_id)
     if user_sub is None and (user_checkups is not None) and len(user_checkups) >= 1:
         await call.message.answer("🌰️Для этого нужно расколоть орех…",
-                             reply_markup=buy_sub_keyboard.as_markup())
+                             reply_markup=(await get_sub_keyboard(user_id)).as_markup())
         await call.message.delete()
         return
     user_checkup = await checkup_repository.get_active_checkup_by_user_id_type_checkup(user_id=user_id,

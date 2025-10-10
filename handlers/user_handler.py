@@ -3,27 +3,23 @@ import logging
 import traceback
 
 from aiogram import Router, F, Bot
-from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandStart, CommandObject
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import any_state
 from aiogram.types import Message, CallbackQuery
 
-from bots import main_bot
-from data.keyboards import next_politic_keyboard, have_promo_keyboard, age_keyboard, \
-    main_keyboard, choice_gender_keyboard, settings_cancel_keyboard, skip_enter_name_keyboard, \
-    skip_enter_promocode_keyboard, buy_sub_keyboard, get_sub_keyboard
-
+from data.images import menu_photo, photos_pages
+from data.keyboards import have_promo_keyboard, main_keyboard, choice_gender_keyboard, settings_cancel_keyboard, \
+    skip_enter_name_keyboard, \
+    skip_enter_promocode_keyboard, get_sub_keyboard
+from data.message_templates import messages_dict
 from db.repository import users_repository
 from handlers.standard_handler import user_request_handler
-from data.message_templates import messages_dict
-from data.images import menu_photo, photos_pages
 from utils.account_manager import continue_registration
 from utils.messages_provider import send_main_menu
 from utils.paginator import MechanicsPaginator
 from utils.promocode import user_entered_promo_code
 from utils.state_models import InputMessage
-from utils.subscription import get_user_subscription
 
 user_router = Router()
 

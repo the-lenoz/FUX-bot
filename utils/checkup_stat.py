@@ -14,7 +14,7 @@ from PIL import Image, ImageFont, ImageDraw, ImageFilter, ImageOps
 from aiogram.types import BufferedInputFile
 
 from bots import main_bot
-from data.keyboards import buy_sub_keyboard
+from data.keyboards import get_sub_keyboard
 from db.repository import days_checkups_repository, pending_messages_repository, \
     user_counters_repository, checkup_repository
 from data.images import calendar_template_photo
@@ -403,7 +403,7 @@ async def send_weekly_checkup_report(user_id: int, last_date = None):
                     BufferedInputFile(new_graphic.getvalue(), "report.png"),
                     has_spoiler=True,
                     caption="✅ Результаты <i>недельного трекера</i> <b>готовы</b>, но для того, чтобы их увидеть 👀 нужна <b>подписка</b>!",
-                    reply_markup=buy_sub_keyboard.as_markup()
+                    reply_markup=(await get_sub_keyboard(user_id)).as_markup()
                 )
     if not user_counters.received_monthly_tracking_reports:
         await send_motivation_weekly_message(user_id)
@@ -475,5 +475,5 @@ async def send_monthly_checkup_report(user_id: int, last_date = None):
                     BufferedInputFile(new_graphic.getvalue(), "report.png"),
                     has_spoiler=True,
                     caption="✅ Результаты <i>месячного трекера</i> <b>готовы</b>, но для того, чтобы их увидеть 👀 нужна <b>подписка</b>!",
-                    reply_markup=buy_sub_keyboard.as_markup()
+                    reply_markup=(await get_sub_keyboard(user_id)).as_markup()
             )
