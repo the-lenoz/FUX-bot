@@ -10,9 +10,8 @@ from data.message_templates import messages_dict
 
 async def trigger_power_mode(user_id: int):
     last_user_event = await events_repository.get_last_event_by_user_id(user_id)
-    user_timezone = await user_timezone_repository.get_user_timezone_delta(user_id) or DEFAULT_TIMEZONE
 
-    now_date = datetime.datetime.now(datetime.timezone(user_timezone)).date()
+    now_date = datetime.datetime.now(datetime.timezone.utc).date()
     user = await users_repository.get_user_by_user_id(user_id)
 
     if not last_user_event or last_user_event.upd_date.date() != now_date or user.power_mode_days == 0:
