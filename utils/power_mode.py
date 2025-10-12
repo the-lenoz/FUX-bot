@@ -4,7 +4,7 @@ from bots import main_bot
 from data.keyboards import get_nuts_keyboard
 from data.message_templates import messages_dict
 from db.repository import user_counters_repository, events_repository, user_timezone_repository, users_repository
-from settings import MAX_DAYS_FREEZE, DEFAULT_TIMEZONE
+from settings import MAX_DAYS_FREEZE, DEFAULT_TIMEZONE, MAX_POWER_MODE_DISCOUNT
 
 
 async def trigger_power_mode(user_id: int):
@@ -32,9 +32,11 @@ async def update_power_mode(user_id: int):
     if user.power_mode_days:
         await main_bot.send_message(
             user_id,
-            messages_dict["new_nut_format"].format(user.power_mode_days + 1),
+            messages_dict["new_nut_format"].format(user.power_mode_days + 1) +
+            messages_dict["nuts_limit_reached_text"].format(MAX_POWER_MODE_DISCOUNT * 100),
             reply_markup=(await get_nuts_keyboard(user_id)).as_markup()
         )
+
 
     await users_repository.update_power_mode_days_by_user_id(user_id, user.power_mode_days + 1)
 
