@@ -36,7 +36,7 @@ edit_activate_notification_keyboard.row(InlineKeyboardButton(text="в Меню",
 
 referral_keyboard = InlineKeyboardBuilder()
 referral_keyboard.row(InlineKeyboardButton(text="✍️ Ввести промокод", callback_data="enter_promo_code"))
-referral_keyboard.row(InlineKeyboardButton(text="Выпустить промокод", callback_data="create_promo_code"))
+referral_keyboard.row(InlineKeyboardButton(text="🙋‍♂️ Пригласить друга", callback_data="create_promo_code"))
 referral_keyboard.row(InlineKeyboardButton(text="🎁 Подарить подписку", callback_data="buy_gift"))
 referral_keyboard.row(menu_button)
 
@@ -110,6 +110,32 @@ choice_gender_settings_keyboard = InlineKeyboardBuilder()
 choice_gender_settings_keyboard.row(InlineKeyboardButton(text="В женском роде♀️", callback_data="gender|female"))
 choice_gender_settings_keyboard.row(InlineKeyboardButton(text="В мужском роде♂️", callback_data="gender|male"))
 choice_gender_settings_keyboard.row(InlineKeyboardButton(text="Отменить", callback_data="system_settings"))
+
+
+
+
+async def get_nuts_keyboard(user_id: int):
+    user = await users_repository.get_user_by_user_id(user_id)
+    user_sub = await subscriptions_repository.get_all_subscriptions_by_user_id(user_id)
+
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+    nuts_keyboard = InlineKeyboardBuilder()
+    if now - user.creation_date.replace(tzinfo=None) < timedelta(days=2):
+        nuts_keyboard.row(InlineKeyboardButton(text="Что это?", callback_data="show_nuts_description"))
+    nuts_keyboard.row(
+        InlineKeyboardButton(text="🐿 КУПИТЬ ПОДПИСКУ" if not user_sub else "🐿 ПОДПИСКА", callback_data="subscribe")
+    )
+    return nuts_keyboard
+
+
+async def get_sub_keyboard(user_id: int):
+    user_sub = await subscriptions_repository.get_all_subscriptions_by_user_id(user_id)
+    keyboard = InlineKeyboardBuilder()
+    keyboard.row(
+        InlineKeyboardButton(text="🐿 КУПИТЬ ПОДПИСКУ" if not user_sub else "🐿 ПОДПИСКА", callback_data="subscribe")
+    )
+    return keyboard
 
 recommendation_keyboard = InlineKeyboardBuilder()
 recommendation_keyboard.row(InlineKeyboardButton(text="Получить рекомендацию", callback_data="recommendation"))
@@ -204,10 +230,6 @@ async def generate_change_plan_keyboard(user_id: int, current_plan: int):
     subscriptions_keyboard.row(menu_button)
     return subscriptions_keyboard
 
-
-buy_sub_keyboard = InlineKeyboardBuilder()
-buy_sub_keyboard.row(InlineKeyboardButton(text="🐿 ПОДПИСКА", callback_data=f"subscribe"))
-buy_sub_keyboard.row(menu_button)
 
 
 async def keyboard_for_pay(operation_id: str, url: str, time_limit: int, mode_type: str | None = None):

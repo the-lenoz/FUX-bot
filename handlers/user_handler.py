@@ -3,27 +3,23 @@ import logging
 import traceback
 
 from aiogram import Router, F, Bot
-from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandStart, CommandObject
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import any_state
 from aiogram.types import Message, CallbackQuery
 
-from bots import main_bot
-from data.keyboards import next_politic_keyboard, have_promo_keyboard, age_keyboard, \
-    main_keyboard, choice_gender_keyboard, settings_cancel_keyboard, skip_enter_name_keyboard, \
-    skip_enter_promocode_keyboard
-
+from data.images import menu_photo, photos_pages
+from data.keyboards import have_promo_keyboard, main_keyboard, choice_gender_keyboard, settings_cancel_keyboard, \
+    skip_enter_name_keyboard, \
+    skip_enter_promocode_keyboard, get_sub_keyboard
+from data.message_templates import messages_dict
 from db.repository import users_repository
 from handlers.standard_handler import user_request_handler
-from data.message_templates import messages_dict
-from data.images import menu_photo, photos_pages
 from utils.account_manager import continue_registration
 from utils.messages_provider import send_main_menu
 from utils.paginator import MechanicsPaginator
 from utils.promocode import user_entered_promo_code
 from utils.state_models import InputMessage
-from utils.subscription import get_user_subscription
 
 user_router = Router()
 
@@ -231,3 +227,9 @@ async def user_choice_age(call: CallbackQuery, state: FSMContext):
     await users_repository.update_age_by_user_id(user_id=user_id, age=age)
 
     await call.message.delete()
+
+
+@user_router.callback_query(F.data == "show_nuts_description")
+async def power_mode_help(call: CallbackQuery, state: FSMContext):
+    await call.message.answer(messages_dict["nuts_description_text"],
+                              reply_markup=(await get_sub_keyboard(call.from_user.id)).as_markup())

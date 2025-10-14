@@ -1,20 +1,18 @@
 import logging
 from random import choice
 
-import telegramify_markdown
 from aiogram import Router, F, Bot
-from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from bots import main_bot
-from data.keyboards import menu_keyboard, buy_sub_keyboard, discuss_problem_keyboard, \
-    create_practice_exercise_recommendation_keyboard
-from db.repository import limits_repository, user_counters_repository, mental_problems_repository
-from data.message_templates import messages_dict
 from data.images import exercises_photo
+from data.keyboards import menu_keyboard, get_sub_keyboard, discuss_problem_keyboard, \
+    create_practice_exercise_recommendation_keyboard
+from data.message_templates import messages_dict
+from db.repository import user_counters_repository, mental_problems_repository
 from utils.gpt_distributor import user_request_handler
 from utils.limits import decrease_exercises_limit
 from utils.messages_provider import send_long_markdown_message
@@ -106,7 +104,7 @@ async def send_exercise(call: CallbackQuery, bot: Bot, problem_id: int):
         await main_bot.send_message(
             user_id,
             messages_dict["exercises_subscription_text"],
-            reply_markup=buy_sub_keyboard.as_markup()
+            reply_markup=(await get_sub_keyboard(user_id)).as_markup()
         )
 
 async def go_deeper(call: CallbackQuery, bot: Bot, problem_id: int):
@@ -129,6 +127,6 @@ async def go_deeper(call: CallbackQuery, bot: Bot, problem_id: int):
         await main_bot.send_message(
             user_id,
             messages_dict["exercises_subscription_text"],
-            reply_markup=buy_sub_keyboard.as_markup()
+            reply_markup=(await get_sub_keyboard(user_id)).as_markup()
         )
 

@@ -1,5 +1,5 @@
 from bots import main_bot
-from data.keyboards import buy_sub_keyboard
+from data.keyboards import get_sub_keyboard
 from data.message_templates import messages_dict
 from db.repository import limits_repository
 from settings import LIMITS_NOTIFICATION_THRESHOLDS
@@ -22,7 +22,7 @@ async def decrease_psy_requests_limit(user_id: int) -> bool:
             messages_dict["limit_remaining_notification_text"].format(
                 n=user_limits.psychological_requests_remaining - 1,
                 item_name="психологических запросов"),
-            reply_markup=buy_sub_keyboard.as_markup()
+            reply_markup=(await get_sub_keyboard(user_id)).as_markup()
         )
 
     return True
@@ -44,7 +44,7 @@ async def decrease_universal_requests_limit(user_id: int):
             messages_dict["limit_remaining_notification_text"].format(
                 n=user_limits.universal_requests_remaining - 1,
                 item_name="универсальных запросов"),
-            reply_markup=buy_sub_keyboard.as_markup()
+            reply_markup=(await get_sub_keyboard(user_id)).as_markup()
         )
 
     return True
@@ -66,7 +66,7 @@ async def decrease_attachments_limit(user_id: int):
             messages_dict["limit_remaining_notification_text"].format(
                 n=user_limits.attachments_remaining - 1,
                 item_name="файлов и картинок"),
-            reply_markup=buy_sub_keyboard.as_markup()
+            reply_markup=(await get_sub_keyboard(user_id)).as_markup()
         )
 
     return True
@@ -88,7 +88,7 @@ async def decrease_voices_limit(user_id: int):
             messages_dict["limit_remaining_notification_text"].format(
                 n=user_limits.voices_remaining - 1,
                 item_name="голосовых сообщений"),
-            reply_markup=buy_sub_keyboard.as_markup()
+            reply_markup=(await get_sub_keyboard(user_id)).as_markup()
         )
 
     return True
@@ -110,7 +110,7 @@ async def decrease_exercises_limit(user_id: int):
             messages_dict["limit_remaining_notification_text"].format(
                 n=user_limits.exercises_remaining - 1,
                 item_name="упражнений"),
-            reply_markup=buy_sub_keyboard.as_markup()
+            reply_markup=(await get_sub_keyboard(user_id)).as_markup()
         )
 
     return True
