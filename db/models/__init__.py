@@ -2,6 +2,7 @@ from .admin import Admin
 from .ai_requests import AiRequests
 from .checkup import Checkup
 from .checkup_day_data import CheckupDayData
+from .discount import Discount
 from .events import Events
 from .exercises_user import Exercise
 from .operations import Operations
@@ -27,4 +28,5 @@ __all__ = ['User',
            'Events',
            'MentalProblem',
            'Recommendation',
+           'Discount'
            ]

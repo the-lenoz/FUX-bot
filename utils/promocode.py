@@ -4,7 +4,8 @@ from datetime import datetime, timedelta, timezone
 from bots import main_bot
 from data.keyboards import cancel_keyboard, menu_keyboard
 from db.repository import referral_system_repository, users_repository, promo_activations_repository, \
-    subscriptions_repository
+    subscriptions_repository, discount_repository
+from db.time_provider import get_now_utc_time
 from utils.callbacks import subscribed_callback
 from utils.messages_provider import send_prolong_subscription_message
 
@@ -18,7 +19,7 @@ async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: 
             "Такого промокода не существует",
             reply_markup=cancel_keyboard.as_markup())
         return False
-    elif promo.bring_user_id == user_id and promo.type_promo == "standard":
+    elif promo.bring_user_id == user_id and (promo.type_promo == "standard" or promo.type_promo == "discount"):
         await main_bot.send_message(
             user_id,
             "Ты не можешь активировать промокод, который ты сам же выпустил)",
@@ -143,7 +144,7 @@ async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: 
                                                                      f" По твоему промокоду уже {promo.activations} активаций",
                                    reply_markup=menu_keyboard.as_markup())
             return True
-    else:
+    elif promo.type_promo == "admin":
         promo_activations = await promo_activations_repository.get_activations_by_promo_id(promo_id=promo.id)
         if promo.active is False:
             if from_referral is None or not from_referral:
@@ -185,3 +186,39 @@ async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: 
             await send_prolong_subscription_message(user_id, promo.days_sub, active_user_sub.id)
 
         return True
+    elif promo.type_promo == "discount":
+        promo_activations = await promo_activations_repository.get_activations_by_promo_id(promo_id=promo.id)
+        if promo.active is False:
+            if from_referral is None or not from_referral:
+                await main_bot.send_message(user_id, "К сожалению, данный промокод уже неактивен")
+            else:
+                await main_bot.send_message(user_id,
+                                            "К сожалению, данный промокод уже неактивен",
+                                            reply_markup=menu_keyboard.as_markup())
+            return False
+        if len(promo_activations) >= promo.max_activations:
+            if from_referral is None or not from_referral:
+                await main_bot.send_message(user_id,
+                                            "К сожалению, данный промокод был активирован максимальное количество раз")
+            else:
+                await main_bot.send_message(user_id,
+                                            "К сожалению, данный промокод был активирован максимальное количество раз",
+                                            reply_markup=menu_keyboard.as_markup())
+            return False
+        if user_id in [promo_activation.activate_user_id for promo_activation in promo_activations]:
+            if from_referral is None or not from_referral:
+                await main_bot.send_message(user_id, "Ты уже активировал данный промокод ранее")
+            else:
+                await main_bot.send_message(user_id,
+                                            "Ты уже активировал данный промокод ранее",
+                                            reply_markup=menu_keyboard.as_markup())
+            return False
+        await referral_system_repository.update_activations_by_promo_id(promo_id=promo.id)
+        await promo_activations_repository.add_activation(promo_id=promo.id, activate_user_id=user_id)
+
+        await discount_repository.create_discount(user_id=user_id,
+                                                  end_timestamp=get_now_utc_time() + timedelta(days=promo.days_sub),
+                                                  value=promo.value)
+        return True
+    return False
+

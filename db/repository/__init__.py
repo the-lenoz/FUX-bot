@@ -2,6 +2,7 @@ from .admin_repo import AdminRepository
 from .ai_requests_repo import AiRequestsRepository
 from .checkups_repo import CheckupRepository
 from .days_checkups_repo import DaysCheckupRepository
+from .discount_repo import DiscountRepository
 from .events_repo import EventsRepository
 from .exercises_user_repo import ExercisesUserRepository
 from .limits_repo import LimitsRepository
@@ -36,6 +37,7 @@ limits_repository = LimitsRepository()
 pending_messages_repository = PendingMessagesRepository()
 user_counters_repository = UserCountersRepository()
 payment_methods_repository = PaymentMethodsRepository()
+discount_repository = DiscountRepository()
 
 __all__ = ['users_repository',
            'admin_repository',
@@ -54,5 +56,6 @@ __all__ = ['users_repository',
            'limits_repository',
            'pending_messages_repository',
            'user_counters_repository',
-           'payment_methods_repository'
+           'payment_methods_repository',
+           'discount_repository'
           ]
