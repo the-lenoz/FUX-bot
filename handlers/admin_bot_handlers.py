@@ -433,12 +433,12 @@ async def enter_max_activations(message: types.Message, state: FSMContext, bot: 
         )
 
         await message.answer("Выбери тип промокода, который хочешь создать:", reply_markup=keyboard.as_markup())
+    else:
+        await message.answer("Ты ввел не число, попробуй еще раз ввести"
+                             " максимальное количество активаций данного промокода",
+                             reply_markup=cancel_keyboard.as_markup())
 
-    await message.answer("Ты ввел не число, попробуй еще раз ввести"
-                         " максимальное количество активаций данного промокода",
-                         reply_markup=cancel_keyboard.as_markup())
-
-@admin_router.callback_query(F.data == "generate_subscription_promocode")
+@admin_router.callback_query(F.data.startswith("generate_subscription_promocode"))
 @is_main_admin
 async def generate_subscription_promocode(call: types.CallbackQuery, state: FSMContext, bot: Bot):
     _, max_days, max_activations = call.data.split('|')
@@ -454,7 +454,7 @@ async def generate_subscription_promocode(call: types.CallbackQuery, state: FSMC
     await call.message.answer(f"<code>{promo_code}</code>")
     await call.message.answer(f"Ссылка: {await create_start_link(main_bot, promo_code)}")
 
-@admin_router.callback_query(F.data == "generate_discount_promocode")
+@admin_router.callback_query(F.data.startswith("generate_discount_promocode"))
 @is_main_admin
 async def generate_discount_promocode(call: types.CallbackQuery, state: FSMContext, bot: Bot):
     _, max_days, max_activations = call.data.split('|')
