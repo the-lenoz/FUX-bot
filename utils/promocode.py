@@ -219,6 +219,7 @@ async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: 
         await discount_repository.create_discount(user_id=user_id,
                                                   end_timestamp=get_now_utc_time() + timedelta(days=promo.days_sub),
                                                   value=promo.value)
+        await main_bot.send_message(user_id, f"Теперь у тебя есть скидка в {promo.value}% на {promo.days_sub} дней!")
         return True
     return False
 
