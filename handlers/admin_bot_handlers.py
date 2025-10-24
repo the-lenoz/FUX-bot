@@ -418,19 +418,71 @@ async def enter_promo_days(message: types.Message, state: FSMContext, bot: Bot):
 async def enter_max_activations(message: types.Message, state: FSMContext, bot: Bot):
     max_activations = message.text
     state_data = await state.get_data()
-    max_days = int(state_data.get("max_days"))
+    max_days = state_data.get("max_days")
     if max_activations.isdigit():
-        max_activations = int(max_activations)
         await state.clear()
+
+        keyboard = InlineKeyboardBuilder()
+        keyboard.row(
+            InlineKeyboardButton(text="На подписку",
+                                 callback_data=f"generate_subscription_promocode|{max_days}|{max_activations}")
+        )
+        keyboard.row(
+            InlineKeyboardButton(text="На скидку",
+                                 callback_data=f"generate_discount_promocode|{max_days}|{max_activations}")
+        )
+
+        await message.answer("Выбери тип промокода, который хочешь создать:", reply_markup=keyboard.as_markup())
+    else:
+        await message.answer("Ты ввел не число, попробуй еще раз ввести"
+                             " максимальное количество активаций данного промокода",
+                             reply_markup=cancel_keyboard.as_markup())
+
+@admin_router.callback_query(F.data.startswith("generate_subscription_promocode"))
+@is_main_admin
+async def generate_subscription_promocode(call: types.CallbackQuery, state: FSMContext, bot: Bot):
+    _, max_days, max_activations = call.data.split('|')
+    max_days = int(max_days)
+    max_activations = int(max_activations)
+
+    promo_code = await generate_single_promo_code()
+    await referral_system_repository.add_promo(promo_code=promo_code,
+                                               max_days=max_days,
+                                               max_activations=max_activations,
+                                               type_promo="from_admin")
+    await call.message.answer(f"Отлично, ты выпустил промокод!\n\nПромокод:")
+    await call.message.answer(f"<code>{promo_code}</code>")
+    await call.message.answer(f"Ссылка: {await create_start_link(main_bot, promo_code)}")
+
+@admin_router.callback_query(F.data.startswith("generate_discount_promocode"))
+@is_main_admin
+async def generate_discount_promocode(call: types.CallbackQuery, state: FSMContext, bot: Bot):
+    _, max_days, max_activations = call.data.split('|')
+    await state.clear()
+    await state.update_data(max_days=max_days, max_activations=max_activations)
+    await call.message.answer("Отлично, теперь введи значение скидки в процентах от 0 до 100")
+    await state.set_state(InputMessage.enter_discount_value)
+
+
+@admin_router.message(F.text, InputMessage.enter_discount_value)
+@is_main_admin
+async def enter_discount_value(message: types.Message, state: FSMContext, bot: Bot):
+    value = message.text.rstrip('%')
+    if value.isdigit():
+        max_activations = int(await state.get_value("max_activations"))
+        max_days = int(await state.get_value("max_days"))
+        value = int(value)
+
         promo_code = await generate_single_promo_code()
         await referral_system_repository.add_promo(promo_code=promo_code,
                                                    max_days=max_days,
                                                    max_activations=max_activations,
-                                                   type_promo="from_admin")
+                                                   value=value,
+                                                   type_promo="discount")
         await message.answer(f"Отлично, ты выпустил промокод!\n\nПромокод:")
         await message.answer(f"<code>{promo_code}</code>")
         await message.answer(f"Ссылка: {await create_start_link(main_bot, promo_code)}")
-        return
-    await message.answer("Ты ввел не число, попробуй еще раз ввести"
-                         " максимальное количество активаций данного промокода",
-                         reply_markup=cancel_keyboard.as_markup())
+    else:
+        await message.answer("Ты ввел не число, попробуй еще раз ввести"
+                             " значение скидки в процентах",
+                             reply_markup=cancel_keyboard.as_markup())

@@ -17,6 +17,7 @@ class ReferralSystemRepository:
                           max_activations: int | None = None,
                           bring_user_id: int | None = None,
                           type_promo: str | None = None,
+                          value: int | None = None
                           ) -> bool:
         """
 
@@ -32,20 +33,12 @@ class ReferralSystemRepository:
             async with session.begin():
                 sql = ReferralSystem(bring_user_id=bring_user_id, promo_code=promo_code,
                                      days_sub=max_days, max_activations=max_activations,
-                                     type_promo=type_promo)
+                                     type_promo=type_promo, value=value if value else 0)
                 try:
                     session.add(sql)
                 except Exception:
                     return False
                 return True
-
-    # async def get_promo_info_by_user_id(self, user_id: int) -> Optional[ReferralSystem]:
-    #     async with self.session_maker() as session:
-    #         session: AsyncSession
-    #         async with session.begin():
-    #             sql = select(ReferralSystem).where(or_(ReferralSystem.bring_user_id == user_id))
-    #             query = await session.execute(sql)
-    #             return query.scalars().one_or_none()
 
     async def select_all_promo(self) -> Sequence[ReferralSystem]:
         async with self.session_maker() as session:
@@ -88,5 +81,3 @@ class ReferralSystemRepository:
                 }).where(or_(ReferralSystem.id == promo_id))
                 await session.execute(sql)
                 await session.commit()
-
-

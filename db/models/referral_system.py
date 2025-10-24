@@ -18,6 +18,7 @@ class ReferralSystem(BaseModel, CleanModel):
     max_activations = Column(BigInteger, nullable=True, unique=False)
     type_promo = Column(String, nullable=False, unique=False, default="standard")
     active = Column(Boolean, nullable=False, default=True, unique=False)
+    value = Column(BigInteger, nullable=False, default=0)
 
     @property
     def stats(self) -> str:
