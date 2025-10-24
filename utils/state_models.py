@@ -15,6 +15,7 @@ class InputMessage(StatesGroup):
     enter_answer_exercise = State()
     enter_promo_days = State()
     enter_max_activations_promo = State()
+    enter_discount_value = State()
 
 
 class AccountSettingsStates(StatesGroup):
