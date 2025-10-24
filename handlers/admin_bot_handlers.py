@@ -421,15 +421,15 @@ async def enter_max_activations(message: types.Message, state: FSMContext, bot: 
     max_days = state_data.get("max_days")
     if max_activations.isdigit():
         await state.clear()
-        await state.update_data(max_days=max_days)
-        await state.update_data(max_activations=max_activations)
 
         keyboard = InlineKeyboardBuilder()
         keyboard.row(
-            InlineKeyboardButton(text="На подписку", callback_data="generate_subscription_promocode")
+            InlineKeyboardButton(text="На подписку",
+                                 callback_data=f"generate_subscription_promocode|{max_days}|{max_activations}")
         )
         keyboard.row(
-            InlineKeyboardButton(text="На скидку", callback_data="generate_discount_promocode")
+            InlineKeyboardButton(text="На скидку",
+                                 callback_data=f"generate_discount_promocode|{max_days}|{max_activations}")
         )
 
         await message.answer("Выбери тип промокода, который хочешь создать:", reply_markup=keyboard.as_markup())
@@ -441,9 +441,10 @@ async def enter_max_activations(message: types.Message, state: FSMContext, bot: 
 @admin_router.callback_query(F.data == "generate_subscription_promocode")
 @is_main_admin
 async def generate_subscription_promocode(call: types.CallbackQuery, state: FSMContext, bot: Bot):
-    max_activations = int(await state.get_value("max_activations"))
-    max_days = int(await state.get_value("max_days"))
-    await state.clear()
+    _, max_days, max_activations = call.data.split('|')
+    max_days = int(max_days)
+    max_activations = int(max_activations)
+
     promo_code = await generate_single_promo_code()
     await referral_system_repository.add_promo(promo_code=promo_code,
                                                max_days=max_days,
@@ -456,12 +457,12 @@ async def generate_subscription_promocode(call: types.CallbackQuery, state: FSMC
 @admin_router.callback_query(F.data == "generate_discount_promocode")
 @is_main_admin
 async def generate_discount_promocode(call: types.CallbackQuery, state: FSMContext, bot: Bot):
-    max_activations = await state.get_value("max_activations")
-    max_days = await state.get_value("max_days")
+    _, max_days, max_activations = call.data.split('|')
     await state.clear()
-    await state.set_state(InputMessage.enter_discount_value)
     await state.update_data(max_days=max_days, max_activations=max_activations)
     await call.message.answer("Отлично, теперь введи значение скидки в процентах от 0 до 100")
+    await state.set_state(InputMessage.enter_discount_value)
+
 
 @admin_router.message(F.text, InputMessage.enter_discount_value)
 @is_main_admin
