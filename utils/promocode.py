@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: bool = False) -> bool:
     promo = await referral_system_repository.get_promo_by_promo_code(promo_code=promo_code)
-    logger.info(str(promo))
+    #logger.info(str(promo))
     if promo is None:
         await main_bot.send_message(
             user_id,
@@ -145,7 +145,7 @@ async def user_entered_promo_code(user_id: int, promo_code: str, from_referral: 
                                                                      f" По твоему промокоду уже {promo.activations} активаций",
                                    reply_markup=menu_keyboard.as_markup())
             return True
-    elif promo.type_promo == "admin":
+    elif promo.type_promo == "from_admin":
         promo_activations = await promo_activations_repository.get_activations_by_promo_id(promo_id=promo.id)
         if promo.active is False:
             if from_referral is None or not from_referral:

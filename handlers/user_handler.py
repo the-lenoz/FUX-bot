@@ -152,7 +152,7 @@ async def user_enter_promo_code(message: Message, state: FSMContext, bot: Bot):
         await bot.delete_message(chat_id=user_id, message_id=delete_message_id)
 
     await user_entered_promo_code(user_id, promo_code, from_referral)
-    logger.info(f"entered promocode: user_id={user_id}, promo_code={promo_code}, from_referral={from_referral}")
+    #logger.info(f"entered promocode: user_id={user_id}, promo_code={promo_code}, from_referral={from_referral}")
 
     if from_referral:
         await state.clear()
