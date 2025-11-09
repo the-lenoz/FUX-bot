@@ -24,6 +24,8 @@ from utils.state_models import InputMessage
 user_router = Router()
 
 
+logger = logging.getLogger(__name__)
+
 @user_router.callback_query(F.data == "cancel", any_state)
 @user_router.callback_query(F.data == "start_menu", any_state)
 async def start_menu(call: CallbackQuery, state: FSMContext):
@@ -150,6 +152,7 @@ async def user_enter_promo_code(message: Message, state: FSMContext, bot: Bot):
         await bot.delete_message(chat_id=user_id, message_id=delete_message_id)
 
     await user_entered_promo_code(user_id, promo_code, from_referral)
+    logger.info(f"entered promocode: user_id={user_id}, promo_code={promo_code}, from_referral={from_referral}")
 
     if from_referral:
         await state.clear()
